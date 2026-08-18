@@ -1,0 +1,9 @@
+{
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/crm/dashboard.html" },
+    { "source": "/crm", "destination": "/crm/dashboard.html" },
+    { "source": "/crm/", "destination": "/crm/dashboard.html" },
+    { "source": "/crm/:path*", "destination": "/crm/:path*" }
+  ]
+}
