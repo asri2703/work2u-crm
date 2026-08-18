@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Work2U Components Library</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #0a0a14 0%, #1a0f24 100%);
+    min-height: 100vh;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 40px;
+  }
+  
+  header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 60px;
+  }
+  
+  h1 {
+    font-size: 3em;
+    font-weight: 200;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  
+  .subtitle {
+    color: rgba(255,255,255,0.6);
+    font-size: 1.1em;
+  }
+  
+  .components {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .component {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 28px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    display: block;
+  }
+  
+  .component:hover {
+    transform: translateY(-4px);
+    border-color: rgba(167, 139, 250, 0.5);
+    box-shadow: 0 16px 40px rgba(167, 139, 250, 0.2);
+    background: rgba(255,255,255,0.06);
+  }
+  
+  .component h2 {
+    color: #a78bfa;
+    font-size: 1.5em;
+    margin-bottom: 8px;
+  }
+  
+  .component p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  
+  .features {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .features li {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85em;
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  
+  .features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #a78bfa;
+  }
+  
+  .arrow {
+    margin-top: 16px;
+    color: #a78bfa;
+    font-weight: 600;
+  }
+  
+  footer {
+    text-align: center;
+    margin-top: 80px;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9em;
+  }
+  
+  .meta {
+    background: rgba(167, 139, 250, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 40px;
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎨 Work2U Components Library</h1>
+  <p class="subtitle">3 production-ready components by David Haz · Vanilla JS ports</p>
+</header>
+
+<div class="components">
+  
+  <a href="liquid-chrome.html" class="component" target="_blank">
+    <h2>LiquidChrome</h2>
+    <p>WebGL animated liquid metal background yang respond kepada mouse. Effect iridescent morphing using ogl + custom shader.</p>
+    <ul class="features">
+      <li>Mouse-interactive distortion</li>
+      <li>Configurable colors, speed, amplitude</li>
+      <li>No external libs (just ogl via CDN)</li>
+      <li>Perfect untuk hero section</li>
+    </ul>
+    <div class="arrow">View demo →</div>
+  </a>
+  
+  <a href="magic-bento.html" class="component" target="_blank">
+    <h2>MagicBento</h2>
+    <p>Responsive grid layout dengan spotlight tracking, border glow, 3D tilt pada hover, dan click ripple effects.</p>
+    <ul class="features">
+      <li>Mouse-tracked global spotlight</li>
+      <li>Border glow on hover</li>
+      <li>3D perspective tilt</li>
+      <li>Click ripple effect</li>
+      <li>1/2/4 column responsive</li>
+    </ul>
+    <div class="arrow">View demo →</div>
+  </a>
+  
+  <a href="glass-surface.html" class="component" target="_blank">
+    <h2>GlassSurface</h2>
+    <p>Liquid glass effect dengan SVG chromatic aberration. Refraction effect yang beautiful untuk modals & floating panels.</p>
+    <ul class="features">
+      <li>SVG feDisplacementMap shader</li>
+      <li>3-channel chromatic aberration</li>
+      <li>Auto-resize via ResizeObserver</li>
+      <li>Configurable blur & distortion</li>
+    </ul>
+    <div class="arrow">View demo →</div>
+  </a>
+  
+</div>
+
+<div class="meta">
+  <strong>📦 Self-contained:</strong> Each component is a single HTML file.<br>
+  Copy-paste into any project. Zero build step. Works on any static host.
+</div>
+
+<footer>
+  Source: <a href="https://reactbits.dev" style="color:#a78bfa;text-decoration:none;">reactbits.dev</a> · Saved for future Work2U projects
+</footer>
+
+</body>
+</html>
