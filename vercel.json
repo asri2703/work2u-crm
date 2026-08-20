@@ -1,6 +1,10 @@
 {
   "cleanUrls": false,
   "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/register", "destination": "/register.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    { "source": "/terms-of-service", "destination": "/terms-of-service.html" },
     { "source": "/dashboard", "destination": "/crm/dashboard.html" },
     { "source": "/crm", "destination": "/crm/dashboard.html" },
     { "source": "/crm/", "destination": "/crm/dashboard.html" },

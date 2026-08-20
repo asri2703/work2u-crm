@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Work2U — Liquid Brand</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #0a0a14;
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  
+  /* Animated radial background */
+  .bg {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(167, 139, 250, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(79, 70, 229, 0.4) 0%, transparent 50%);
+    animation: bgShift 8s ease-in-out infinite alternate;
+    filter: blur(40px);
+  }
+  @keyframes bgShift {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(-5deg); }
+  }
+  
+  /* SVG blob center */
+  .blob-container {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    filter: drop-shadow(0 30px 80px rgba(167, 139, 250, 0.5));
+    animation: morphFloat 12s ease-in-out infinite;
+  }
+  
+  /* Brand text overlay */
+  .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .brand-name {
+    font-size: 8vw;
+    font-weight: 200;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin: 0;
+    animation: fadeUp 1.5s ease-out 0.5s both;
+    text-shadow: 0 0 60px rgba(167, 139, 250, 0.5);
+  }
+  
+  .brand-tagline {
+    font-size: 1.3vw;
+    color: rgba(255,255,255,0.6);
+    margin-top: 1.5vw;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    font-weight: 300;
+    animation: fadeUp 1.5s ease-out 1.5s both;
+  }
+  
+  .corner-text {
+    position: absolute;
+    bottom: 4vh;
+    left: 4vw;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9vw;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: fadeIn 2s ease-out 3s both;
+  }
+  
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  
+  @keyframes morphFloat {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotate(5deg); }
+    50% { transform: translate(-50%, -50%) scale(1.05) rotate(0deg); }
+    75% { transform: translate(-50%, -50%) rotate(-5deg); }
+  }
+</style>
+</head>
+<body>
+<!-- Animated background -->
+<div class="bg"></div>
+
+<!-- Morphing blob SVG -->
+<div class="blob-container">
+  <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="g1" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="#f9a8d4" />
+        <stop offset="40%" stop-color="#a78bfa" />
+        <stop offset="100%" stop-color="#4f46e5" />
+      </radialGradient>
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="
+          1 0 0 0 0  
+          0 1 0 0 0  
+          0 0 1 0 0  
+          0 0 0 25 -10" />
+      </filter>
+    </defs>
+    
+    <g filter="url(#goo)">
+      <circle cx="200" cy="200" r="100" fill="url(#g1)">
+        <animate attributeName="cx" values="200;400;200" dur="8s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="200;300;200" dur="8s" repeatCount="indefinite" />
+        <animate attributeName="r" values="100;130;100" dur="6s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="400" cy="350" r="120" fill="url(#g1)" opacity="0.85">
+        <animate attributeName="cx" values="400;200;400" dur="9s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="350;200;350" dur="7s" repeatCount="indefinite" />
+        <animate attributeName="r" values="120;90;120" dur="5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="300" cy="400" r="80" fill="url(#g1)" opacity="0.9">
+        <animate attributeName="cx" values="300;350;250;300" dur="10s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="400;250;350;400" dur="9s" repeatCount="indefinite" />
+        <animate attributeName="r" values="80;120;80" dur="7s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="350" cy="250" r="60" fill="url(#g1)" opacity="0.7">
+        <animate attributeName="cx" values="350;150;350" dur="11s" repeatCount="indefinite" />
+        <animate attributeName="cy" values="250;400;250" dur="8s" repeatCount="indefinite" />
+      </circle>
+    </g>
+  </svg>
+</div>
+
+<!-- Brand overlay -->
+<div class="overlay">
+  <h1 class="brand-name">Work2U</h1>
+  <p class="brand-tagline">The Future of Business</p>
+  <p class="corner-text">work2u.io · crm.work2u.io</p>
+</div>
+</body>
+</html>

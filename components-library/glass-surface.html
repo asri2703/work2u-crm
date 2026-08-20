@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  GlassSurface Component (Vanilla JS Port)                       ║
+  ║  From React Bits - By David Haz                                  ║
+  ║                                                                  ║
+  ║  Features:                                                       ║
+  ║  - SVG feDisplacementMap chromatic aberration effect             ║
+  ║  - backdrop-filter with brightness, blur, distortion             ║
+  ║  - Auto-resize via ResizeObserver                                ║
+  ║  - Configurable: brightness, opacity, blur, distortion           ║
+  ║  - Pure HTML/CSS/JS — no dependencies                            ║
+  ║                                                                  ║
+  ║  Usage:                                                          ║
+  ║  <div class="glass-surface">Your content</div>                   ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GlassSurface Component</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  /* Demo background to show glass effect */
+  body {
+    background: linear-gradient(45deg, #ec4899, #a78bfa, #06b6d4, #f59e0b);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    color: white;
+    gap: 32px;
+  }
+  
+  h1 {
+    font-weight: 200;
+    font-size: 2.5em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  
+  /* === GlassSurface Styles === */
+  .glass-surface {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    overflow: hidden;
+    border-radius: 20px;
+    
+    /* Tint applied as background (visible on top of blur) */
+    backdrop-filter: var(--filter-id, blur(11px)) saturate(var(--glass-saturation, 1));
+    -webkit-backdrop-filter: var(--filter-id, blur(11px)) saturate(var(--glass-saturation, 1));
+    backdrop-filter: blur(11px) saturate(1);
+    
+    box-shadow:
+      0 0 2px 1px rgba(255, 255, 255, 0.08) inset,
+      0 0 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Tint layer — provides readable background */
+  .glass-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: hsl(0 0% 50% / 0.05);  /* Adjust --glass-frost */
+    border-radius: inherit;
+    z-index: 0;
+  }
+  
+  /* Inner border (the visible "edge") */
+  .glass-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.4),
+      rgba(255,255,255,0.1)
+    );
+    border-radius: inherit;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* SVG filter container (hidden) */
+  .glass-surface__filter {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  
+  /* Content area sits above the tint but below the border */
+  .glass-surface__content {
+    position: relative;
+    z-index: 2;
+    padding: 24px;
+  }
+  
+  /* Demo sizes */
+  .demo-small {
+    width: 200px; height: 100px;
+  }
+  .demo-medium {
+    width: 360px; height: 200px;
+  }
+  .demo-large {
+    width: 500px; height: 300px;
+  }
+  
+  .glass-surface h2 {
+    font-size: 24px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  
+  .glass-surface p {
+    opacity: 0.85;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* Fallback for browsers without SVG filter support */
+  .glass-surface--fallback {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+</style>
+</head>
+<body>
+
+<h1>GlassSurface</h1>
+
+<div class="glass-surface demo-medium" data-glass>
+  <div class="glass-surface__content">
+    <h2>Modern Glass</h2>
+    <p>Liquid glass effect with chromatic aberration. Drag this card to your projects.</p>
+  </div>
+</div>
+
+<div class="glass-surface demo-small" data-glass>
+  <div class="glass-surface__content">
+    <h2>Compact</h2>
+    <p>Smaller surface, same magic.</p>
+  </div>
+</div>
+
+<div class="glass-surface demo-large" data-glass>
+  <div class="glass-surface__content">
+    <h2>Liquid Glass</h2>
+    <p>This glass surface uses SVG feDisplacementMap for chromatic aberration — what you see behind appears to refract through the glass, with subtle color separation at the edges.</p>
+    <p style="margin-top: 12px;"><strong>Tip:</strong> View source and copy the glass-surface styles into your projects.</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  // SVG displacement map generator (chromatic aberration trick)
+  function generateDisplacementMap(surface, config) {
+    const actualWidth = surface.offsetWidth || 400;
+    const actualHeight = surface.offsetHeight || 200;
+    const edgeSize = Math.min(actualWidth, actualHeight) * (config.borderWidth * 0.5);
+    const filterId = surface.getAttribute('data-glass-filter') || 'glass-filter-' + Math.random().toString(36).slice(2);
+    
+    const svgContent = `<svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="red-grad-${filterId}" x1="100%" y1="0%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#0000"/>
+          <stop offset="100%" stop-color="red"/>
+        </linearGradient>
+        <linearGradient id="blue-grad-${filterId}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#0000"/>
+          <stop offset="100%" stop-color="blue"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black"></rect>
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${config.borderRadius}" fill="url(#red-grad-${filterId})" />
+      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${config.borderRadius}" fill="url(#blue-grad-${filterId})" style="mix-blend-mode: ${config.mixBlendMode}" />
+      <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${config.borderRadius}" fill="hsl(0 0% ${config.brightness}% / ${config.opacity})" style="filter:blur(${config.blur}px)" />
+    </svg>`;
+    
+    return `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
+  }
+  
+  // Default config (can be customized per surface)
+  const defaultConfig = {
+    borderRadius: 20,
+    borderWidth: 0.07,
+    brightness: 50,
+    opacity: 0.93,
+    blur: 11,
+    backgroundOpacity: 0,
+    saturation: 1,
+    distortionScale: -180,
+    redOffset: 0,
+    greenOffset: 10,
+    blueOffset: 20,
+    xChannel: 'R',
+    yChannel: 'G',
+    mixBlendMode: 'difference'
+  };
+  
+  // Check browser support
+  const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  const isFirefox = /Firefox/.test(navigator.userAgent);
+  const supportsFilters = !isWebkit && !isFirefox && CSS.supports('backdrop-filter', 'blur(1px)');
+  
+  // Setup all glass surfaces
+  document.querySelectorAll('[data-glass]').forEach(surface => {
+    if (!supportsFilters) {
+      surface.classList.add('glass-surface--fallback');
+      return;
+    }
+    
+    const config = defaultConfig;
+    const filterId = 'glass-filter-' + Math.random().toString(36).slice(2);
+    surface.setAttribute('data-glass-filter', filterId);
+    
+    // Create SVG filter
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'glass-surface__filter');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.setAttribute('id', filterId);
+    filter.setAttribute('color-interpolation-filters', 'sRGB');
+    filter.setAttribute('x', '0%');
+    filter.setAttribute('y', '0%');
+    filter.setAttribute('width', '100%');
+    filter.setAttribute('height', '100%');
+    
+    const feImage = document.createElementNS('http://www.w3.org/2000/svg', 'feImage');
+    feImage.setAttribute('x', '0');
+    feImage.setAttribute('y', '0');
+    feImage.setAttribute('width', '100%');
+    feImage.setAttribute('height', '100%');
+    feImage.setAttribute('preserveAspectRatio', 'none');
+    feImage.setAttribute('result', 'map');
+    filter.appendChild(feImage);
+    
+    // Red channel
+    const redDispl = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+    redDispl.setAttribute('in', 'SourceGraphic');
+    redDispl.setAttribute('in2', 'map');
+    redDispl.setAttribute('scale', (config.distortionScale + config.redOffset).toString());
+    redDispl.setAttribute('xChannelSelector', config.xChannel);
+    redDispl.setAttribute('yChannelSelector', config.yChannel);
+    redDispl.setAttribute('result', 'dispRed');
+    filter.appendChild(redDispl);
+    
+    const redMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+    redMatrix.setAttribute('in', 'dispRed');
+    redMatrix.setAttribute('type', 'matrix');
+    redMatrix.setAttribute('values', '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0');
+    redMatrix.setAttribute('result', 'red');
+    filter.appendChild(redMatrix);
+    
+    // Green channel
+    const greenDispl = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+    greenDispl.setAttribute('in', 'SourceGraphic');
+    greenDispl.setAttribute('in2', 'map');
+    greenDispl.setAttribute('scale', (config.distortionScale + config.greenOffset).toString());
+    greenDispl.setAttribute('xChannelSelector', config.xChannel);
+    greenDispl.setAttribute('yChannelSelector', config.yChannel);
+    greenDispl.setAttribute('result', 'dispGreen');
+    filter.appendChild(greenDispl);
+    
+    const greenMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+    greenMatrix.setAttribute('in', 'dispGreen');
+    greenMatrix.setAttribute('type', 'matrix');
+    greenMatrix.setAttribute('values', '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0');
+    greenMatrix.setAttribute('result', 'green');
+    filter.appendChild(greenMatrix);
+    
+    // Blue channel
+    const blueDispl = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+    blueDispl.setAttribute('in', 'SourceGraphic');
+    blueDispl.setAttribute('in2', 'map');
+    blueDispl.setAttribute('scale', (config.distortionScale + config.blueOffset).toString());
+    blueDispl.setAttribute('xChannelSelector', config.xChannel);
+    blueDispl.setAttribute('yChannelSelector', config.yChannel);
+    blueDispl.setAttribute('result', 'dispBlue');
+    filter.appendChild(blueDispl);
+    
+    const blueMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix');
+    blueMatrix.setAttribute('in', 'dispBlue');
+    blueMatrix.setAttribute('type', 'matrix');
+    blueMatrix.setAttribute('values', '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0');
+    blueMatrix.setAttribute('result', 'blue');
+    filter.appendChild(blueMatrix);
+    
+    // Blend
+    const blend1 = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend');
+    blend1.setAttribute('in', 'red');
+    blend1.setAttribute('in2', 'green');
+    blend1.setAttribute('mode', 'screen');
+    blend1.setAttribute('result', 'rg');
+    filter.appendChild(blend1);
+    
+    const blend2 = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend');
+    blend2.setAttribute('in', 'rg');
+    blend2.setAttribute('in2', 'blue');
+    blend2.setAttribute('mode', 'screen');
+    blend2.setAttribute('result', 'output');
+    filter.appendChild(blend2);
+    
+    const blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+    blur.setAttribute('in', 'output');
+    blur.setAttribute('stdDeviation', '0.7');
+    filter.appendChild(blur);
+    
+    defs.appendChild(filter);
+    svg.appendChild(defs);
+    document.body.appendChild(svg);
+    
+    // Set backdrop-filter
+    surface.style.setProperty('--filter-id', `url(#${filterId})`);
+    surface.style.backdropFilter = `var(--filter-id) blur(${config.blur}px) saturate(${config.saturation})`;
+    surface.style.webkitBackdropFilter = `var(--filter-id) blur(${config.blur}px) saturate(${config.saturation})`;
+    
+    // Update displacement map when size changes
+    const updateMap = () => {
+      feImage.setAttribute('href', generateDisplacementMap(surface, config));
+    };
+    
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => setTimeout(updateMap, 0));
+      ro.observe(surface);
+    }
+    setTimeout(updateMap, 100);
+  });
+})();
+</script>
+
+</body>
+</html>

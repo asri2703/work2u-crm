@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  LiquidChrome Background Component                              ║
+  ║  From React Bits - By David Haz                                  ║
+  ║                                                                  ║
+  ║  Usage:                                                          ║
+  ║  - Copy this entire <style> + <body> into your page             ║
+  ║  - Adjust baseColor, speed, amplitude, frequency                 ║
+  ║  - Save 100% working on any site (no React needed)               ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LiquidChrome Component</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #000;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* The container must be absolutely positioned to fill parent */
+  .liquidChrome-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  }
+  
+  /* SVG filter fallback (optional) */
+  .liquidChrome-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Demo content overlay */
+  .demo-content {
+    position: relative;
+    z-index: 10;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    text-align: center;
+    padding-top: 30vh;
+  }
+  
+  .demo-content h1 {
+    font-size: 4em;
+    font-weight: 200;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .demo-content p {
+    font-size: 1.2em;
+    opacity: 0.7;
+    margin-top: 16px;
+  }
+</style>
+
+<!-- Load ogl library for WebGL (CDN) -->
+<script type="module">
+  import { Renderer, Program, Mesh, Triangle } from 'https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm';
+  window.__ogl = { Renderer, Program, Mesh, Triangle };
+</script>
+</head>
+<body>
+
+<div class="liquidChrome-container" id="liquid-bg"></div>
+
+<div class="demo-content">
+  <h1>LiquidChrome</h1>
+  <p>Move your mouse to interact</p>
+</div>
+
+<script>
+// Wait for ogl to load
+window.addEventListener('load', async () => {
+  // Dynamic import
+  const ogl = await import('https://cdn.jsdelivr.net/npm/ogl@1.0.11/+esm');
+  const { Renderer, Program, Mesh, Triangle } = ogl;
+  
+  const container = document.getElementById('liquid-bg');
+  const renderer = new Renderer({ antialias: true });
+  const gl = renderer.gl;
+  gl.clearColor(0, 0, 0, 1);
+
+  // ==== CONFIG - Edit these to customize ====
+  const config = {
+    baseColor: [0.66, 0.55, 0.98],   // RGB 0-1 — purple vibe
+    speed: 0.2,
+    amplitude: 0.5,
+    frequencyX: 3,
+    frequencyY: 2,
+    interactive: true
+  };
+
+  const vertexShader = `
+    attribute vec2 position;
+    attribute vec2 uv;
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 0.0, 1.0);
+    }
+  `;
+
+  const fragmentShader = `
+    precision highp float;
+    uniform float uTime;
+    uniform vec3 uResolution;
+    uniform vec3 uBaseColor;
+    uniform float uAmplitude;
+    uniform float uFrequencyX;
+    uniform float uFrequencyY;
+    uniform vec2 uMouse;
+    varying vec2 vUv;
+
+    vec4 renderImage(vec2 uvCoord) {
+        vec2 fragCoord = uvCoord * uResolution.xy;
+        vec2 uv = (2.0 * fragCoord - uResolution.xy) / min(uResolution.x, uResolution.y);
+
+        for (float i = 1.0; i < 10.0; i++){
+            uv.x += uAmplitude / i * cos(i * uFrequencyX * uv.y + uTime + uMouse.x * 3.14159);
+            uv.y += uAmplitude / i * cos(i * uFrequencyY * uv.x + uTime + uMouse.y * 3.14159);
+        }
+
+        vec2 diff = (uvCoord - uMouse);
+        float dist = length(diff);
+        float falloff = exp(-dist * 20.0);
+        float ripple = sin(10.0 * dist - uTime * 2.0) * 0.03;
+        uv += (diff / (dist + 0.0001)) * ripple * falloff;
+
+        vec3 color = uBaseColor / abs(sin(uTime - uv.y - uv.x));
+        return vec4(color, 1.0);
+    }
+
+    void main() {
+        vec4 col = vec4(0.0);
+        int samples = 0;
+        for (int i = -1; i <= 1; i++){
+            for (int j = -1; j <= 1; j++){
+                vec2 offset = vec2(float(i), float(j)) * (1.0 / min(uResolution.x, uResolution.y));
+                col += renderImage(vUv + offset);
+                samples++;
+            }
+        }
+        gl_FragColor = col / float(samples);
+    }
+  `;
+
+  const geometry = new Triangle(gl);
+  const program = new Program(gl, {
+    vertex: vertexShader,
+    fragment: fragmentShader,
+    uniforms: {
+      uTime: { value: 0 },
+      uResolution: {
+        value: new Float32Array([gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height])
+      },
+      uBaseColor: { value: new Float32Array(config.baseColor) },
+      uAmplitude: { value: config.amplitude },
+      uFrequencyX: { value: config.frequencyX },
+      uFrequencyY: { value: config.frequencyY },
+      uMouse: { value: new Float32Array([0, 0]) }
+    }
+  });
+  const mesh = new Mesh(gl, { geometry, program });
+
+  function resize() {
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    const resUniform = program.uniforms.uResolution.value;
+    resUniform[0] = gl.canvas.width;
+    resUniform[1] = gl.canvas.height;
+    resUniform[2] = gl.canvas.width / gl.canvas.height;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function handleMouseMove(e) {
+    const rect = container.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = 1 - (e.clientY - rect.top) / rect.height;
+    const mouseUniform = program.uniforms.uMouse.value;
+    mouseUniform[0] = x;
+    mouseUniform[1] = y;
+  }
+
+  if (config.interactive) {
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        const t = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = (t.clientX - rect.left) / rect.width;
+        const y = 1 - (t.clientY - rect.top) / rect.height;
+        const m = program.uniforms.uMouse.value;
+        m[0] = x; m[1] = y;
+      }
+    }, { passive: true });
+  }
+
+  function update(t) {
+    requestAnimationFrame(update);
+    program.uniforms.uTime.value = t * 0.001 * config.speed;
+    renderer.render({ scene: mesh });
+  }
+  requestAnimationFrame(update);
+
+  container.appendChild(gl.canvas);
+});
+</script>
+
+</body>
+</html>
