@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work2U</title>
+  <meta name="description" content="Work2U - AI-powered business operating system for follow-up, communication, automation, and accounting." />
+  <link rel="stylesheet" href="/work2u/styles.css" />
+</head>
+<body>
+  <div class="auth-gate" id="auth-gate" hidden>
+    <div class="auth-card">
+      <div class="auth-hero">
+        <div class="eyebrow">Pre-login survey</div>
+        <h2>Tell Work2U how your business works</h2>
+        <p>Start with a short survey, then choose email login. Work2U uses your answers to shape the dashboard, recommend the right package, and set the default workflow. The whole flow is designed to feel fast on mobile, not heavy.</p>
+        <div class="onboarding-steps" aria-label="Onboarding steps">
+          <span>1. Survey</span>
+          <span>2. Login</span>
+          <span>3. Open dashboard</span>
+        </div>
+        <div class="onboarding-progress" aria-label="Onboarding progress">
+          <div class="onboarding-progress-track">
+            <span class="onboarding-progress-fill"></span>
+          </div>
+          <div class="onboarding-progress-labels">
+            <span class="active">Survey</span>
+            <span>Login</span>
+            <span>Dashboard</span>
+          </div>
+        </div>
+        <div class="onboarding-wizard" id="onboarding-wizard" aria-label="Onboarding wizard">
+          <button class="onboarding-step-card active" type="button" id="onboarding-step-survey">
+            <span class="onboarding-step-index">1</span>
+            <strong>Survey</strong>
+            <p>Tell Work2U what you do, who you serve, and how you want to work.</p>
+          </button>
+          <button class="onboarding-step-card" type="button" id="onboarding-step-login">
+            <span class="onboarding-step-index">2</span>
+            <strong>Login</strong>
+            <p>Choose email login once the profile is ready.</p>
+          </button>
+          <button class="onboarding-step-card" type="button" id="onboarding-step-dashboard">
+            <span class="onboarding-step-index">3</span>
+            <strong>Dashboard</strong>
+            <p>Open the CRM, manage clients, and start follow-up with your workspace saved.</p>
+          </button>
+        </div>
+        <div class="onboarding-wizard-copy" id="onboarding-wizard-copy">Step 1 of 3 is active. Fill in the survey so Work2U can recommend the right package and workflow.</div>
+        <div class="topbar-actions onboarding-wizard-actions">
+          <button class="primary-btn" type="button" id="onboarding-cta-survey">Start survey</button>
+          <button class="soft-btn" type="button" id="onboarding-cta-login">Go to login</button>
+          <button class="ghost-btn" type="button" id="onboarding-cta-dashboard">Open dashboard</button>
+        </div>
+      </div>
+
+      <div class="auth-layout">
+        <form class="auth-panel stack" id="survey-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="survey-workspace">Workspace name</label>
+              <input id="survey-workspace" placeholder="Work2U Studio" />
+            </div>
+            <div class="field">
+              <label for="survey-role">What do you do?</label>
+              <select id="survey-role">
+                <option>Property Agent</option>
+                <option>Insurance Agent</option>
+                <option>Freelancer</option>
+                <option>Corporate Team</option>
+                <option>General Business</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="survey-goal">Main goal</label>
+              <select id="survey-goal">
+                <option>Follow up prospects</option>
+                <option>Manage clients</option>
+                <option>Send invoices</option>
+                <option>Track tasks</option>
+                <option>Coordinate team</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="survey-team">Team size</label>
+              <select id="survey-team">
+                <option>1</option>
+                <option>2-5</option>
+                <option>6-10</option>
+                <option>10+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="survey-region">Region</label>
+              <select id="survey-region">
+                <option>Malaysia</option>
+                <option>Global</option>
+              </select>
+              <div class="tiny" id="survey-location-status">Work2U can suggest a region from your timezone and language, or you can detect it from device location.</div>
+              <div class="survey-actions">
+                <button class="soft-btn" type="button" id="survey-apply-region">Use suggestion</button>
+                <button class="soft-btn" type="button" id="survey-detect-region">Detect my region</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="survey-language">Language</label>
+              <select id="survey-language">
+                <option>BM + English</option>
+                <option>Bahasa Melayu</option>
+                <option>English</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Functions you need</label>
+            <div class="check-row survey-chips">
+              <label class="check-pill"><input type="checkbox" id="survey-task" checked />Task system</label>
+              <label class="check-pill"><input type="checkbox" id="survey-hub" checked />WhatsApp / Email / Telegram</label>
+              <label class="check-pill"><input type="checkbox" id="survey-accounting" />Accounting / invoices</label>
+              <label class="check-pill"><input type="checkbox" id="survey-calendar" checked />Calendar sync</label>
+              <label class="check-pill"><input type="checkbox" id="survey-ai" checked />AI assistance</label>
+              <label class="check-pill"><input type="checkbox" id="survey-social" />Social media</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Primary channels</label>
+            <div class="check-row survey-chips">
+              <label class="check-pill"><input type="checkbox" id="survey-channel-whatsapp" checked />WhatsApp</label>
+              <label class="check-pill"><input type="checkbox" id="survey-channel-email" checked />Email</label>
+              <label class="check-pill"><input type="checkbox" id="survey-channel-telegram" checked />Telegram</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>How should AI help?</label>
+            <div class="choice-grid" id="survey-ai-mode">
+              <button class="choice-card active" type="button" data-value="Suggest only">
+                <strong>Suggest only</strong>
+                <span>AI drafts ideas for you to approve.</span>
+              </button>
+              <button class="choice-card" type="button" data-value="Draft only">
+                <strong>Draft only</strong>
+                <span>AI prepares replies, you send them.</span>
+              </button>
+              <button class="choice-card" type="button" data-value="Semi-auto">
+                <strong>Semi-auto</strong>
+                <span>AI drafts and queues follow-ups.</span>
+              </button>
+              <button class="choice-card" type="button" data-value="Auto-send for approved rules">
+                <strong>Auto-send</strong>
+                <span>Approved rules can send automatically.</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <section class="auth-panel stack">
+          <div class="section-title">
+            <div>
+              <h3>Login method</h3>
+              <p>Choose the sign-in path you want to use. Work2U will show the right next step after you pick one.</p>
+            </div>
+            <span class="status-pill" id="auth-package-pill">Starter</span>
+          </div>
+
+          <div class="choice-grid" id="auth-method-grid">
+            <button class="choice-card active" type="button" data-method="email">
+              <strong>Email</strong>
+              <span>Use your own email or a Work2U domain mailbox later.</span>
+            </button>
+          </div>
+
+          <div class="field" id="auth-email-field">
+            <label for="auth-email">Email address</label>
+            <input id="auth-email" type="email" placeholder="you@company.com" />
+          </div>
+
+          <div class="field">
+            <label for="auth-mailbox">Email sending account</label>
+            <select id="auth-mailbox">
+              <option>Own email</option>
+              <option>Work2U domain email</option>
+            </select>
+          </div>
+
+          <div class="auth-method-note" id="auth-method-note"></div>
+          <div class="auth-login-steps" id="auth-login-steps"></div>
+          <div class="auth-readiness" id="auth-readiness"></div>
+          <div class="auth-checklist" id="auth-checklist"></div>
+
+          <div class="summary-card" id="survey-summary"></div>
+
+          <div class="auth-status" id="auth-status">Connect Supabase auth to enable email login.</div>
+
+          <div class="stack">
+            <div class="list-item">
+              <div>
+                <strong>What happens next</strong>
+                <div class="tiny">We save your survey, prefill your workspace, and open the dashboard.</div>
+              </div>
+            </div>
+            <div class="list-item">
+              <div>
+                <strong>Support channels</strong>
+                <div class="tiny">WhatsApp, email, and Telegram can be wired into one follow-up flow.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="primary-btn" type="button" id="auth-continue">Enter workspace</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-orb orb-one"></div>
+  <div class="bg-orb orb-two"></div>
+
+  <div class="overlay welcome-overlay" id="welcome-overlay" hidden>
+    <div class="overlay-card welcome-card">
+      <div class="overlay-header welcome-header">
+        <div>
+          <div class="eyebrow">Welcome</div>
+          <h2 id="welcome-title">Welcome</h2>
+        </div>
+        <button class="soft-btn" type="button" id="welcome-close" aria-label="Close welcome">Close</button>
+      </div>
+
+      <div class="welcome-body">
+        <div class="summary-card welcome-summary" id="welcome-summary"></div>
+        <div class="welcome-panel">
+          <div class="section-title">
+            <div>
+              <h3>Your next steps</h3>
+              <p>Finish login, then move straight into the dashboard with your survey profile already lined up.</p>
+            </div>
+          </div>
+          <div class="welcome-steps" id="welcome-steps"></div>
+          <div class="topbar-actions">
+            <button class="primary-btn" type="button" id="welcome-continue">Continue to login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay module-overlay" id="module-detail-overlay" hidden>
+    <div class="overlay-card module-detail-card">
+      <div class="overlay-header module-detail-header">
+        <div>
+          <div class="eyebrow">Module detail</div>
+          <h2 id="module-detail-title">Module</h2>
+        </div>
+        <button class="soft-btn" type="button" id="module-close" aria-label="Close module detail">Close</button>
+      </div>
+
+      <p class="module-detail-copy" id="module-detail-copy"></p>
+      <div class="pill-line module-detail-meta" id="module-detail-meta"></div>
+
+      <div class="module-detail-grid">
+        <div class="module-detail-panel">
+          <div class="section-title">
+            <div>
+              <h3>What to do next</h3>
+              <p>The fastest actions for this module.</p>
+            </div>
+          </div>
+          <div class="module-detail-steps" id="module-detail-checklist"></div>
+        </div>
+        <div class="module-detail-panel">
+          <div class="section-title">
+            <div>
+              <h3>Shortcuts</h3>
+              <p>Jump to the right place in the app.</p>
+            </div>
+          </div>
+          <div class="topbar-actions" id="module-detail-actions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="/assets/work2u-favicon.svg" alt="Work2U" />
+        </div>
+        <div>
+          <div class="brand-title">Work2U</div>
+          <div class="brand-sub">Business OS</div>
+        </div>
+      </div>
+
+      <div class="workspace-card">
+        <div class="workspace-pill">Active Workspace</div>
+        <div class="workspace-name" id="workspace-name">Loading...</div>
+        <div class="workspace-meta" id="workspace-meta">Setup pending</div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="overview">Overview</button>
+        <button class="nav-item" data-view="setup">Setup</button>
+        <button class="nav-item" data-view="workspace">Workspace</button>
+        <button class="nav-item" data-view="hub">Communication</button>
+        <button class="nav-item" data-view="tasks">Tasks</button>
+        <button class="nav-item" data-view="clients">Clients</button>
+        <button class="nav-item" data-view="calendar">Calendar</button>
+        <button class="nav-item" data-view="ai">AI Copilot</button>
+        <button class="nav-item" data-view="access">Access</button>
+        <button class="nav-item" data-view="billing">Billing</button>
+        <button class="nav-item" data-view="reports">Reports</button>
+        <button class="nav-item" data-view="admin">Admin</button>
+      </nav>
+
+      <div class="sidebar-note">
+        <div class="sidebar-note-title">Today</div>
+        <div class="sidebar-note-body" id="sidebar-note-body">Configure your workspace to unlock personalized workflows, reminders, and automation.</div>
+      </div>
+
+      <div class="legal-links" aria-label="Legal links">
+        <a href="/launch-checklist.html">Launch Checklist</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/service-policy.html">Service Policy</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">AI-powered business operating system</div>
+          <h1 id="page-title">Overview</h1>
+          <p id="page-subtitle">A single place for follow-up, communication, and business memory.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-btn" id="theme-toggle" type="button">Theme</button>
+          <button class="ghost-btn" id="signout-btn" type="button" hidden>Sign out</button>
+          <button class="primary-btn" id="quick-setup" type="button">Continue setup</button>
+        </div>
+      </header>
+
+      <section class="view" id="view-root"></section>
+    </main>
+  </div>
+
+  <div class="overlay" id="member-overlay" hidden>
+    <div class="overlay-card">
+      <div class="overlay-header">
+        <div>
+          <div class="eyebrow">Team Access</div>
+          <h2 id="member-modal-title">Add member</h2>
+        </div>
+        <button class="ghost-btn" id="close-member">Close</button>
+      </div>
+      <form id="member-form" class="stack"></form>
+    </div>
+  </div>
+
+  <script src="/work2u/app.js"></script>
+</body>
+</html>

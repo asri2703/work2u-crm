@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work2U Docs</title>
+<meta name="description" content="Visual documentation hub for Work2U product, build order, schema, calendar, and launch references.">
+<style>
+  :root {
+    --bg: #0b1120;
+    --bg-2: #111827;
+    --card: rgba(255,255,255,0.06);
+    --card-2: rgba(255,255,255,0.08);
+    --line: rgba(255,255,255,0.12);
+    --text: #e5eefb;
+    --muted: #9fb2d1;
+    --primary: #5aa7ff;
+    --primary-2: #14b8a6;
+    --accent: #8b5cf6;
+    --shadow: 0 24px 80px rgba(0,0,0,0.35);
+    --radius: 24px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at top left, rgba(90,167,255,0.22), transparent 30%),
+      radial-gradient(circle at 85% 12%, rgba(20,184,166,0.16), transparent 24%),
+      radial-gradient(circle at 50% 100%, rgba(139,92,246,0.20), transparent 28%),
+      linear-gradient(180deg, #050816 0%, #0b1220 100%);
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 56px;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0 24px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .brand-mark {
+    width: clamp(96px, 18vw, 132px);
+    height: auto;
+    display: block;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .top-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .top-links a {
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 13px;
+    background: rgba(255,255,255,0.03);
+  }
+  .top-links a:hover {
+    color: var(--text);
+    border-color: var(--line);
+  }
+  .hero {
+    display: grid;
+    grid-template-columns: 1.4fr 0.9fr;
+    gap: 22px;
+    align-items: stretch;
+    margin-bottom: 22px;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    animation: rise .7s ease both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .panel.hero-main {
+    padding: 34px;
+    animation-delay: 0.04s;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #b9cff0;
+    margin-bottom: 18px;
+  }
+  h1 {
+    margin: 0 0 14px;
+    font-size: clamp(34px, 5vw, 58px);
+    line-height: 1.03;
+    letter-spacing: -0.04em;
+  }
+  .lead {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.7;
+    max-width: 760px;
+  }
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    color: #d7e6ff;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .hero-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 22px;
+  }
+  .hero-strip span {
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: #d7e6ff;
+    font-size: 13px;
+    line-height: 1;
+  }
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .summary-item {
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+  }
+  .summary-item .summary-label {
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #9fc1ff;
+    margin-bottom: 8px;
+  }
+  .summary-item strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 6px;
+    color: #f4f8ff;
+  }
+  .summary-item p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 13px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--line);
+    color: var(--text);
+  }
+  .quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .stat {
+    padding: 18px;
+    min-height: 130px;
+  }
+  .hero > .stat:nth-child(2) { animation-delay: 0.10s; }
+  .hero > .stat:nth-child(3) { animation-delay: 0.16s; }
+  .hero > .stat:nth-child(4) { animation-delay: 0.22s; }
+  .stat h3 {
+    margin: 0 0 10px;
+    font-size: 15px;
+  }
+  .stat p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+  .stat .num {
+    display: block;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff, #9cc7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 0 18px;
+  }
+  .search {
+    flex: 1 1 320px;
+    min-width: 240px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    outline: none;
+  }
+  .search::placeholder { color: #8aa1c4; }
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pill {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .pill.active {
+    color: white;
+    background: rgba(90,167,255,0.18);
+    border-color: rgba(90,167,255,0.32);
+  }
+  .section-title {
+    margin: 28px 0 14px;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .doc-card {
+    padding: 18px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    animation-delay: 0.06s;
+  }
+  .doc-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(90,167,255,0.35);
+    background: rgba(255,255,255,0.09);
+  }
+  .doc-card .tag {
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #9fc1ff;
+  }
+  .doc-card h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .doc-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 14px;
+    flex: 1;
+  }
+  .doc-card .meta {
+    font-size: 13px;
+    color: #c9d8f0;
+  }
+  .footer {
+    margin-top: 22px;
+    padding: 18px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .footer a { color: #d9e6ff; }
+  .section-shell {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .detail-card {
+    padding: 22px;
+    min-height: 220px;
+  }
+  .detail-card .tag {
+    margin-bottom: 12px;
+  }
+  .detail-card ul {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .timeline-card {
+    padding: 20px;
+    min-height: 180px;
+  }
+  .timeline-card:nth-child(1) { animation-delay: 0.08s; }
+  .timeline-card:nth-child(2) { animation-delay: 0.14s; }
+  .timeline-card:nth-child(3) { animation-delay: 0.20s; }
+  .timeline-card .step {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #9fc1ff;
+    margin-bottom: 10px;
+  }
+  .timeline-card h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+  .timeline-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .flow-card {
+    padding: 22px;
+    min-height: 200px;
+  }
+  .flow-card .tag {
+    margin-bottom: 12px;
+  }
+  .flow-card p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .flow-card ul {
+    margin: 14px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .section-note {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 760px;
+  }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .price-card {
+    padding: 22px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .price-card:nth-child(1) { animation-delay: 0.08s; }
+  .price-card:nth-child(2) { animation-delay: 0.14s; }
+  .price-card:nth-child(3) { animation-delay: 0.20s; }
+  .price-card.featured {
+    border-color: rgba(90,167,255,0.35);
+    background: linear-gradient(180deg, rgba(90,167,255,0.12), rgba(255,255,255,0.05));
+  }
+  .price-name {
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #9fc1ff;
+  }
+  .price-value {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+  .price-copy {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .price-card ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .note-bar {
+    margin: 18px 0 22px;
+    padding: 16px 18px;
+    border: 1px solid rgba(90,167,255,0.22);
+    background: rgba(90,167,255,0.08);
+    border-radius: 18px;
+    color: #dbeafe;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .roadmap-note {
+    margin: 18px 0 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    color: #d8e7ff;
+    font-size: 13px;
+  }
+  .roadmap-note span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+  @media (max-width: 980px) {
+    .hero, .grid { grid-template-columns: 1fr; }
+    .section-shell { grid-template-columns: 1fr; }
+    .timeline, .pricing-grid, .flow-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .wrap { width: min(100% - 20px, 1180px); padding-top: 18px; }
+    .topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .top-links {
+      justify-content: flex-start;
+    }
+    .panel.hero-main { padding: 22px; }
+    .quick-grid { grid-template-columns: 1fr; }
+    .toolbar { align-items: stretch; }
+    .search { flex-basis: 100%; }
+    .hero-strip {
+      margin-top: 14px;
+    }
+    .summary-bar {
+      grid-template-columns: 1fr;
+    }
+    .price-card {
+      min-height: auto;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img class="brand-mark" src="../assets/work2u-logo.svg" alt="Work2U" />
+      </div>
+      <div class="top-links">
+        <a href="#product">Product</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#launch">Launch</a>
+      </div>
+      <a class="badge" href="../">Open Work2U</a>
+    </div>
+
+    <div class="hero">
+      <section class="panel hero-main">
+        <div class="hero-kicker">Executive briefing</div>
+        <h1>One command center for product direction, build order, and launch readiness.</h1>
+        <p class="lead">
+          Use this hub to keep founders, developers, and operations aligned without digging through raw files first.
+          It gives you the product story, execution order, and release notes in one place.
+        </p>
+        <div class="hero-strip" aria-label="Docs focus">
+          <span>Product direction</span>
+          <span>Execution order</span>
+          <span>Launch readiness</span>
+          <span>Billing and ops</span>
+        </div>
+        <div class="summary-bar" aria-label="Executive summary">
+          <div class="summary-item">
+            <div class="summary-label">Focus</div>
+            <strong>One source of truth</strong>
+            <p>Keep product, build, and launch references aligned in one shared place.</p>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Flow</div>
+            <strong>From spec to release</strong>
+            <p>Move from planning to execution without losing the sequence.</p>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Use</div>
+            <strong>Fast handoff</strong>
+            <p>Founders, developers, and operations can pick up work quickly.</p>
+          </div>
+        </div>
+        <div class="actions">
+          <a class="btn btn-primary" href="./work2u-product-spec-v1.md">Open Product Spec</a>
+          <a class="btn btn-secondary" href="./work2u-supabase-execution-checklist.md">Open SQL Checklist</a>
+          <a class="btn btn-secondary" href="./work2u-internal-calendar.md">Open Calendar Guide</a>
+        </div>
+        <div class="section-note">Best for internal review, founder decisions, and fast handoff between product, build, and launch work.</div>
+      </section>
+
+      <section class="panel stat">
+        <span class="num">4</span>
+        <h3>Core layers</h3>
+        <p>CRM, communication, accounting, and automation are documented as a single operating flow.</p>
+      </section>
+
+      <section class="panel stat">
+        <span class="num">3</span>
+        <h3>Execution paths</h3>
+        <p>Use the product spec, execution checklist, or deploy checklist depending on where you are in the build.</p>
+      </section>
+
+      <section class="panel stat">
+        <span class="num">1</span>
+        <h3>Source of truth</h3>
+        <p>The docs hub keeps the team aligned before code, billing, and onboarding changes go live.</p>
+      </section>
+    </div>
+
+    <h2 class="section-title" id="product">Executive Snapshot</h2>
+    <div class="section-shell">
+      <section class="panel detail-card">
+        <div class="tag">Product</div>
+        <h3>Built for daily follow-up, not just record keeping.</h3>
+        <p class="lead" style="margin:12px 0 0;font-size:14px;line-height:1.7">
+          Work2U is designed to help users act faster, keep context together, and reduce the mental load of remembering every next step.
+        </p>
+        <ul>
+          <li>survey-first onboarding</li>
+          <li>CRM, tasks, clients, and cases</li>
+          <li>internal calendar and reminders</li>
+        </ul>
+      </section>
+      <section class="panel detail-card" id="pricing">
+        <div class="tag">Pricing</div>
+        <h3>Affordable entry point, with room to scale.</h3>
+        <p class="lead" style="margin:12px 0 0;font-size:14px;line-height:1.7">
+          The pricing logic is built around affordability first, so freelancers and small teams can start without heavy monthly pressure.
+        </p>
+        <ul>
+          <li>Starter for solo users</li>
+          <li>Elite for growing teams</li>
+          <li>Enterprise for custom workflows</li>
+        </ul>
+      </section>
+      <section class="panel detail-card" id="launch">
+        <div class="tag">Launch</div>
+        <h3>Clear execution path for production rollout.</h3>
+        <p class="lead" style="margin:12px 0 0;font-size:14px;line-height:1.7">
+          The docs set a practical order for schema, calendar, email, billing, and launch ops so the team can move safely.
+        </p>
+        <ul>
+          <li>Supabase execution checklist</li>
+          <li>internal calendar companion</li>
+          <li>final launch and webhook notes</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="note-bar">
+      Work2U keeps the core workflow calm and practical: survey first, login next, then a dashboard that adapts to how the user actually works.
+    </div>
+
+    <div class="roadmap-note">
+      <span>Survey-first onboarding</span>
+      <span>Internal calendar first</span>
+      <span>Malaysia + global billing</span>
+      <span>AI assist, not AI overload</span>
+    </div>
+
+    <h2 class="section-title">Execution Roadmap</h2>
+    <div class="timeline">
+      <section class="panel timeline-card">
+        <div class="step">Now</div>
+        <h3>Core workflow and internal calendar</h3>
+        <p>Focus on survey onboarding, CRM core, email sending, reminders, and the internal calendar layer that makes follow-up easier.</p>
+      </section>
+      <section class="panel timeline-card">
+        <div class="step">Next</div>
+        <h3>Billing, invoices, and automation</h3>
+        <p>Strengthen the money flow with invoices, receipts, document sharing, payment reminders, and a cleaner automation layer.</p>
+      </section>
+      <section class="panel timeline-card">
+        <div class="step">Later</div>
+        <h3>Deeper AI and connector expansion</h3>
+        <p>Expand AI assistance, optional Google connectors, and higher-tier controls only after the core experience stays stable.</p>
+      </section>
+    </div>
+
+    <h2 class="section-title" id="pricing">Pricing and Packaging</h2>
+    <div class="pricing-grid">
+      <section class="panel price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-value">RM39</div>
+        <div class="price-copy">For solo operators and small teams who want the essentials without a heavy monthly load.</div>
+        <ul>
+          <li>core CRM</li>
+          <li>follow-up reminders</li>
+          <li>basic AI assist</li>
+          <li>single workspace</li>
+        </ul>
+      </section>
+      <section class="panel price-card featured">
+        <div class="price-name">Elite</div>
+        <div class="price-value">RM99</div>
+        <div class="price-copy">For growing teams that need more automation, more communication volume, and more control.</div>
+        <ul>
+          <li>team workflows</li>
+          <li>more automation</li>
+          <li>billing and reporting</li>
+          <li>more channel usage</li>
+        </ul>
+      </section>
+      <section class="panel price-card">
+        <div class="price-name">Enterprise</div>
+        <div class="price-value">Custom</div>
+        <div class="price-copy">For custom onboarding, admin control, and sales-led deployments for larger organizations.</div>
+        <ul>
+          <li>custom scope</li>
+          <li>admin controls</li>
+          <li>deployment support</li>
+          <li>tailored integrations</li>
+        </ul>
+      </section>
+    </div>
+
+    <h2 class="section-title">Receipt Flow</h2>
+    <div class="flow-grid">
+      <section class="panel flow-card">
+        <div class="tag">Upload</div>
+        <h3>Save receipts the moment they happen.</h3>
+        <p>Users can upload receipt images or PDFs from mobile or desktop so the system becomes the main place to keep expense proof.</p>
+        <ul>
+          <li>camera capture or file upload</li>
+          <li>store by date and month</li>
+          <li>attach to expense or vendor</li>
+        </ul>
+      </section>
+      <section class="panel flow-card">
+        <div class="tag">Categorize</div>
+        <h3>AI reads the receipt automatically.</h3>
+        <p>OCR and AI can extract vendor, date, amount, and receipt text so the user spends less time typing and correcting data.</p>
+        <ul>
+          <li>vendor and date capture</li>
+          <li>amount and tax detection</li>
+          <li>suggested category tags</li>
+        </ul>
+      </section>
+      <section class="panel flow-card">
+        <div class="tag">Close Month</div>
+        <h3>See monthly summary and profit clearly.</h3>
+        <p>Work2U can roll up revenue, expenses, and overhead into a clean monthly view, making P&amp;L and planning easier.</p>
+        <ul>
+          <li>monthly expense summary</li>
+          <li>revenue minus expenses minus overhead</li>
+          <li>simple P&amp;L view</li>
+        </ul>
+      </section>
+    </div>
+
+    <h2 class="section-title">Monthly Expense Dashboard</h2>
+    <div class="flow-grid">
+      <section class="panel flow-card">
+        <div class="tag">Overview</div>
+        <h3>Track spend, overhead, and receipts together.</h3>
+        <p>A monthly dashboard gives users a single view of expense totals, receipt count, and the categories that matter most.</p>
+        <ul>
+          <li>monthly totals</li>
+          <li>receipt count</li>
+          <li>category breakdown</li>
+        </ul>
+      </section>
+      <section class="panel flow-card">
+        <div class="tag">AI Assist</div>
+        <h3>Let AI flag missing data or unusual spend.</h3>
+        <p>AI can help identify missing vendor names, suspicious totals, or uncategorized receipts before month-end close.</p>
+        <ul>
+          <li>missing field alerts</li>
+          <li>duplicate detection</li>
+          <li>unusual spend flagging</li>
+        </ul>
+      </section>
+      <section class="panel flow-card">
+        <div class="tag">P&amp;L</div>
+        <h3>Move from dashboard into profit view.</h3>
+        <p>The dashboard feeds a cleaner profit report so revenue, expenses, and overhead can be reviewed together.</p>
+        <ul>
+          <li>gross revenue</li>
+          <li>monthly expenses</li>
+          <li>net profit view</li>
+        </ul>
+      </section>
+    </div>
+
+    <h2 class="section-title">Build References</h2>
+    <div class="grid">
+      <a class="panel doc-card" data-tags="build receipt ocr accounting" href="./work2u-receipt-backend-plan.md">
+        <div class="tag">Build</div>
+        <h3>Receipt Backend Plan</h3>
+        <p>Backend fields, OCR flow, extraction rules, and summary rollup for expense receipts.</p>
+        <div class="meta">Use this for schema and service planning.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build dashboard expense pnl" href="./work2u-expense-dashboard-v1.md">
+        <div class="tag">Build</div>
+        <h3>Expense Dashboard V1</h3>
+        <p>Monthly dashboard spec for receipts, overhead, and profit visibility without spreadsheet work.</p>
+        <div class="meta">Use this for UI and reporting scope.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build schema expense supabase" href="./work2u-expense-schema.sql">
+        <div class="tag">Schema</div>
+        <h3>Expense Schema SQL</h3>
+        <p>Supabase-ready tables, policies, and summary snapshots for expense receipts and OCR data.</p>
+        <div class="meta">Use this to create the database layer.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build schema phase expense supabase" href="./work2u-expense-migration-steps.md">
+        <div class="tag">Plan</div>
+        <h3>Expense Migration Steps</h3>
+        <p>Three-phase rollout for categories, OCR receipts, and monthly summary snapshots.</p>
+        <div class="meta">Use this when you want smaller migration batches.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build wireframe dashboard expense" href="./work2u-expense-dashboard-wireframe.md">
+        <div class="tag">Wireframe</div>
+        <h3>Expense Dashboard Wireframe</h3>
+        <p>Text wireframe for the monthly dashboard layout, filters, receipt table, and AI panel.</p>
+        <div class="meta">Use this to brief UI implementation.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build seed demo expense" href="./work2u-expense-demo-seed.sql">
+        <div class="tag">Seed</div>
+        <h3>Expense Demo Seed</h3>
+        <p>Three sample expense receipts plus a monthly summary snapshot for local testing.</p>
+        <div class="meta">Use this to make the dashboard feel alive during dev.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build query expense dashboard" href="./work2u-expense-query-guide.md">
+        <div class="tag">Query</div>
+        <h3>Expense Query Guide</h3>
+        <p>Query helper map for summary, vendor breakdown, review queue, category breakdown, and P&amp;L.</p>
+        <div class="meta">Use this for backend query naming and mapping.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build contract expense frontend api" href="./work2u-expense-data-contract.md">
+        <div class="tag">Contract</div>
+        <h3>Expense Data Contract</h3>
+        <p>JSON shape for dashboard summary, charts, review queue, AI insights, and P&amp;L rows.</p>
+        <div class="meta">Use this for frontend props and API response alignment.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build helpers expense backend api" href="./work2u-expense-query-helpers.md">
+        <div class="tag">Helpers</div>
+        <h3>Expense Query Helpers</h3>
+        <p>Named helper flow for snapshot summary, live fallback, breakdown queries, and review queue.</p>
+        <div class="meta">Use this when wiring service layer functions.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build api expense endpoint backend" href="./work2u-expense-api-contract.md">
+        <div class="tag">API</div>
+        <h3>Expense Dashboard API Contract</h3>
+        <p>Request and response contract for the monthly expense dashboard endpoint and fallback rules.</p>
+        <div class="meta">Use this to wire backend responses and client fetches.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build react expense props frontend" href="./work2u-expense-react-scaffold.md">
+        <div class="tag">React</div>
+        <h3>Expense React Scaffold</h3>
+        <p>TypeScript props and component skeleton for a future React expense dashboard.</p>
+        <div class="meta">Use this to keep frontend component boundaries stable.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build automation receipt expense monthly" href="./work2u-expense-automation.md">
+        <div class="tag">Automation</div>
+        <h3>Expense Automation</h3>
+        <p>Upload, OCR, review, monthly rollup, and month-close automation for receipt keeping.</p>
+        <div class="meta">Use this to design the receipt lifecycle.</div>
+      </a>
+    </div>
+
+    <div class="toolbar">
+      <input class="search" id="search" placeholder="Search docs by keyword, for example calendar, billing, or onboarding" />
+      <div class="pill-row" id="pills">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="start">Start Here</button>
+        <button class="pill" data-filter="build">Build</button>
+        <button class="pill" data-filter="schema">Schema</button>
+        <button class="pill" data-filter="launch">Launch</button>
+      </div>
+    </div>
+
+    <h2 class="section-title">Primary References</h2>
+    <div class="grid" id="docs-grid">
+      <a class="panel doc-card" data-tags="start product spec strategy" href="./work2u-product-spec-v1.md">
+        <div class="tag">Start Here</div>
+        <h3>Work2U Product Spec v1</h3>
+        <p>Core positioning, personas, product layers, pricing summary, and the locked V1 decisions.</p>
+        <div class="meta">Best first read for founders, sales, and design.</div>
+      </a>
+      <a class="panel doc-card" data-tags="start build order execution" href="./work2u-v1-build-order.md">
+        <div class="tag">Start Here</div>
+        <h3>Work2U V1 Build Order</h3>
+        <p>Practical build phases for identity, CRM, calendar, messaging, billing, and post-core work.</p>
+        <div class="meta">Use this to decide what gets built first.</div>
+      </a>
+      <a class="panel doc-card" data-tags="start calendar reminders" href="./work2u-internal-calendar.md">
+        <div class="tag">Start Here</div>
+        <h3>Internal Calendar Guide</h3>
+        <p>Explains the internal scheduling layer, reminder flow, and the optional connector mindset.</p>
+        <div class="meta">Use this before touching task-to-calendar sync.</div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Build and Schema</h2>
+    <div class="grid" id="docs-grid-2">
+      <a class="panel doc-card" data-tags="build checklist sql migration" href="./work2u-supabase-execution-checklist.md">
+        <div class="tag">Build</div>
+        <h3>Supabase Execution Checklist</h3>
+        <p>Execution order for schema, RLS, seed checks, and smoke testing in the right sequence.</p>
+        <div class="meta">Best for developers and database setup.</div>
+      </a>
+      <a class="panel doc-card" data-tags="build deploy checklist sql" href="./work2u-supabase-deploy-checklist.md">
+        <div class="tag">Build</div>
+        <h3>Supabase Deploy Checklist</h3>
+        <p>A smaller deploy path for running core auth, CRM, calendar, and email support step by step.</p>
+        <div class="meta">Use this when you want a safer rollout.</div>
+      </a>
+      <a class="panel doc-card" data-tags="schema rls database" href="./work2u-schema-rls-plan.md">
+        <div class="tag">Schema</div>
+        <h3>Schema & RLS Plan</h3>
+        <p>Ownership model, row-level security pattern, helper functions, and migration order notes.</p>
+        <div class="meta">Good for policy and architecture decisions.</div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Launch and Ops</h2>
+    <div class="grid" id="docs-grid-3">
+      <a class="panel doc-card" data-tags="launch ops go live" href="./work2u-final-launch-checklist.md">
+        <div class="tag">Launch</div>
+        <h3>Final Launch Checklist</h3>
+        <p>Last go/no-go review before the product is pushed publicly.</p>
+        <div class="meta">Use before production rollout.</div>
+      </a>
+      <a class="panel doc-card" data-tags="launch billing webhook ops" href="./work2u-webhook-setup.md">
+        <div class="tag">Launch</div>
+        <h3>Webhook Setup</h3>
+        <p>Setup notes for Stripe, Billplz, and other webhook-driven flows.</p>
+        <div class="meta">Important for payments and automation.</div>
+      </a>
+      <a class="panel doc-card" data-tags="launch env config" href="./work2u-env-playbook.md">
+        <div class="tag">Launch</div>
+        <h3>Env Playbook</h3>
+        <p>Guidance for local, Malaysia, and global environment splits plus launch readiness.</p>
+        <div class="meta">Useful when preparing deployment values.</div>
+      </a>
+      <a class="panel doc-card" data-tags="launch changelog release notes" href="./changelog.md">
+        <div class="tag">Launch</div>
+        <h3>Changelog</h3>
+        <p>Keep release notes, documentation updates, and roadmap reminders in one place.</p>
+        <div class="meta">Use this to track what changed and when.</div>
+      </a>
+    </div>
+
+    <div class="footer">
+      <div>
+        Docs hub for Work2U. Main product and company reference: <a href="../">work2u.io</a>.
+        Built for internal team alignment, launch checks, and fast onboarding.
+      </div>
+    </div>
+  </div>
+
+<script>
+  const search = document.getElementById('search');
+  const cards = Array.from(document.querySelectorAll('.doc-card'));
+  const pills = Array.from(document.querySelectorAll('.pill'));
+  let activeFilter = 'all';
+
+  function applyFilter() {
+    const q = search.value.trim().toLowerCase();
+    cards.forEach((card) => {
+      const tags = (card.dataset.tags || '').toLowerCase();
+      const text = card.textContent.toLowerCase();
+      const matchesQuery = !q || tags.includes(q) || text.includes(q);
+      const matchesFilter = activeFilter === 'all' || tags.includes(activeFilter);
+      card.style.display = matchesQuery && matchesFilter ? 'flex' : 'none';
+    });
+  }
+
+  search.addEventListener('input', applyFilter);
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      pills.forEach((item) => item.classList.remove('active'));
+      pill.classList.add('active');
+      activeFilter = pill.dataset.filter || 'all';
+      applyFilter();
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 // Google OAuth Login
 export default async function handler(req, res) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://crm.work2u.io/api/auth/google/callback';
+  const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || appBaseUrl + '/api/auth/google/callback';
   if (!clientId) return res.status(500).json({ error: 'GOOGLE_CLIENT_ID not set' });
 
   const scopes = [

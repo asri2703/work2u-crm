@@ -5,34 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Work2U — The All-In-One CRM Platform for Modern Businesses</title>
 <meta name="description" content="Work2U CRM - Manage tasks, leads, clients, services, accounting, and AI assistance in one powerful platform.">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="/assets/work2u-favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/work2u-favicon.svg">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
-  --accent: #06b6d4;
+  --primary: #1d4ed8;
+  --primary-dark: #1738a2;
+  --primary-light: #60a5fa;
+  --accent: #14b8a6;
   --dark: #0f172a;
-  --gray-900: #1e293b;
-  --gray-700: #334155;
-  --gray-500: #64748b;
-  --gray-300: #cbd5e1;
-  --gray-200: #e2e8f0;
-  --gray-100: #f1f5f9;
-  --gray-50: #f8fafc;
+  --gray-900: #111827;
+  --gray-700: #374151;
+  --gray-500: #6b7280;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50: #fafafa;
   --white: #ffffff;
   --green: #10b981;
   --red: #ef4444;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-  --shadow: 0 4px 20px rgba(0,0,0,0.08);
-  --shadow-lg: 0 20px 60px rgba(37, 99, 235, 0.15);
+  --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.14);
 }
 
 body {
-  background: var(--white);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
+    radial-gradient(circle at 85% 12%, rgba(20, 184, 166, 0.10), transparent 24%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 45%, #f3f4f6 100%);
   color: var(--gray-900);
   line-height: 1.6;
   overflow-x: hidden;
@@ -43,9 +46,9 @@ body {
   position: fixed;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
+    linear-gradient(rgba(17, 24, 39, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 24, 39, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
   z-index: -1;
   mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black 30%, transparent 80%);
 }
@@ -83,10 +86,10 @@ body {
 nav {
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.75);
   z-index: 100;
   padding: 16px 0;
 }
@@ -108,17 +111,9 @@ nav {
   text-decoration: none;
 }
 .brand-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  color: white;
-  font-weight: 800;
-  font-size: 16px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  transform: perspective(400px) rotateY(-15deg);
+  width: clamp(92px, 22vw, 128px);
+  height: auto;
+  display: block;
 }
 .nav-links {
   display: flex;
@@ -134,22 +129,66 @@ nav {
 }
 .nav-link:hover { color: var(--primary); }
 .nav-cta {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white !important;
   padding: 10px 20px;
   border-radius: 10px;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  transition: transform 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-.nav-cta:hover { transform: translateY(-1px); }
+.nav-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.18) 45%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.nav-cta:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: saturate(1.05);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.34);
+}
+.nav-cta:hover::before {
+  transform: translateX(120%);
+  transition: transform 0.8s ease;
+}
 
 /* Hero */
 .hero {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 100px 24px 60px;
+  padding: 108px 24px 72px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(8px);
+}
+.hero::before {
+  width: 420px;
+  height: 420px;
+  left: -160px;
+  top: 18px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.12), transparent 68%);
+}
+.hero::after {
+  width: 360px;
+  height: 360px;
+  right: -130px;
+  top: 120px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.12), transparent 68%);
 }
 .eyebrow {
   display: inline-flex;
@@ -187,10 +226,10 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 .hero-sub {
-  font-size: 20px;
+  font-size: 19px;
   color: var(--gray-500);
-  max-width: 700px;
-  margin: 0 auto 40px;
+  max-width: 820px;
+  margin: 0 auto 34px;
   line-height: 1.5;
 }
 .hero-cta {
@@ -199,21 +238,211 @@ h1 {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 60px;
+  margin-bottom: 44px;
+}
+.hero-cta .btn {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: transform 0.6s ease, opacity 0.6s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+  will-change: transform, opacity;
+}
+.hero.is-visible .hero-cta .btn {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.hero.is-visible .hero-cta .btn:nth-child(1) { transition-delay: 0.06s; }
+.hero.is-visible .hero-cta .btn:nth-child(2) { transition-delay: 0.14s; }
+.hero.is-visible .hero-cta .btn:nth-child(3) { transition-delay: 0.22s; }
+.hero-signal-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 auto 34px;
+  max-width: 1020px;
+  perspective: 1200px;
+}
+.hero-signal-card {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  text-align: left;
+  animation: signalFloat 8s ease-in-out infinite;
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: transform 0.6s ease, opacity 0.6s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  will-change: transform, opacity;
+}
+.hero.is-visible .hero-signal-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.hero-signal-card::after {
+  content: '';
+  position: absolute;
+  inset: -40% auto auto -30%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(255,255,255,0.55), transparent 68%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+.hero-signal-card .signal-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+.hero-signal-card strong {
+  display: block;
+  font-size: 17px;
+  color: var(--gray-900);
+  letter-spacing: -0.02em;
+}
+.hero-signal-card p {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--gray-500);
+}
+.hero-signal-card:nth-child(2) { animation-delay: 0.7s; }
+.hero-signal-card:nth-child(3) { animation-delay: 1.4s; }
+.hero.is-visible .hero-signal-card:nth-child(1) { transition-delay: 0.08s; }
+.hero.is-visible .hero-signal-card:nth-child(2) { transition-delay: 0.18s; }
+.hero.is-visible .hero-signal-card:nth-child(3) { transition-delay: 0.28s; }
+.hero-signal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.10);
+  border-color: rgba(37, 99, 235, 0.14);
+}
+.hero-points {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -28px auto 58px;
+  max-width: 900px;
+}
+.hero-points span {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(255,255,255,0.72);
+  box-shadow: var(--shadow-sm);
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 600;
+  animation: chipFloat 8s ease-in-out infinite;
+}
+.hero-points span:nth-child(2) { animation-delay: 0.7s; }
+.hero-points span:nth-child(3) { animation-delay: 1.4s; }
+.hero-points span:nth-child(4) { animation-delay: 2.1s; }
+@keyframes chipFloat {
+  0%, 100% { transform: translateY(0); box-shadow: var(--shadow-sm); }
+  50% { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08); }
+}
+@keyframes signalFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.hero-trust {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: -10px auto 54px;
+  color: var(--gray-500);
+  font-size: 13px;
+}
+.hero-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.hero-trust span:hover {
+  transform: translateY(-1px);
+  color: var(--gray-700);
+}
+.hero-trust span::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--green));
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.09);
+}
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: -6px auto 56px;
+  max-width: 1040px;
+}
+.hero-stat {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  background: rgba(255,255,255,0.86);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
+}
+.hero-stat:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.16);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+.hero-stat .stat-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 8px;
+}
+.hero-stat strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+.hero-stat p {
+  margin: 0;
+  color: var(--gray-500);
+  font-size: 13px;
+  line-height: 1.5;
 }
 .btn {
+  position: relative;
+  overflow: hidden;
   padding: 14px 28px;
   border-radius: 12px;
   font-weight: 600;
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   border: none;
   font-family: inherit;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.24) 45%, transparent 70%);
+  transform: translateX(-130%);
+  pointer-events: none;
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -221,36 +450,252 @@ h1 {
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
 }
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.5);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.5);
+  filter: saturate(1.05);
+}
+.btn-primary:hover::before,
+.btn-ghost:hover::before,
+.nav-cta:hover::before {
+  transform: translateX(130%);
+  transition: transform 0.85s ease;
 }
 .btn-ghost {
   background: white;
   color: var(--gray-900);
   border: 1px solid var(--gray-200);
 }
-.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+.btn-ghost:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+.btn:active,
+.nav-cta:active {
+  transform: translateY(0) scale(0.985);
+}
+.btn,
+.nav-link,
+.nav-cta,
+.feature-card,
+.onboarding-card,
+.proof-card,
+.proof-stack-card,
+.pricing-card,
+.faq-item,
+.dashboard-preview,
+.module {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+}
+.btn:hover,
+.feature-card:hover,
+.onboarding-card:hover,
+.proof-card:hover,
+.proof-stack-card:hover,
+.pricing-card:hover,
+.module:hover {
+  transform: translateY(-4px);
+}
+.dashboard-preview:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 40px 110px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(148, 163, 184, 0.16);
+}
+.section-header,
+.hero,
+.stats-section,
+.features-section,
+.modules-section,
+.pricing-section,
+.faq-section,
+.cta-section,
+.onboarding-section,
+.proof-section {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.section-header.is-visible,
+.hero.is-visible,
+.stats-section.is-visible,
+.features-section.is-visible,
+.modules-section.is-visible,
+.pricing-section.is-visible,
+.faq-section.is-visible,
+.cta-section.is-visible,
+.onboarding-section.is-visible,
+.proof-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.features-grid .feature-card,
+.modules-grid .module,
+.pricing-grid .pricing-card,
+.onboarding-grid .onboarding-card,
+.proof-grid .proof-card,
+.proof-bento .proof-mini,
+.proof-sidebar .proof-stack-card {
+  opacity: 0;
+  transform: translateY(22px) scale(0.985);
+}
+.features-section.is-visible .feature-card,
+.modules-section.is-visible .module,
+.pricing-section.is-visible .pricing-card,
+.onboarding-section.is-visible .onboarding-card,
+.proof-section.is-visible .proof-card,
+.proof-section.is-visible .proof-mini,
+.proof-section.is-visible .proof-stack-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.features-section.is-visible .feature-card:nth-child(1),
+.modules-section.is-visible .module:nth-child(1),
+.pricing-section.is-visible .pricing-card:nth-child(1),
+.onboarding-section.is-visible .onboarding-card:nth-child(1),
+.proof-section.is-visible .proof-card:nth-child(1),
+.proof-section.is-visible .proof-mini:nth-child(1),
+.proof-section.is-visible .proof-stack-card:nth-child(1) { transition-delay: 0.04s; }
+.features-section.is-visible .feature-card:nth-child(2),
+.modules-section.is-visible .module:nth-child(2),
+.pricing-section.is-visible .pricing-card:nth-child(2),
+.onboarding-section.is-visible .onboarding-card:nth-child(2),
+.proof-section.is-visible .proof-card:nth-child(2),
+.proof-section.is-visible .proof-mini:nth-child(2),
+.proof-section.is-visible .proof-stack-card:nth-child(2) { transition-delay: 0.12s; }
+.features-section.is-visible .feature-card:nth-child(3),
+.modules-section.is-visible .module:nth-child(3),
+.pricing-section.is-visible .pricing-card:nth-child(3),
+.onboarding-section.is-visible .onboarding-card:nth-child(3),
+.proof-section.is-visible .proof-card:nth-child(3),
+.proof-section.is-visible .proof-mini:nth-child(3),
+.proof-section.is-visible .proof-stack-card:nth-child(3) { transition-delay: 0.2s; }
+.features-section.is-visible .feature-card:nth-child(4),
+.modules-section.is-visible .module:nth-child(4),
+.pricing-section.is-visible .pricing-card:nth-child(4),
+.onboarding-section.is-visible .onboarding-card:nth-child(4),
+.proof-section.is-visible .proof-card:nth-child(4),
+.proof-section.is-visible .proof-mini:nth-child(4),
+.proof-section.is-visible .proof-stack-card:nth-child(4) { transition-delay: 0.28s; }
 
 /* Hero Visual */
 .hero-visual {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
   position: relative;
 }
+.hero-exec-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+.hero-exec-item {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(226,232,240,0.9);
+  box-shadow: var(--shadow-sm);
+}
+.hero-exec-item .tiny {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-500);
+}
+.hero-exec-item strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--gray-900);
+}
+.hero-exec-item p {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--gray-500);
+}
 .dashboard-preview {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 30px 80px rgba(37, 99, 235, 0.15), 0 0 0 1px rgba(37, 99, 235, 0.1);
+  --preview-channel-primary: #25d366;
+  --preview-channel-accent: #0ea5e9;
+  --preview-channel-rgb: 37, 211, 102;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 28px;
+  padding: 22px;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(148, 163, 184, 0.14);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+  backdrop-filter: blur(18px) saturate(150%);
+  transform-style: preserve-3d;
+  animation: previewFloat 9s ease-in-out infinite;
 }
 .dashboard-preview::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(37, 99, 235, 0.03));
+  background: linear-gradient(135deg, transparent, rgba(var(--preview-channel-rgb), 0.08));
   pointer-events: none;
+}
+.dashboard-preview::after {
+  content: '';
+  position: absolute;
+  inset: auto -12% -18% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--preview-channel-rgb), 0.16), transparent 62%);
+  filter: blur(6px);
+  pointer-events: none;
+  animation: previewGlow 7s ease-in-out infinite;
+}
+.dashboard-preview[data-preview-channel="whatsapp"] {
+  --preview-channel-primary: #25d366;
+  --preview-channel-accent: #16a34a;
+  --preview-channel-rgb: 37, 211, 102;
+}
+.dashboard-preview[data-preview-channel="email"]::after {
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.18), transparent 62%);
+}
+.dashboard-preview[data-preview-channel="email"] {
+  --preview-channel-primary: #7c3aed;
+  --preview-channel-accent: #f472b6;
+  --preview-channel-rgb: 124, 58, 237;
+}
+.dashboard-preview[data-preview-channel="telegram"]::after {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.18), transparent 62%);
+}
+.dashboard-preview[data-preview-channel="telegram"] {
+  --preview-channel-primary: #0ea5e9;
+  --preview-channel-accent: #06b6d4;
+  --preview-channel-rgb: 14, 165, 233;
+}
+.dashboard-preview.preview-switching {
+  box-shadow: 0 34px 100px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+.preview-aura {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(10px);
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+.preview-aura.one {
+  inset: 12% auto auto -6%;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 68%);
+  animation: auraOrbit 12s ease-in-out infinite;
+}
+.preview-aura.two {
+  inset: auto -2% 8% auto;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.16), transparent 68%);
+  animation: auraOrbit 14s ease-in-out infinite reverse;
 }
 .preview-header {
   display: flex;
@@ -268,13 +713,257 @@ h1 {
 .preview-content {
   display: grid;
   grid-template-columns: 60px 1fr 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
   height: 400px;
 }
+.preview-channel-switcher {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.preview-statusline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+.preview-statusline.preview-switching {
+  animation: statusFlash 0.45s ease;
+}
+.preview-status-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--preview-channel-primary), var(--preview-channel-accent));
+  box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0.28);
+  animation: statusPulse 2.4s ease-out infinite;
+  flex: 0 0 auto;
+}
+.preview-status-text {
+  display: grid;
+  gap: 2px;
+}
+.preview-status-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+.preview-status-copy {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+.preview-channel-spotlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  color: var(--gray-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+.preview-channel-spotlight::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--preview-channel-primary), var(--preview-channel-accent));
+  box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0.2);
+  animation: spotlightPulse 2.4s ease-out infinite;
+}
+.preview-channel-spotlight.preview-switching {
+  animation: spotlightLift 0.45s ease;
+}
+.preview-float-card {
+  position: absolute;
+  top: 68px;
+  right: 22px;
+  z-index: 3;
+  width: 188px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.86);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(14px);
+  animation: floatCard 6.5s ease-in-out infinite;
+}
+.dashboard-preview[data-preview-channel="whatsapp"] .preview-float-card {
+  background: rgba(5, 96, 70, 0.9);
+  box-shadow: 0 18px 34px rgba(5, 96, 70, 0.26);
+}
+.dashboard-preview[data-preview-channel="email"] .preview-float-card {
+  background: rgba(76, 29, 149, 0.9);
+  box-shadow: 0 18px 34px rgba(76, 29, 149, 0.26);
+}
+.dashboard-preview[data-preview-channel="telegram"] .preview-float-card {
+  background: rgba(8, 47, 73, 0.9);
+  box-shadow: 0 18px 34px rgba(8, 47, 73, 0.26);
+}
+.preview-float-card.preview-switching {
+  filter: saturate(1.08);
+  box-shadow: 0 24px 44px rgba(15, 23, 42, 0.28);
+}
+.preview-float-card .tiny {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.preview-float-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+.preview-float-card p {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+.preview-float-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 38px;
+  margin-top: 12px;
+}
+.preview-float-bars span {
+  flex: 1;
+  border-radius: 999px 999px 4px 4px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(37,99,235,0.58));
+  transform-origin: bottom;
+}
+.preview-float-bars span:nth-child(1) { height: 28%; }
+.preview-float-bars span:nth-child(2) { height: 46%; }
+.preview-float-bars span:nth-child(3) { height: 74%; }
+.preview-float-bars span:nth-child(4) { height: 56%; }
+.preview-float-bars span:nth-child(5) { height: 82%; }
+.preview-channel-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--gray-600);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.preview-channel-chip.active {
+  background: linear-gradient(135deg, var(--preview-channel-primary), var(--preview-channel-accent));
+  border-color: transparent;
+  color: #fff;
+}
 .preview-sidebar {
-  background: linear-gradient(135deg, var(--gray-50), white);
-  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255,255,255,0.92));
+  border: 1px solid rgba(229, 231, 235, 0.85);
+  border-radius: 16px;
   padding: 12px;
+  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+}
+.preview-focus-card {
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.96), rgba(15, 118, 110, 0.92));
+  border: none;
+  color: #fff;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, background 0.28s ease, filter 0.28s ease;
+}
+.dashboard-preview[data-preview-channel="email"] .preview-focus-card {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.96), rgba(244, 114, 182, 0.92));
+}
+.dashboard-preview[data-preview-channel="telegram"] .preview-focus-card {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.96), rgba(6, 182, 212, 0.92));
+}
+.dashboard-preview[data-preview-channel="whatsapp"] .preview-focus-card {
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.96), rgba(22, 163, 74, 0.92));
+}
+.preview-focus-card::before {
+  content: '';
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 180px;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.22), transparent 55%);
+  transform: translate3d(0, 0, 0);
+  animation: focusSheen 10s ease-in-out infinite;
+  pointer-events: none;
+}
+.dashboard-preview[data-preview-channel="whatsapp"] .preview-focus-card::before {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), rgba(37, 211, 102, 0.14) 34%, transparent 64%);
+}
+.dashboard-preview[data-preview-channel="email"] .preview-focus-card::before {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), rgba(124, 58, 237, 0.16) 34%, transparent 64%);
+}
+.dashboard-preview[data-preview-channel="telegram"] .preview-focus-card::before {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), rgba(14, 165, 233, 0.15) 34%, transparent 64%);
+}
+.preview-focus-card.preview-switching {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 26px 46px rgba(15, 23, 42, 0.18);
+  filter: saturate(1.05);
+}
+.preview-focus-card.preview-switching::before {
+  opacity: 0.92;
+}
+.preview-channel-switcher {
+  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+}
+.preview-focus-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+.preview-focus-title {
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  margin-top: 8px;
+}
+.preview-focus-copy {
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-top: 8px;
+}
+.preview-focus-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.preview-focus-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 700;
 }
 .preview-item {
   height: 28px;
@@ -284,25 +973,95 @@ h1 {
   opacity: 0.7;
 }
 .preview-item.active {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--preview-channel-primary), var(--preview-channel-accent));
   opacity: 1;
 }
 .preview-card {
-  background: white;
-  border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 16px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+  animation: previewCardDrift 6.5s ease-in-out infinite;
+}
+.preview-card.preview-switching,
+.preview-sidebar.preview-switching,
+.preview-channel-switcher.preview-switching {
+  opacity: 0.84;
+  transform: translateY(2px) scale(0.995);
+  filter: saturate(0.96);
 }
 .preview-line {
   height: 8px;
   background: var(--gray-100);
   border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.preview-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+  transform: translateX(-120%);
+  animation: shimmer 1.6s infinite;
 }
 .preview-line.short { width: 60%; }
 .preview-line.med { width: 80%; }
+.preview-card:nth-child(3) { animation-delay: 0.4s; }
+.preview-card:nth-child(4) { animation-delay: 0.8s; }
+
+@keyframes previewFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.005); }
+}
+@keyframes previewGlow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.75; }
+  50% { transform: translate3d(-16px, -10px, 0) scale(1.08); opacity: 1; }
+}
+@keyframes previewCardDrift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes auraOrbit {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.7; }
+  50% { transform: translate3d(18px, -10px, 0) scale(1.08); opacity: 1; }
+}
+@keyframes statusPulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0.28); }
+  70% { box-shadow: 0 0 0 14px rgba(var(--preview-channel-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0); }
+}
+@keyframes focusSheen {
+  0%, 100% { transform: translate3d(-8%, -2%, 0) rotate(0deg); opacity: 0.55; }
+  50% { transform: translate3d(10%, 6%, 0) rotate(4deg); opacity: 1; }
+}
+@keyframes statusFlash {
+  0% { transform: translateY(0) scale(1); box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0.04); }
+  50% { transform: translateY(-1px) scale(1.01); box-shadow: 0 16px 30px rgba(var(--preview-channel-rgb), 0.08); }
+  100% { transform: translateY(0) scale(1); box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0); }
+}
+@keyframes spotlightPulse {
+  0% { box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(var(--preview-channel-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--preview-channel-rgb), 0); }
+}
+@keyframes spotlightLift {
+  0% { transform: translateY(0); opacity: 0.92; }
+  50% { transform: translateY(-1px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.98; }
+}
+@keyframes floatCard {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -8px, 0) rotate(-1deg); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(120%); }
+}
 
 /* Stats */
 .stats-section {
@@ -330,6 +1089,219 @@ h1 {
   color: var(--gray-500);
   font-size: 14px;
   margin-top: 8px;
+}
+
+/* Onboarding */
+.onboarding-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 84px;
+}
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+.onboarding-card {
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(226,232,240,0.9);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.onboarding-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -40px -40px auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.16), rgba(20,184,166,0.12) 46%, transparent 70%);
+  pointer-events: none;
+}
+.onboarding-step {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--green));
+  color: white;
+  font-weight: 800;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+}
+.onboarding-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.onboarding-card p {
+  color: var(--gray-500);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.onboarding-list {
+  list-style: none;
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+.onboarding-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gray-700);
+  font-size: 14px;
+}
+.onboarding-list li::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  flex-shrink: 0;
+}
+
+/* Product Proof */
+.proof-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+}
+.proof-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 20px;
+  margin-top: 28px;
+}
+.proof-card {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(226,232,240,0.9);
+  border-radius: 28px;
+  padding: 26px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+.proof-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(37,99,235,0.04), rgba(6,182,212,0.03), rgba(16,185,129,0.03));
+  pointer-events: none;
+}
+.proof-card h3 {
+  font-size: 28px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 12px 0 14px;
+}
+.proof-card p {
+  color: var(--gray-500);
+  max-width: 56ch;
+}
+.proof-flow {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+.proof-flow-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(226,232,240,0.9);
+  background: rgba(248,250,252,0.88);
+}
+.proof-flow-item .index {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--green));
+  flex-shrink: 0;
+}
+.proof-flow-item strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.proof-flow-item .tiny {
+  color: var(--gray-500);
+  font-size: 13px;
+}
+.proof-bento {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.proof-mini {
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+  border: 1px solid rgba(226,232,240,0.9);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+.proof-mini:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.07);
+}
+.proof-mini .tiny {
+  color: var(--gray-500);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.proof-mini strong {
+  display: block;
+  font-size: 20px;
+  margin-top: 8px;
+}
+.proof-mini p {
+  font-size: 13px;
+  margin-top: 6px;
+}
+.proof-sidebar {
+  display: grid;
+  gap: 12px;
+}
+.proof-stack-card {
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(226,232,240,0.9);
+  box-shadow: var(--shadow);
+}
+.proof-stack-card:nth-child(1) { transform: translateY(0); }
+.proof-stack-card:nth-child(2) { transform: translateY(6px); }
+.proof-stack-card:nth-child(3) { transform: translateY(12px); }
+.proof-stack-card .tiny {
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+}
+.proof-stack-card strong {
+  display: block;
+  margin: 8px 0 8px;
+  font-size: 18px;
+}
+.proof-stack-card p {
+  font-size: 14px;
+  color: var(--gray-500);
+}
+.proof-stack-card:hover {
+  transform: translateY(-4px);
 }
 
 /* Features */
@@ -368,13 +1340,14 @@ h1 {
   gap: 24px;
 }
 .feature-card {
-  background: white;
-  border: 1px solid var(--gray-200);
-  border-radius: 20px;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 22px;
   padding: 32px;
-  transition: all 0.3s;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, opacity 0.28s ease;
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 .feature-card:hover {
   border-color: var(--primary);
@@ -388,7 +1361,7 @@ h1 {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--green));
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -396,7 +1369,7 @@ h1 {
 .feature-icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(6, 182, 212, 0.1));
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.08));
   border-radius: 14px;
   display: grid;
   place-items: center;
@@ -434,14 +1407,15 @@ h1 {
   gap: 16px;
 }
 .module {
-  background: white;
-  border: 1px solid var(--gray-200);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 18px;
   padding: 24px;
   display: flex;
   align-items: center;
   gap: 16px;
-  transition: all 0.2s;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  will-change: transform;
 }
 .module:hover {
   border-color: var(--primary);
@@ -451,7 +1425,7 @@ h1 {
 .module-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--green));
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -483,18 +1457,42 @@ h1 {
   margin-top: 50px;
 }
 .pricing-card {
-  background: white;
-  border: 2px solid var(--gray-200);
-  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.92));
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 28px;
   padding: 32px;
-  transition: all 0.3s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.10);
+}
+.pricing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.92), rgba(6, 182, 212, 0.92), rgba(16, 185, 129, 0.88));
+  opacity: 0.72;
+}
+.pricing-card.featured::before {
+  opacity: 1;
 }
 .pricing-card.featured {
   border-color: var(--primary);
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.98), rgba(6, 182, 212, 0.96), rgba(16, 185, 129, 0.88));
   color: white;
   transform: scale(1.05);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 28px 76px rgba(37, 99, 235, 0.24);
+}
+.pricing-section.is-visible .pricing-card.featured {
+  opacity: 1;
+  transform: translateY(0) scale(1.05);
 }
 .pricing-card.featured .pricing-amount,
 .pricing-card.featured .pricing-feat,
@@ -541,6 +1539,34 @@ h1 {
   color: var(--gray-700);
 }
 .pricing-feat svg { color: var(--green); flex-shrink: 0; }
+.pricing-callout {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 24px auto 10px;
+}
+.pricing-callout span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: var(--shadow-sm);
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pricing-callout span::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--green));
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
 
 /* FAQ */
 .faq-section {
@@ -557,9 +1583,13 @@ h1 {
   border-radius: 12px;
   margin-bottom: 12px;
   overflow: hidden;
-  transition: all 0.2s;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.faq-item:hover { border-color: var(--primary); }
+.faq-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
 .faq-q {
   padding: 20px 24px;
   font-weight: 600;
@@ -593,7 +1623,7 @@ h1 {
 .cta-section {
   padding: 100px 24px;
   text-align: center;
-  background: linear-gradient(135deg, var(--dark), var(--gray-900));
+  background: linear-gradient(135deg, #0f172a, #111827 60%, #1d4ed8);
   color: white;
 }
 .cta-section h2 {
@@ -613,10 +1643,14 @@ h1 {
   margin-right: auto;
 }
 
+.mobile-cta {
+  display: none;
+}
+
 /* Footer */
 footer {
   padding: 60px 24px 30px;
-  background: var(--dark);
+  background: #0f172a;
   color: var(--gray-300);
 }
 .footer-container {
@@ -658,8 +1692,494 @@ footer {
   .nav-links { display: none; }
   .preview-content { grid-template-columns: 1fr; height: auto; }
   .preview-sidebar { display: none; }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .preview-channel-switcher {
+    margin-bottom: 12px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .preview-channel-switcher::-webkit-scrollbar { display: none; }
+  .preview-channel-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .preview-statusline { align-items: flex-start; flex-direction: column; }
+  .preview-status-pulse { margin-top: 2px; }
+  .preview-float-card {
+    position: static;
+    width: auto;
+    margin-bottom: 12px;
+    right: auto;
+    top: auto;
+  }
+  .hero { padding: 84px 16px 56px; }
+  h1 { font-size: clamp(34px, 10vw, 52px); }
+  .hero-sub { font-size: 16px; margin-bottom: 28px; }
+  .hero-cta { flex-direction: column; align-items: stretch; margin-bottom: 36px; }
+  .hero-signal-strip { grid-template-columns: 1fr; margin-bottom: 34px; }
+  .hero-signal-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .hero-cta .btn,
+  .cta-section .btn { width: 100%; justify-content: center; }
+  .hero-points,
+  .hero-trust { gap: 8px; margin-bottom: 28px; }
+  .hero-points span,
+  .hero-trust span { width: 100%; justify-content: center; text-align: center; }
+  .hero-stats {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 34px;
+  }
+  .hero-stat {
+    text-align: center;
+  }
+  .hero-visual { margin-top: 8px; }
+  .section-header,
+  .stats-section,
+  .features-section,
+  .modules-section,
+  .pricing-section,
+  .faq-section,
+  .cta-section,
+  .onboarding-section,
+  .proof-section { padding-left: 16px; padding-right: 16px; }
+  .features-grid,
+  .modules-grid,
+  .pricing-grid,
+  .onboarding-grid,
+  .proof-grid { grid-template-columns: 1fr; }
   .pricing-card.featured { transform: none; }
+  .proof-bento { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .cta-section h2 { font-size: clamp(32px, 9vw, 44px); }
+  .cta-section p { font-size: 16px; }
+  .mobile-cta {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 120;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .mobile-cta a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .mobile-cta a .cta-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+  .mobile-cta a .cta-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .mobile-cta a .cta-label { white-space: nowrap; }
+  .mobile-cta a.primary {
+    grid-column: 1 / -1;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow: 0 12px 24px rgba(29, 78, 216, 0.34);
+  }
+  .mobile-cta a.secondary {
+    color: #e5e7eb;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.04);
+  }
+  body { padding-bottom: calc(136px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn:hover,
+  .btn-primary:hover,
+  .btn-ghost:hover,
+  .nav-cta:hover {
+    transform: none;
+    box-shadow: inherit;
+    filter: none;
+  }
+  .btn:active,
+  .nav-cta:active {
+    transform: translateY(0) scale(0.992);
+  }
+  .nav-cta:hover::before,
+  .btn-primary:hover::before,
+  .btn-ghost:hover::before {
+    transform: translateX(-130%);
+  }
+}
+
+@media (max-width: 480px) {
+  .nav { padding: 18px 16px; }
+  .hero { padding-top: 72px; padding-bottom: 44px; }
+  .pricing-section { padding-bottom: 76px; }
+  .pricing-card { padding: 20px; border-radius: 20px; }
+  .pricing-amount { font-size: 40px; }
+  .pricing-desc { margin-bottom: 18px; }
+  .pricing-feats { margin-bottom: 18px; }
+  .pricing-feat { font-size: 13px; }
+  .dashboard-preview { padding: 14px; border-radius: 22px; }
+  .preview-content { gap: 10px; }
+  .preview-channel-chip {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+  .preview-focus-card { min-height: 220px; }
+}
+
+.survey-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 220;
+}
+.survey-overlay.active { display: flex; }
+.survey-modal {
+  width: min(1080px, 100%);
+  max-height: min(92vh, 980px);
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 30px;
+  box-shadow: var(--shadow-lg);
+}
+.survey-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 26px 26px 0;
+}
+.survey-modal-title {
+  display: grid;
+  gap: 8px;
+  max-width: 680px;
+}
+.survey-modal-title .eyebrow {
+  margin-bottom: 0;
+}
+.survey-modal-title h3 {
+  font-size: clamp(26px, 4vw, 40px);
+  line-height: 1.05;
+  color: var(--gray-900);
+  letter-spacing: -0.03em;
+}
+.survey-modal-title p {
+  color: var(--gray-500);
+  font-size: 15px;
+  max-width: 60ch;
+}
+.survey-modal-close {
+  border: 0;
+  background: rgba(17, 24, 39, 0.06);
+  color: var(--gray-700);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+.survey-modal-body {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+  padding: 20px 26px 26px;
+}
+.survey-form-shell,
+.survey-result-shell {
+  border-radius: 24px;
+  border: 1px solid rgba(229, 231, 235, 0.92);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.96) 100%);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+.survey-form-shell {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+}
+.survey-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.survey-field {
+  display: grid;
+  gap: 8px;
+}
+.survey-field.full {
+  grid-column: 1 / -1;
+}
+.survey-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  letter-spacing: 0.02em;
+}
+.survey-input,
+.survey-select,
+.survey-textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: white;
+  padding: 13px 14px;
+  color: var(--gray-900);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.survey-input:focus,
+.survey-select:focus,
+.survey-textarea:focus {
+  border-color: rgba(29, 78, 216, 0.5);
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.08);
+}
+.survey-textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+.survey-helper {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+.survey-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.onboarding-cta {
+  margin: 28px auto 0;
+  max-width: 1200px;
+  padding: 22px 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(6, 182, 212, 0.08), rgba(16, 185, 129, 0.06));
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+.onboarding-cta .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.onboarding-cta strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: var(--gray-900);
+}
+.onboarding-cta p {
+  margin-top: 6px;
+  color: var(--gray-600);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.onboarding-cta-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.survey-result-shell {
+  padding: 22px;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.10), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(240, 249, 255, 0.98) 100%);
+}
+.survey-result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(29, 78, 216, 0.09);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+.survey-result-plan {
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1;
+  font-weight: 800;
+  color: var(--gray-900);
+  letter-spacing: -0.04em;
+}
+.survey-result-copy {
+  color: var(--gray-600);
+  line-height: 1.6;
+  font-size: 14px;
+}
+.survey-result-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.survey-result-list li {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(226, 232, 240, 0.88);
+  color: var(--gray-700);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.survey-result-note {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.survey-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.survey-result-metric {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(226, 232, 240, 0.92);
+}
+.survey-result-metric .tiny {
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+.survey-result-metric strong {
+  font-size: 18px;
+  color: var(--gray-900);
+}
+@media (max-width: 960px) {
+  .survey-modal-body {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 720px) {
+  .survey-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+  .survey-modal {
+    border-radius: 24px 24px 18px 18px;
+    max-height: 94vh;
+  }
+  .survey-modal-head {
+    padding-top: 20px;
+    padding-bottom: 2px;
+  }
+  .survey-modal-head,
+  .survey-modal-body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .survey-modal-body {
+    gap: 12px;
+  }
+  .survey-form-shell {
+    order: 2;
+    padding: 18px;
+    gap: 14px;
+  }
+  .survey-result-shell {
+    order: 1;
+    padding: 18px;
+    gap: 14px;
+  }
+  .survey-fields,
+  .survey-result-grid {
+    grid-template-columns: 1fr;
+  }
+  .survey-input,
+  .survey-select,
+  .survey-textarea {
+    font-size: 16px;
+    min-height: 48px;
+  }
+  .survey-textarea {
+    min-height: 104px;
+  }
+  .survey-form-shell .survey-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0 0;
+    background: linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,0.96) 28%);
+    backdrop-filter: blur(10px);
+  }
+  .survey-form-shell .survey-actions .btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .survey-result-shell .survey-actions {
+    position: static;
+    padding: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .survey-modal-title h3 {
+    font-size: clamp(22px, 7vw, 30px);
+  }
+  .survey-modal-title p,
+  .survey-helper,
+  .survey-result-copy,
+  .survey-result-list li,
+  .survey-result-note {
+    font-size: 14px;
+  }
+  .onboarding-cta {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+  .onboarding-cta-actions {
+    justify-content: stretch;
+  }
+  .onboarding-cta-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>
 </head>
@@ -672,15 +2192,16 @@ footer {
 <nav>
   <div class="nav-container">
     <a href="/" class="brand">
-      <div class="brand-icon">W</div>
-      <span>Work2U</span>
+      <img class="brand-icon" src="/assets/work2u-logo.svg" alt="Work2U" />
     </a>
     <div class="nav-links">
       <a href="#features" class="nav-link">Features</a>
       <a href="#modules" class="nav-link">Modules</a>
       <a href="#pricing" class="nav-link">Pricing</a>
       <a href="#faq" class="nav-link">FAQ</a>
-      <a href="https://crm.work2u.io/dashboard" class="nav-link nav-cta">Open CRM →</a>
+      <a href="/docs/index.html" class="nav-link">Docs</a>
+      <a href="/launch-checklist.html" class="nav-link">Demo Flow</a>
+      <a href="/crm" class="nav-link nav-cta" onclick="return openWork2UEntry(false);">Open CRM →</a>
     </div>
   </div>
 </nav>
@@ -688,21 +2209,117 @@ footer {
 <section class="hero">
   <div class="eyebrow">
     <span class="pulse"></span>
-    NOW WITH AI ASSISTANT
+    WORK2U CRM FOR BUSINESS OPERATIONS
   </div>
-  <h1>Run your entire business<br>in one powerful platform</h1>
-  <p class="hero-sub">From leads and clients to invoices and reports — Work2U CRM unifies everything you need to grow. AI-powered, beautifully designed, ridiculously easy.</p>
+  <h1>One polished dashboard for follow-up, billing, and AI-assisted business</h1>
+  <p class="hero-sub">Work2U brings leads, clients, tasks, services, invoices, reminders, messaging, and AI support into one calm flow. A short survey shapes the setup before users start.</p>
   <div class="hero-cta">
-    <a href="https://crm.work2u.io/dashboard" class="btn btn-primary">Start Free →</a>
-    <a href="#features" class="btn btn-ghost">See Features</a>
+    <a href="/crm" class="btn btn-primary" onclick="return openWork2UEntry(true);">Start 7-Day Trial</a>
+    <a href="/launch-checklist.html" class="btn btn-ghost">View Demo Flow</a>
+    <a href="#onboarding" class="btn btn-ghost">View product flow</a>
+  </div>
+  <div class="hero-signal-strip" aria-label="Work2U product signals">
+    <div class="hero-signal-card">
+      <div class="signal-label">Onboarding</div>
+      <strong>Survey-first setup</strong>
+      <p>We shape the workspace from role, channels, and business type before login.</p>
+    </div>
+    <div class="hero-signal-card">
+      <div class="signal-label">Billing</div>
+      <strong>Trial-led activation</strong>
+      <p>Users start with a 7-day trial, then continue only if the plan fits the workflow.</p>
+    </div>
+    <div class="hero-signal-card">
+      <div class="signal-label">Delivery</div>
+      <strong>Mobile-first operations</strong>
+      <p>Quick follow-up, reminders, and AI prompts stay easy on the phone first.</p>
+    </div>
+  </div>
+  <div class="hero-trust" style="margin-top:-16px;">
+    <span>Survey first, then the workspace adapts</span>
+    <span>Built for Malaysia and global teams</span>
+    <span>Affordable first, scalable later</span>
+  </div>
+  <div class="hero-points">
+    <span>Survey-first onboarding</span>
+    <span>Email login</span>
+    <span>Internal calendar</span>
+    <span>AI drafting support</span>
+  </div>
+  <div class="hero-trust">
+    <span>No card needed to explore</span>
+    <span>Survey to dashboard in one flow</span>
+    <span>Privacy Policy and Service Policy links are available below</span>
+  </div>
+  <div class="hero-stats" aria-label="Work2U highlights">
+    <div class="hero-stat">
+      <span class="stat-label">Starter plan</span>
+      <strong>RM 39</strong>
+      <p>Affordable entry point for solo users and small operators.</p>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-label">Trial</span>
+      <strong>7 days</strong>
+      <p>Stripe trial for global users before renewal starts.</p>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-label">Setup</span>
+      <strong>Survey first</strong>
+      <p>Adapt onboarding to role, channel, and workflow.</p>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-label">Focus</span>
+      <strong>AI assist</strong>
+      <p>Draft follow-up faster without forcing extra complexity.</p>
+    </div>
+  </div>
+  <div class="proof-bento" style="margin-top:-6px;grid-template-columns:repeat(3,minmax(0,1fr));">
+      <div class="proof-mini">
+        <div class="tiny">Step 01</div>
+        <strong>Survey</strong>
+      <p>Tell us your role, goal, and channels before login.</p>
+      </div>
+      <div class="proof-mini">
+        <div class="tiny">Step 02</div>
+        <strong>Login</strong>
+      <p>Email login or magic link to enter your workspace.</p>
+      </div>
+      <div class="proof-mini">
+        <div class="tiny">Step 03</div>
+        <strong>Assist</strong>
+      <p>AI drafts, reminders, and follow-up flow start working.</p>
+      </div>
   </div>
 
   <div class="hero-visual">
     <div class="dashboard-preview">
+      <div class="preview-aura one"></div>
+      <div class="preview-aura two"></div>
       <div class="preview-header">
         <div class="preview-dot red"></div>
         <div class="preview-dot yellow"></div>
         <div class="preview-dot green"></div>
+      </div>
+      <div class="preview-statusline">
+        <span class="preview-status-pulse"></span>
+        <div class="preview-status-text">
+          <div class="preview-status-title" id="preview-status-title">Live sync ready</div>
+          <div class="preview-status-copy" id="preview-status-copy">Channel reminders, AI suggestions, and follow-up notes stay in one flow.</div>
+        </div>
+      </div>
+      <div class="preview-channel-spotlight" id="preview-channel-spotlight">Now showing: WhatsApp</div>
+      <div class="preview-float-card">
+        <div class="tiny">Daily signal</div>
+        <strong>24 follow-ups</strong>
+        <p>Pending today across WhatsApp, email, and Telegram.</p>
+        <div class="preview-float-bars" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+      <div class="preview-channel-switcher" role="tablist" aria-label="Channel preview filter">
+        <button type="button" class="preview-channel-chip active" data-preview-channel="WhatsApp">WhatsApp</button>
+        <button type="button" class="preview-channel-chip" data-preview-channel="Email">Email</button>
+        <button type="button" class="preview-channel-chip" data-preview-channel="Telegram">Telegram</button>
       </div>
       <div class="preview-content">
         <div class="preview-sidebar">
@@ -714,6 +2331,16 @@ footer {
           <div class="preview-item"></div>
           <div class="preview-item"></div>
         </div>
+        <div class="preview-card preview-focus-card">
+          <div class="preview-focus-kicker" id="preview-channel-kicker">WhatsApp-first workflow</div>
+          <div class="preview-focus-title" id="preview-channel-title">Fast replies from the dashboard</div>
+          <div class="preview-focus-copy" id="preview-channel-copy">Scan the QR, reply inside Work2U, and keep the follow-up moving without switching tools.</div>
+          <div class="preview-focus-meta">
+            <span class="preview-focus-pill" id="preview-channel-pill-1">QR web client</span>
+            <span class="preview-focus-pill" id="preview-channel-pill-2">Auto reminder</span>
+            <span class="preview-focus-pill" id="preview-channel-pill-3">Client follow-up</span>
+          </div>
+        </div>
         <div class="preview-card">
           <div class="preview-line med"></div>
           <div class="preview-line short"></div>
@@ -722,18 +2349,69 @@ footer {
         </div>
         <div class="preview-card">
           <div class="preview-line short"></div>
-          <div class="preview-line"></div>
           <div class="preview-line med"></div>
-        </div>
-        <div class="preview-card">
-          <div class="preview-line med"></div>
-          <div class="preview-line short"></div>
           <div class="preview-line"></div>
           <div class="preview-line short"></div>
           <div class="preview-line"></div>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="proof-section" id="about-work2u" style="padding-bottom:56px;">
+  <div class="section-header">
+    <div class="section-eyebrow">WHAT WORK2U IS</div>
+    <h2 class="section-title">Work2U keeps follow-up, billing, and business operations in one place</h2>
+    <p class="section-sub">It helps property agents, insurance agents, freelancers, and small teams manage leads, clients, tasks, invoices, reminders, email, WhatsApp, Telegram, and AI assistance from one dashboard without the heavy-suite feel.</p>
+  </div>
+
+  <div class="proof-grid">
+    <article class="proof-card">
+      <div class="section-eyebrow">Why it exists</div>
+      <h3>One place to turn interest into action without losing track of the work.</h3>
+      <p>Most teams do not need another generic task app. They need one place to capture a lead, follow up, issue invoices, sync reminders, and keep the day moving without relying on memory alone.</p>
+      <div class="proof-flow">
+        <div class="proof-flow-item">
+          <div class="index">01</div>
+          <div>
+            <strong>Lead to client flow</strong>
+            <div class="tiny">Track prospect status until conversion, then attach services, cases, and invoices.</div>
+          </div>
+        </div>
+        <div class="proof-flow-item">
+          <div class="index">02</div>
+          <div>
+            <strong>Follow-up automation</strong>
+            <div class="tiny">Send reminders by WhatsApp, email, or Telegram so nothing gets forgotten.</div>
+          </div>
+        </div>
+        <div class="proof-flow-item">
+          <div class="index">03</div>
+          <div>
+            <strong>AI assist</strong>
+            <div class="tiny">Suggest what to write before sending and help plan the next business step.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <aside class="proof-sidebar">
+      <article class="proof-stack-card">
+        <div class="tiny">Built for</div>
+        <strong>Property, insurance, freelance, and team collaboration</strong>
+        <p>One workflow that adapts to different business types through the initial survey and login flow.</p>
+      </article>
+      <article class="proof-stack-card">
+        <div class="tiny">Core value</div>
+        <strong>Less memory burden, better follow-up</strong>
+        <p>Tasks, calendar sync, phone reminders, and messaging reduce missed opportunities and admin stress.</p>
+      </article>
+      <article class="proof-stack-card">
+        <div class="tiny">Positioning</div>
+        <strong>Affordable first, scalable later</strong>
+        <p>Starter stays lightweight while Elite and Enterprise unlock heavier automation and team controls.</p>
+      </article>
+    </aside>
   </div>
 </section>
 
@@ -758,11 +2436,118 @@ footer {
   </div>
 </section>
 
+<section class="onboarding-section" id="onboarding">
+  <div class="section-header">
+    <div class="section-eyebrow">HOW IT WORKS</div>
+    <h2 class="section-title">Survey first, then we shape the workspace</h2>
+    <p class="section-sub">The onboarding flow is designed to keep setup fast, relevant, and easy to sell across Malaysia and global users.</p>
+  </div>
+
+  <div class="onboarding-grid">
+    <article class="onboarding-card">
+      <div class="onboarding-step">1</div>
+      <h3>Survey popup</h3>
+      <p>Before login, we ask what you do, what you need, and which channels matter most so the dashboard can align to your workflow.</p>
+      <ul class="onboarding-list">
+        <li>Industry and role</li>
+        <li>Main goal and team size</li>
+        <li>WhatsApp, email, or Telegram first</li>
+      </ul>
+    </article>
+    <article class="onboarding-card">
+      <div class="onboarding-step">2</div>
+      <h3>Login your way</h3>
+      <p>Users can sign in with email or magic link. If they already have a business mailbox, Work2U can use it for sending when the email workflow is enabled.</p>
+      <ul class="onboarding-list">
+        <li>Email login or magic link</li>
+        <li>Region-aware billing routing</li>
+      </ul>
+    </article>
+    <article class="onboarding-card">
+      <div class="onboarding-step">3</div>
+      <h3>AI and automation setup</h3>
+      <p>Work2U recommends a package, suggests the right assistant mode, and lets the user connect their own AI account for full control.</p>
+      <ul class="onboarding-list">
+        <li>Suggestion-only or auto-send</li>
+        <li>Calendar and reminders sync</li>
+        <li>Lead follow-up and client tracking</li>
+      </ul>
+    </article>
+  </div>
+  <div class="onboarding-cta">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> FAST TRACK SETUP</div>
+      <strong>Start with the survey, then let Work2U recommend the right path.</strong>
+      <p>Users can move from survey to login with less friction, so the first session feels guided instead of overwhelming.</p>
+    </div>
+    <div class="onboarding-cta-actions">
+      <a href="#" class="btn btn-primary" onclick="return openWork2USurvey(true);">Start survey</a>
+      <a href="#pricing" class="btn btn-ghost">See packages</a>
+    </div>
+  </div>
+</section>
+
+<section class="proof-section" id="product-proof">
+  <div class="section-header">
+    <div class="section-eyebrow">PRODUCT PROOF</div>
+    <h2 class="section-title">A calmer operating layer for business follow-up</h2>
+    <p class="section-sub">The experience is intentionally airy: one clear hero, product mockups up top, and concise proof cards that explain what Work2U actually does.</p>
+  </div>
+
+  <div class="proof-grid">
+    <article class="proof-card">
+      <div class="section-eyebrow">Workflow</div>
+      <h3>Survey, login, then start with the right playbook.</h3>
+      <p>We don't throw every feature at the user. Work2U asks a few smart questions first, then aligns the dashboard, the plan, and the automation level to the user's business.</p>
+      <div class="proof-bento">
+        <div class="proof-mini">
+          <div class="tiny">Step 01</div>
+          <strong>Survey-led setup</strong>
+          <p>Role, industry, channel, and goal are captured before the dashboard loads.</p>
+        </div>
+        <div class="proof-mini">
+          <div class="tiny">Step 02</div>
+          <strong>Smart routing</strong>
+          <p>Starter, Elite, or Enterprise is recommended based on the real workflow.</p>
+        </div>
+        <div class="proof-mini">
+          <div class="tiny">Step 03</div>
+          <strong>AI assist</strong>
+          <p>Draft, rewrite, and suggest next steps before anything gets sent out.</p>
+        </div>
+        <div class="proof-mini">
+          <div class="tiny">Step 04</div>
+          <strong>Auto sync</strong>
+          <p>Tasks, calendar, and reminders stay aligned across the workspace.</p>
+        </div>
+      </div>
+    </article>
+    <aside class="proof-sidebar">
+      <article class="proof-stack-card">
+        <div class="tiny">Follow-up engine</div>
+        <strong>WhatsApp, email, and Telegram in one place</strong>
+        <p>One workflow for reminder, response, and routing. The user sees what needs action today and what can wait.</p>
+      </article>
+      <article class="proof-stack-card">
+        <div class="tiny">Accounting layer</div>
+        <strong>Invoices, receipts, and PnL without heavy overhead</strong>
+        <p>Generate documents, send them through supported channels, and keep revenue visibility simple enough for everyday use.</p>
+      </article>
+      <article class="proof-stack-card">
+        <div class="tiny">Product promise</div>
+        <strong>Affordable first, scalable later</strong>
+        <p>Starter stays low-friction, Elite becomes the upgrade, and Enterprise handles the custom work.</p>
+      </article>
+      <a href="/crm" class="btn btn-primary" style="justify-content:center;" onclick="return openWork2UEntry(false);">Open CRM →</a>
+    </aside>
+  </div>
+</section>
+
 <section class="features-section" id="features">
   <div class="section-header">
     <div class="section-eyebrow">WHY WORK2U</div>
-    <h2 class="section-title">Everything you need, beautifully integrated</h2>
-    <p class="section-sub">Stop juggling 10 different tools. Work2U brings all your business operations together in one place.</p>
+    <h2 class="section-title">Everything you need, without the heavy-suite feel</h2>
+    <p class="section-sub">Work2U keeps your follow-up, billing, reminders, and communication together in one place without forcing you into bloated software.</p>
   </div>
 
   <div class="features-grid">
@@ -811,8 +2596,8 @@ footer {
           <path d="M6 6v-2 M18 6v-2 M6 18v2 M18 18v2"/>
         </svg>
       </div>
-      <h3>Full Accounting</h3>
-      <p>Invoicing, payments, expenses, P&L statements — generate, send, and track every financial transaction.</p>
+      <h3>Accounting & Receipt Vault</h3>
+      <p>Invoicing, payments, expenses, receipt uploads, and P&amp;L statements in one place, so monthly overhead stays easy to follow and summarize.</p>
     </div>
 
     <div class="feature-card">
@@ -823,7 +2608,7 @@ footer {
         </svg>
       </div>
       <h3>Smart Calendar</h3>
-      <p>Sync tasks to Google Calendar automatically. Never miss a deadline with synchronized scheduling.</p>
+      <p>Sync tasks to the internal calendar automatically. Never miss a deadline with synchronized scheduling.</p>
     </div>
 
     <div class="feature-card">
@@ -833,7 +2618,7 @@ footer {
         </svg>
       </div>
       <h3>Email Integration</h3>
-      <p>Connect Gmail to manage emails directly in Work2U. Compose, reply, and organize without switching tabs.</p>
+      <p>Use Work2U domain email via Resend to manage sends directly from the platform. Compose, reply, and organize without switching tabs.</p>
     </div>
 
     <div class="feature-card">
@@ -901,12 +2686,84 @@ footer {
   </div>
 </section>
 
+<section class="onboarding-section" id="receipt-flow" style="padding-top:0;">
+  <div class="section-header">
+    <div class="section-eyebrow">RECEIPT MANAGEMENT</div>
+    <h2 class="section-title">Upload receipts, track expenses, and close the month faster</h2>
+    <p class="section-sub">Work2U helps users keep every receipt in one vault, so monthly expense review and P&amp;L reporting stay simple instead of messy.</p>
+  </div>
+
+  <div class="onboarding-grid">
+    <article class="onboarding-card">
+      <div class="onboarding-step">1</div>
+      <h3>Upload receipt</h3>
+      <p>Users can attach receipt images or PDFs straight into the workspace from phone or desktop.</p>
+      <ul class="onboarding-list">
+        <li>Photo or PDF upload</li>
+        <li>Mobile-first capture</li>
+        <li>Stored against the expense record</li>
+      </ul>
+    </article>
+    <article class="onboarding-card">
+      <div class="onboarding-step">2</div>
+      <h3>AI reads the receipt</h3>
+      <p>OCR and AI can detect the vendor, date, amount, and receipt text automatically to reduce manual typing.</p>
+      <ul class="onboarding-list">
+        <li>Vendor and date capture</li>
+        <li>Amount and tax detection</li>
+        <li>Suggested category tags</li>
+      </ul>
+    </article>
+    <article class="onboarding-card">
+      <div class="onboarding-step">3</div>
+      <h3>Monthly dashboard</h3>
+      <p>Work2U can summarize revenue, expenses, and overhead into a monthly dashboard so users see profit without spreadsheet work.</p>
+      <ul class="onboarding-list">
+        <li>Monthly expense summary</li>
+        <li>Revenue minus expenses minus overhead</li>
+        <li>Clean report view for the month</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section class="proof-section" id="expense-dashboard" style="padding-top:0;">
+  <div class="section-header">
+    <div class="section-eyebrow">MONTHLY EXPENSE DASHBOARD</div>
+    <h2 class="section-title">See cash outflow, overhead, and profit in one simple view</h2>
+    <p class="section-sub">This dashboard turns receipt uploads into a monthly summary, so users can check spending, overhead, and profit without opening a spreadsheet.</p>
+  </div>
+
+  <div class="proof-bento">
+    <div class="proof-mini">
+      <div class="tiny">01</div>
+      <strong>Receipt ingest</strong>
+      <p>Uploads come in from mobile or desktop and are stored against the right month and vendor.</p>
+    </div>
+    <div class="proof-mini">
+      <div class="tiny">02</div>
+      <strong>Auto classification</strong>
+      <p>AI can read the receipt, suggest the category, and help separate overhead from direct expense.</p>
+    </div>
+    <div class="proof-mini">
+      <div class="tiny">03</div>
+      <strong>Monthly summary</strong>
+      <p>The dashboard rolls revenue, expenses, and overhead into a clean monthly view before P&amp;L review.</p>
+    </div>
+    <div class="proof-mini">
+      <div class="tiny">04</div>
+      <strong>Profit view</strong>
+      <p>Users can quickly see `Revenue - Expenses - Overhead` and understand whether the month was healthy.</p>
+    </div>
+  </div>
+</section>
+
 <section class="modules-section" id="modules">
   <div class="modules-container">
     <div class="section-header">
       <div class="section-eyebrow">ALL MODULES</div>
-      <h2 class="section-title">12 Powerful Modules, One Platform</h2>
-      <p class="section-sub">Every business function you need, integrated seamlessly.</p>
+      <h2 class="section-title">12 modules, one operating layer</h2>
+      <p class="section-sub">Every business function stays connected, but the interface still feels light and easy to use.</p>
     </div>
 
     <div class="modules-grid">
@@ -936,11 +2793,11 @@ footer {
       </div>
       <div class="module">
         <div class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <div><h4>Accounting</h4><p>Invoices & P&L</p></div>
+        <div><h4>Accounting</h4><p>Invoices, receipts & P&L</p></div>
       </div>
       <div class="module">
         <div class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4 M8 2v4 M3 10h18"/></svg></div>
-        <div><h4>Calendar</h4><p>Google sync</p></div>
+        <div><h4>Calendar</h4><p>Internal sync</p></div>
       </div>
       <div class="module">
         <div class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8 M16 6l-4-4-4 4 M12 2v13"/></svg></div>
@@ -948,7 +2805,7 @@ footer {
       </div>
       <div class="module">
         <div class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-        <div><h4>Email</h4><p>Gmail integration</p></div>
+        <div><h4>Email</h4><p>Work2U domain sending</p></div>
       </div>
       <div class="module">
         <div class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
@@ -963,52 +2820,69 @@ footer {
 </section>
 
 <section class="pricing-section" id="pricing">
-  <div class="section-header">
-    <div class="section-eyebrow">PRICING</div>
-    <h2 class="section-title">Simple, transparent pricing</h2>
-    <p class="section-sub">Start free, upgrade when you need more power.</p>
-  </div>
+    <div class="section-header">
+      <div class="section-eyebrow">PRICING</div>
+      <h2 class="section-title">Simple pricing that stays affordable as you grow</h2>
+      <p class="section-sub">Start from RM39, keep the core CRM light, and upgrade only when you need more seats, channels, or automation.</p>
+      <p class="section-sub" style="margin-top:8px;">Starter is made for solo operators, Elite is the best-value team upgrade, and Enterprise covers custom workflow, SLA, and governance.</p>
+      <p class="section-sub" style="margin-top:8px;">Malaysia billing stays on Billplz. Global users go through Stripe with a 7-day card trial, so they can continue or unsubscribe before renewal.</p>
+    </div>
+    <div class="pricing-callout" aria-label="Pricing highlights">
+      <span>Starter keeps daily ops light</span>
+      <span>Elite is the best-value upgrade</span>
+      <span>Enterprise is custom + governed</span>
+      <span>Malaysia uses Billplz, global uses Stripe</span>
+    </div>
 
   <div class="pricing-grid">
     <div class="pricing-card">
+      <div class="pricing-badge" style="margin-bottom:10px;">Solo Starter</div>
       <div class="pricing-tier">Starter</div>
-      <div class="pricing-amount">RM 0<span>/mo</span></div>
-      <p class="pricing-desc">Perfect for individuals and freelancers</p>
+      <div class="pricing-amount">RM 39<span>/mo</span></div>
+      <p class="pricing-desc">Best for solo operators who want core CRM, reminders, and light AI support without extra complexity.</p>
       <ul class="pricing-feats">
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Up to 50 tasks</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>1 user</li>
         <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>1 workspace</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Basic accounting</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Email support</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>1 main channel</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>7-day trial on Stripe</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Core CRM + tasks</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Basic AI drafting</li>
       </ul>
-      <a href="https://crm.work2u.io/dashboard" class="btn btn-ghost" style="width:100%;justify-content:center;">Start Free</a>
+      <a href="/crm" class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="return openWork2UEntry(true);">Start Starter Trial</a>
     </div>
 
     <div class="pricing-card featured">
-      <div class="pricing-tier">Pro</div>
+      <div class="pricing-badge" style="margin-top:0;margin-bottom:10px;">Best Value</div>
+      <div class="pricing-tier">Elite</div>
       <div class="pricing-amount">RM 99<span>/mo</span></div>
-      <p class="pricing-desc">For growing businesses</p>
+      <p class="pricing-desc">The smart upgrade for teams that need collaboration, automation, and stronger reporting without jumping into Enterprise.</p>
       <ul class="pricing-feats">
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unlimited tasks</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>10 workspaces</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Full accounting</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AI Assistant</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Gmail integration</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>WhatsApp web</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Up to 5 users</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Up to 3 channels</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unified inbox</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>7-day trial on Stripe</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Accounting + reports</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>More AI credits</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Automation + reminders</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Best upgrade for team collaboration</li>
       </ul>
-      <a href="https://crm.work2u.io/dashboard" class="btn btn-primary" style="width:100%;justify-content:center;">Start Pro Trial</a>
+      <a href="/crm" class="btn btn-primary" style="width:100%;justify-content:center;" onclick="return openWork2UEntry(true);">Start Elite Trial</a>
     </div>
 
     <div class="pricing-card">
+      <div class="pricing-badge" style="margin-bottom:10px;">Custom Build</div>
       <div class="pricing-tier">Enterprise</div>
       <div class="pricing-amount">Custom</div>
-      <p class="pricing-desc">For large organizations</p>
+      <p class="pricing-desc">For custom workflow, SLA, and advanced control. Built for teams that need governance, onboarding support, and custom rollout.</p>
       <ul class="pricing-feats">
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unlimited everything</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Custom integrations</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Dedicated support</li>
-        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>SLA guarantee</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unlimited seats</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Custom channels and automations</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Custom permissions</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Dedicated onboarding</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>SLA + integrations</li>
+        <li class="pricing-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Built for custom rollout and governance</li>
       </ul>
-      <a href="mailto:enquiry@work2u.io" class="btn btn-ghost" style="width:100%;justify-content:center;">Contact Sales</a>
+      <a href="mailto:enquiry@work2u.io" class="btn btn-ghost" style="width:100%;justify-content:center;">Talk to Work2U</a>
     </div>
   </div>
 </section>
@@ -1022,74 +2896,719 @@ footer {
 
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">What is Work2U CRM?</div>
-      <div class="faq-a">Work2U is an all-in-one business management platform that combines tasks, leads, clients, accounting, AI assistance, and communication tools into one beautifully designed system.</div>
+      <div class="faq-a">Work2U is an all-in-one business management platform that combines tasks, leads, clients, accounting, receipt keeping, AI assistance, and communication tools into one beautifully designed system.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Which plan should I choose?</div>
+      <div class="faq-a">The survey recommends the best fit based on your role, team size, channels, and automation needs. Starter is for solo users, Elite is the best-value team plan, and Enterprise is for custom workflow and governance.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is there a free plan?</div>
+      <div class="faq-a">Pricing starts from RM39 per month. Founding users get free onboarding and priority setup during launch, but the product itself is not a free plan.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">How is my data stored?</div>
-      <div class="faq-a">Your data is stored locally in your browser with the option to sync to cloud storage. Enterprise customers can use their own database.</div>
+      <div class="faq-a">Core data lives in Supabase with row-level security. The browser only handles the UI session, and enterprise customers can keep a more custom data setup.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">Can I use my own domain?</div>
-      <div class="faq-a">Yes! Pro and Enterprise plans support custom domains. You can host Work2U on your own domain like crm.yourcompany.com.</div>
+      <div class="faq-a">Yes. Custom domain and branded rollout support is available on higher plans, especially for enterprise setups that need a more controlled experience.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">Does it integrate with WhatsApp?</div>
-      <div class="faq-a">Yes! Work2U includes WhatsApp Web integration. Generate a QR code, scan with your phone, and chat with clients directly from the dashboard.</div>
+      <div class="faq-a">Yes. Work2U supports a QR-based WhatsApp Web style connection so you can message clients directly from the dashboard without forcing the WhatsApp API path for v1.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">Is there an AI assistant?</div>
-      <div class="faq-a">Yes. Work2U includes AI integration with multiple providers including Google Gemini, Anthropic Claude, and OpenAI ChatGPT. Switch between them as needed.</div>
+      <div class="faq-a">Yes. AI helps draft replies, suggest next steps, and support workflow planning. You can also connect your own AI account if you want more control over usage.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">Can I export my data?</div>
-      <div class="faq-a">Absolutely. Export invoices as PDF, reports as CSV, and full backups anytime. Your data is always yours.</div>
+      <div class="faq-a">Absolutely. Export invoices as PDF, reports as CSV, and backups anytime. Your data stays under your workspace ownership model.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can I upload receipts?</div>
+      <div class="faq-a">Yes. Users can upload receipt images or PDFs so Work2U can keep expense records organised, make monthly expense review easier, and support cleaner P&amp;L reporting.</div>
     </div>
     <div class="faq-item" onclick="this.classList.toggle('open')">
       <div class="faq-q">How do I get support?</div>
-      <div class="faq-a">Email us at enquiry@work2u.io or WhatsApp +60 13 773 2703. Pro customers get priority support within 24 hours.</div>
+      <div class="faq-a">Email us at enquiry@work2u.io. Starter gets standard support, Elite gets priority support, and Enterprise gets dedicated onboarding and SLA-style support.</div>
     </div>
   </div>
 </section>
 
 <section class="cta-section">
   <h2>Ready to transform your business?</h2>
-  <p>Join thousands of businesses already running on Work2U. Start free today.</p>
-  <a href="https://crm.work2u.io/dashboard" class="btn btn-primary">Open Work2U CRM →</a>
+  <p>Join teams that want one affordable platform for daily business operations.</p>
+  <a href="/crm" class="btn btn-primary" onclick="return openWork2UEntry(false);">Open Work2U CRM -&gt;</a>
 </section>
+
+<div class="mobile-cta" aria-label="Mobile quick actions">
+  <a class="primary" href="/crm" onclick="return openWork2UEntry(true);">
+    <span class="cta-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 19l14-7-14-7 4 7z"/>
+      </svg>
+    </span>
+    <span class="cta-label">Start Trial</span>
+  </a>
+  <a class="secondary" href="/launch-checklist.html">
+    <span class="cta-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 11l3 3 8-8"/>
+        <path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+    </span>
+    <span class="cta-label">Checklist</span>
+  </a>
+  <a class="secondary" href="/crm" onclick="return openWork2UEntry(false);">
+    <span class="cta-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="4"/>
+        <path d="M7 12h10M12 7v10"/>
+      </svg>
+    </span>
+    <span class="cta-label">Open CRM</span>
+  </a>
+</div>
+
+<div id="work2u-survey-overlay" class="survey-overlay" aria-hidden="true">
+  <div class="survey-modal" role="dialog" aria-modal="true" aria-labelledby="work2u-survey-title">
+    <div class="survey-modal-head">
+      <div class="survey-modal-title">
+        <div class="eyebrow"><span class="pulse"></span> SURVEY-FIRST ONBOARDING</div>
+        <h3 id="work2u-survey-title">Tell us what you need and we will shape the setup</h3>
+        <p>Answer a few short questions and we will recommend the right package, channels, and billing route for Malaysia or global users before you enter the workspace. The result is saved so login feels smoother later.</p>
+      </div>
+      <button type="button" class="survey-modal-close" aria-label="Close survey" onclick="closeWork2USurvey()">&times;</button>
+    </div>
+
+    <div class="survey-modal-body">
+      <form id="work2u-survey-form" class="survey-form-shell">
+        <div class="survey-fields">
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-workspaceName">Workspace / business name</label>
+            <input class="survey-input" id="survey-workspaceName" name="workspaceName" type="text" placeholder="Saga X Ventures / your business name">
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-email">Business email / billing email</label>
+            <input class="survey-input" id="survey-email" name="email" type="email" placeholder="you@company.com">
+            <div class="survey-helper">Used for onboarding updates, billing, and follow-up reminders.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-role">Your role</label>
+            <select class="survey-select" id="survey-role" name="role" required>
+              <option value="Freelancer">Freelancer</option>
+              <option value="Property Agent">Property Agent</option>
+              <option value="Insurance Agent">Insurance Agent</option>
+              <option value="Corporate Team">Corporate Team</option>
+              <option value="Agency">Agency</option>
+              <option value="General Business">General Business</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-industry">Industry</label>
+            <input class="survey-input" id="survey-industry" name="industry" type="text" placeholder="Property, insurance, services, retail...">
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-teamSize">Team size</label>
+            <select class="survey-select" id="survey-teamSize" name="teamSize" required>
+              <option value="1">Solo / 1 person</option>
+              <option value="2-5">2 to 5 people</option>
+              <option value="6+">6 or more</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-mainChannel">Main channel</label>
+            <select class="survey-select" id="survey-mainChannel" name="mainChannel" required>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Email">Email</option>
+              <option value="Telegram">Telegram</option>
+            </select>
+          </div>
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-secondaryChannels">Secondary channels</label>
+            <input class="survey-input" id="survey-secondaryChannels" name="secondaryChannels" type="text" placeholder="Email, Telegram">
+            <div class="survey-helper">Optional. Separate with commas if you use more than one channel.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-aiMode">AI mode</label>
+            <select class="survey-select" id="survey-aiMode" name="aiMode">
+              <option value="draft">Draft only</option>
+              <option value="suggest">Suggest and rewrite</option>
+              <option value="workflow assist">Workflow assist</option>
+              <option value="auto-send">Auto-send with guardrails</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-reminderMode">Reminder mode</label>
+            <select class="survey-select" id="survey-reminderMode" name="reminderMode">
+              <option value="manual">Manual reminders</option>
+              <option value="suggest">Suggest reminders</option>
+              <option value="semi-auto">Semi-auto reminders</option>
+              <option value="auto-send">Auto reminders</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-workflowComplexity">Workflow complexity</label>
+            <select class="survey-select" id="survey-workflowComplexity" name="workflowComplexity">
+              <option value="standard">Standard</option>
+              <option value="medium">Medium</option>
+              <option value="high">High / custom</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-permissionNeeds">Custom permissions</label>
+            <select class="survey-select" id="survey-permissionNeeds" name="permissionNeeds">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-slaNeeds">SLA support</label>
+            <select class="survey-select" id="survey-slaNeeds" name="slaNeeds">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-region">Region</label>
+            <select class="survey-select" id="survey-region" name="region">
+              <option value="Malaysia">Malaysia (Billplz)</option>
+              <option value="Global">Global (Stripe)</option>
+            </select>
+            <div class="survey-helper">We route billing based on your region so setup stays simple.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-language">Language</label>
+            <select class="survey-select" id="survey-language" name="language">
+              <option value="BM + English">BM + English</option>
+              <option value="English">English</option>
+              <option value="Malay">Malay</option>
+            </select>
+          </div>
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-goal">Main goal / notes</label>
+            <textarea class="survey-textarea" id="survey-goal" name="goal" placeholder="Example: follow up prospects, send invoices, track receipts, or automate reminders..."></textarea>
+          </div>
+        </div>
+        <div class="survey-actions">
+          <button type="submit" class="btn btn-primary">Get recommendation</button>
+          <button type="button" class="btn btn-ghost" onclick="closeWork2USurvey()">Maybe later</button>
+        </div>
+        <div class="survey-helper">We only need a few details to recommend the best fit. Your answers will be saved as a draft and can be refined later.</div>
+      </form>
+
+      <aside class="survey-result-shell" id="work2u-survey-result">
+        <div class="survey-result-badge" id="survey-result-badge">Recommendation preview</div>
+        <div class="survey-result-plan" id="survey-result-plan">Starter</div>
+        <p class="survey-result-copy" id="survey-result-copy">Answer the survey and we will recommend the best package for your workflow.</p>
+        <div class="survey-result-grid">
+          <div class="survey-result-metric">
+            <div class="tiny">Confidence</div>
+            <strong id="survey-result-confidence">--</strong>
+          </div>
+          <div class="survey-result-metric">
+            <div class="tiny">First channel</div>
+            <strong id="survey-result-channel">WhatsApp</strong>
+          </div>
+        </div>
+        <ul class="survey-result-list" id="survey-result-list">
+          <li>We will use your answers to shape the dashboard and package suggestion.</li>
+          <li>After that, you can continue to login and start the workspace setup.</li>
+        </ul>
+        <div class="survey-actions">
+          <a id="survey-continue-link" href="/crm" class="btn btn-primary" style="justify-content:center;display:inline-flex;">Continue to CRM</a>
+          <button type="button" class="btn btn-ghost" onclick="closeWork2USurvey()">Close</button>
+        </div>
+        <div class="survey-result-note" id="survey-result-note">Survey answers are saved locally and can be synced when you log in.</div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const DRAFT_KEY = 'work2uSurveyDraft';
+    const RESULT_KEY = 'work2uSurveyResult';
+    const COMPLETE_KEY = 'work2uSurveyComplete';
+    const DISMISSED_KEY = 'work2uSurveyDismissed';
+
+    function getSurveyOverlay() { return document.getElementById('work2u-survey-overlay'); }
+    function getSurveyForm() { return document.getElementById('work2u-survey-form'); }
+    function getSurveyResultList() { return document.getElementById('survey-result-list'); }
+    function getSurveyValue(id) {
+      const el = document.getElementById(id);
+      return el ? String(el.value || '').trim() : '';
+    }
+    function setSurveyValue(id, value) {
+      const el = document.getElementById(id);
+      if (!el || value === undefined || value === null) return;
+      el.value = String(value);
+    }
+    function hasSurveyComplete() {
+      return localStorage.getItem(COMPLETE_KEY) === '1';
+    }
+    function readJson(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || 'null');
+      } catch (error) {
+        return null;
+      }
+    }
+    function writeJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+    function loadSurveyDraft() {
+      return readJson(DRAFT_KEY) || {};
+    }
+    function loadSurveyResult() {
+      return readJson(RESULT_KEY) || null;
+    }
+    function buildSurveyContinueHref(result) {
+      const recommendation = result && result.recommendation ? result.recommendation : {};
+      const plan = String(recommendation.planCode || 'Starter').toLowerCase();
+      const url = new URL('/crm', window.location.origin);
+      url.searchParams.set('survey', '1');
+      url.searchParams.set('plan', plan);
+      return url.pathname + url.search;
+    }
+    function saveSurveyDraft() {
+      writeJson(DRAFT_KEY, {
+        workspaceName: getSurveyValue('survey-workspaceName'),
+        email: getSurveyValue('survey-email'),
+        role: getSurveyValue('survey-role'),
+        industry: getSurveyValue('survey-industry'),
+        teamSize: getSurveyValue('survey-teamSize'),
+        mainChannel: getSurveyValue('survey-mainChannel'),
+        secondaryChannels: getSurveyValue('survey-secondaryChannels'),
+        aiMode: getSurveyValue('survey-aiMode'),
+        reminderMode: getSurveyValue('survey-reminderMode'),
+        workflowComplexity: getSurveyValue('survey-workflowComplexity'),
+        permissionNeeds: getSurveyValue('survey-permissionNeeds'),
+        slaNeeds: getSurveyValue('survey-slaNeeds'),
+        region: getSurveyValue('survey-region'),
+        language: getSurveyValue('survey-language'),
+        goal: getSurveyValue('survey-goal')
+      });
+    }
+    function renderSurveyResult(result) {
+      const recommendation = result && result.recommendation ? result.recommendation : {};
+      const survey = result && result.survey ? result.survey : {};
+      const plan = String(recommendation.planCode || 'Starter');
+      const reasons = Array.isArray(recommendation.reasons) ? recommendation.reasons : [];
+      const channels = Array.isArray(recommendation.channels) ? recommendation.channels : [];
+      const profile = recommendation.packageProfile || {};
+      const billingRoute = String(survey.region || '').toLowerCase() === 'global' ? 'Stripe with a 7-day card trial' : 'Billplz for Malaysia billing';
+      const planLabel = document.getElementById('survey-result-plan');
+      const badge = document.getElementById('survey-result-badge');
+      const copy = document.getElementById('survey-result-copy');
+      const confidence = document.getElementById('survey-result-confidence');
+      const channel = document.getElementById('survey-result-channel');
+      const note = document.getElementById('survey-result-note');
+      const continueLink = document.getElementById('survey-continue-link');
+      const list = getSurveyResultList();
+      if (planLabel) planLabel.textContent = plan;
+      if (badge) badge.textContent = result && result.profileSync && result.profileSync.synced ? 'Saved and synced' : 'Saved locally';
+      if (copy) {
+        const reasonText = profile.fitSummary || (reasons.length ? reasons.slice(0, 2).join(' ') : 'We will keep the setup lightweight and focused.');
+        copy.textContent = `We recommend ${plan} for your workflow. ${reasonText}`;
+      }
+      if (confidence) confidence.textContent = `${Math.round(Number(recommendation.confidence || 0)) || '--'}%`;
+      if (channel) channel.textContent = channels[0] || survey.mainChannel || 'WhatsApp';
+      if (note) note.textContent = result && result.profileSync && result.profileSync.synced
+        ? 'Your profile package mirror has been updated in Supabase.'
+        : 'Your answers are saved locally and will sync when profile details are available.';
+      if (continueLink) {
+        continueLink.href = buildSurveyContinueHref(result);
+      }
+      if (list) {
+        const items = [
+          `Best fit: ${plan}`,
+          profile.priceHint ? `Pricing: ${profile.priceHint}` : null,
+          profile.tagline ? profile.tagline : null,
+          recommendation.score !== undefined ? `Survey score: ${recommendation.score}` : null,
+          recommendation.confidence !== undefined ? `Confidence: ${Math.round(recommendation.confidence)}%` : null,
+          survey.region ? `Region: ${survey.region}` : null,
+          billingRoute ? `Billing: ${billingRoute}` : null,
+          channels.length ? `Main channels: ${channels.join(', ')}` : null,
+          survey.goal ? `Goal: ${survey.goal}` : null
+        ].filter(Boolean);
+        list.innerHTML = items.map((item) => `<li>${item}</li>`).join('');
+      }
+    }
+    function renderSurveyPlaceholder() {
+      renderSurveyResult({
+        recommendation: {
+          planCode: 'Starter',
+          confidence: 0,
+          reasons: ['Answer the survey to generate a recommendation.'],
+          channels: ['WhatsApp']
+        },
+        survey: {}
+      });
+      const badge = document.getElementById('survey-result-badge');
+      if (badge) badge.textContent = 'Recommendation preview';
+      const note = document.getElementById('survey-result-note');
+      if (note) note.textContent = 'Survey answers are saved locally and can be synced when you log in.';
+    }
+    function hydrateSurveyForm() {
+      const draft = loadSurveyDraft();
+      if (!draft || typeof draft !== 'object') return;
+      setSurveyValue('survey-workspaceName', draft.workspaceName || '');
+      setSurveyValue('survey-email', draft.email || '');
+      setSurveyValue('survey-role', draft.role || 'Freelancer');
+      setSurveyValue('survey-industry', draft.industry || '');
+      setSurveyValue('survey-teamSize', draft.teamSize || '1');
+      setSurveyValue('survey-mainChannel', draft.mainChannel || 'WhatsApp');
+      setSurveyValue('survey-secondaryChannels', draft.secondaryChannels || '');
+      setSurveyValue('survey-aiMode', draft.aiMode || 'draft');
+      setSurveyValue('survey-reminderMode', draft.reminderMode || 'manual');
+      setSurveyValue('survey-workflowComplexity', draft.workflowComplexity || 'standard');
+      setSurveyValue('survey-permissionNeeds', draft.permissionNeeds || 'no');
+      setSurveyValue('survey-slaNeeds', draft.slaNeeds || 'no');
+      setSurveyValue('survey-region', draft.region || 'Malaysia');
+      setSurveyValue('survey-language', draft.language || 'BM + English');
+      setSurveyValue('survey-goal', draft.goal || '');
+    }
+    function openWork2USurvey(forceSurvey) {
+      const force = forceSurvey === true;
+      if (!force && hasSurveyComplete()) {
+        window.location.href = '/crm';
+        return false;
+      }
+      const overlay = getSurveyOverlay();
+      if (!overlay) return false;
+      overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      hydrateSurveyForm();
+      if (hasSurveyComplete()) {
+        renderSurveyResult(loadSurveyResult());
+      } else {
+        renderSurveyPlaceholder();
+      }
+      sessionStorage.removeItem(DISMISSED_KEY);
+      return false;
+    }
+    function closeWork2USurvey() {
+      const overlay = getSurveyOverlay();
+      if (!overlay) return;
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (!hasSurveyComplete()) {
+        sessionStorage.setItem(DISMISSED_KEY, '1');
+      }
+    }
+    async function submitWork2USurvey(event) {
+      event.preventDefault();
+      const form = getSurveyForm();
+      if (!form) return;
+      const submitButton = form.querySelector('button[type="submit"]');
+      const originalLabel = submitButton ? submitButton.textContent : '';
+      const payload = {
+        workspaceName: getSurveyValue('survey-workspaceName'),
+        email: getSurveyValue('survey-email'),
+        role: getSurveyValue('survey-role'),
+        industry: getSurveyValue('survey-industry'),
+        teamSize: getSurveyValue('survey-teamSize'),
+        mainChannel: getSurveyValue('survey-mainChannel'),
+        secondaryChannels: getSurveyValue('survey-secondaryChannels'),
+        aiMode: getSurveyValue('survey-aiMode'),
+        reminderMode: getSurveyValue('survey-reminderMode'),
+        workflowComplexity: getSurveyValue('survey-workflowComplexity'),
+        permissionNeeds: getSurveyValue('survey-permissionNeeds'),
+        slaNeeds: getSurveyValue('survey-slaNeeds'),
+        region: getSurveyValue('survey-region'),
+        language: getSurveyValue('survey-language'),
+        goal: getSurveyValue('survey-goal'),
+        authMethod: 'Email',
+        mailboxType: 'Own email'
+      };
+
+      saveSurveyDraft();
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Getting recommendation...';
+      }
+
+      try {
+        const response = await fetch('/api/work2u/survey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(function() { return {}; });
+        if (!response.ok || !data.success) {
+          throw new Error((data && data.error && data.error.message) || data.error || 'Unable to save survey');
+        }
+
+        localStorage.setItem(COMPLETE_KEY, '1');
+        localStorage.removeItem(DISMISSED_KEY);
+        writeJson(RESULT_KEY, data.data || {});
+        writeJson(DRAFT_KEY, payload);
+        renderSurveyResult(data.data || {});
+      } catch (error) {
+        const badge = document.getElementById('survey-result-badge');
+        const note = document.getElementById('survey-result-note');
+        if (badge) badge.textContent = 'Survey save failed';
+        if (note) note.textContent = error.message || 'Please try again.';
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalLabel || 'Get recommendation';
+        }
+      }
+    }
+    function onSurveyKeyDown(event) {
+      if (event.key === 'Escape') closeWork2USurvey();
+    }
+    function openWork2UEntry(forceSurvey) {
+      return openWork2USurvey(forceSurvey === true);
+    }
+
+    window.openWork2USurvey = openWork2USurvey;
+    window.closeWork2USurvey = closeWork2USurvey;
+    window.openWork2UEntry = openWork2UEntry;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const overlay = getSurveyOverlay();
+      const form = getSurveyForm();
+      if (overlay) {
+        overlay.addEventListener('click', function(event) {
+          if (event.target === overlay) closeWork2USurvey();
+        });
+      }
+      if (form) {
+        form.addEventListener('submit', submitWork2USurvey);
+        form.addEventListener('input', saveSurveyDraft);
+        form.addEventListener('change', saveSurveyDraft);
+      }
+      document.addEventListener('keydown', onSurveyKeyDown);
+
+      hydrateSurveyForm();
+      if (hasSurveyComplete()) {
+        renderSurveyResult(loadSurveyResult());
+      } else {
+        renderSurveyPlaceholder();
+        if (!sessionStorage.getItem(DISMISSED_KEY)) {
+          window.setTimeout(function() {
+            openWork2USurvey(true);
+          }, 900);
+        }
+      }
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    const targets = document.querySelectorAll('.hero, .section-header, .stats-section, .features-section, .modules-section, .pricing-section, .faq-section, .cta-section, .onboarding-section, .proof-section');
+    const reveal = (el) => el.classList.add('is-visible');
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            reveal(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.16 });
+      targets.forEach((el) => observer.observe(el));
+    } else {
+      targets.forEach(reveal);
+    }
+
+    reveal(document.querySelector('.hero'));
+  })();
+</script>
+
+<script>
+  (function () {
+    const previewCycle = ['WhatsApp', 'Email', 'Telegram'];
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let previewAutoTimer = null;
+    let previewActiveChannel = 'WhatsApp';
+
+    const presets = {
+      WhatsApp: {
+        kicker: 'WhatsApp-first workflow',
+        title: 'Fast replies from the dashboard',
+        copy: 'Scan the QR, reply inside Work2U, and keep the follow-up moving without switching tools.',
+        pills: ['QR web client', 'Auto reminder', 'Client follow-up'],
+        statusTitle: 'WhatsApp channel live',
+        statusCopy: 'Fast replies, smarter follow-up, and less tab switching.',
+        spotlight: 'Now showing: WhatsApp, live replies, and QR-first control'
+      },
+      Email: {
+        kicker: 'Email-first workflow',
+        title: 'Send invoices and updates cleanly',
+        copy: 'Use your own inbox or the Work2U domain to send documents, proposals, and follow-up emails from one place.',
+        pills: ['Receipt trail', 'Document send', 'Client inbox'],
+        statusTitle: 'Email delivery synced',
+        statusCopy: 'Documents and reminders stay structured for client follow-up.',
+        spotlight: 'Now showing: Email, invoices, and document delivery'
+      },
+      Telegram: {
+        kicker: 'Telegram-first workflow',
+        title: 'Bot-led messages that cost less',
+        copy: 'Work2U bot can route reminders and follow-up messages quickly for teams that prefer a leaner channel setup.',
+        pills: ['Bot send', 'Low setup cost', 'Quick automation'],
+        statusTitle: 'Telegram automation ready',
+        statusCopy: 'Use the bot for lean reminders and fast client pings.',
+        spotlight: 'Now showing: Telegram, bot routing, and lean alerts'
+      }
+    };
+
+    function flashPreviewState() {
+      const preview = document.querySelector('.dashboard-preview');
+      const statusLine = document.querySelector('.preview-statusline');
+      const floatCard = document.querySelector('.preview-float-card');
+      const focusCard = document.querySelector('.preview-focus-card');
+      const previewCards = Array.from(document.querySelectorAll('.dashboard-preview .preview-card, .dashboard-preview .preview-sidebar, .dashboard-preview .preview-channel-switcher'));
+
+      if (preview) {
+        preview.classList.add('preview-switching');
+        window.setTimeout(function() { preview.classList.remove('preview-switching'); }, 420);
+      }
+      if (statusLine) {
+        statusLine.classList.remove('preview-switching');
+        void statusLine.offsetWidth;
+        statusLine.classList.add('preview-switching');
+        window.setTimeout(function() { statusLine.classList.remove('preview-switching'); }, 420);
+      }
+      if (floatCard) {
+        floatCard.classList.add('preview-switching');
+        window.setTimeout(function() { floatCard.classList.remove('preview-switching'); }, 420);
+      }
+      if (focusCard) {
+        focusCard.classList.add('preview-switching');
+        window.setTimeout(function() { focusCard.classList.remove('preview-switching'); }, 420);
+      }
+      previewCards.forEach(function(card, index) {
+        const delay = index * 70;
+        window.setTimeout(function() {
+          card.classList.add('preview-switching');
+        }, delay);
+        window.setTimeout(function() {
+          card.classList.remove('preview-switching');
+        }, delay + 520);
+      });
+    }
+
+    function schedulePreviewAutoRotate(delay) {
+      if (prefersReducedMotion) return;
+      window.clearTimeout(previewAutoTimer);
+      previewAutoTimer = window.setTimeout(function() {
+        const currentIndex = Math.max(0, previewCycle.indexOf(previewActiveChannel));
+        const nextChannel = previewCycle[(currentIndex + 1) % previewCycle.length];
+        setPreviewChannel(nextChannel, { auto: true });
+        schedulePreviewAutoRotate(7000);
+      }, delay || 8200);
+    }
+
+    function setPreviewChannel(channel, options) {
+      const nextChannel = previewCycle.indexOf(channel) !== -1 ? channel : 'WhatsApp';
+      previewActiveChannel = nextChannel;
+      const preset = presets[nextChannel] || presets.WhatsApp;
+      const kicker = document.getElementById('preview-channel-kicker');
+      const title = document.getElementById('preview-channel-title');
+      const copy = document.getElementById('preview-channel-copy');
+      const pills = [
+        document.getElementById('preview-channel-pill-1'),
+        document.getElementById('preview-channel-pill-2'),
+        document.getElementById('preview-channel-pill-3')
+      ];
+      const statusTitle = document.getElementById('preview-status-title');
+      const statusCopy = document.getElementById('preview-status-copy');
+      const spotlight = document.getElementById('preview-channel-spotlight');
+      const preview = document.querySelector('.dashboard-preview');
+      const spotlightEl = document.querySelector('.preview-channel-spotlight');
+
+      if (kicker) kicker.textContent = preset.kicker;
+      if (title) title.textContent = preset.title;
+      if (copy) copy.textContent = preset.copy;
+      if (statusTitle) statusTitle.textContent = preset.statusTitle || 'Live sync ready';
+      if (statusCopy) statusCopy.textContent = preset.statusCopy || 'Channel reminders, AI suggestions, and follow-up notes stay in one flow.';
+      if (spotlight) spotlight.textContent = preset.spotlight || ('Now showing: ' + nextChannel);
+      if (preview) preview.dataset.previewChannel = nextChannel.toLowerCase();
+      const previewCards = document.querySelectorAll('.dashboard-preview .preview-card, .dashboard-preview .preview-sidebar, .dashboard-preview .preview-channel-switcher');
+      pills.forEach(function(pill, index) {
+        if (pill) pill.textContent = preset.pills[index] || '';
+      });
+      if (spotlightEl) {
+        spotlightEl.classList.remove('preview-switching');
+        void spotlightEl.offsetWidth;
+        spotlightEl.classList.add('preview-switching');
+        window.setTimeout(function() { spotlightEl.classList.remove('preview-switching'); }, 420);
+      }
+      previewCards.forEach(function(card) {
+        card.classList.add('preview-switching');
+        window.setTimeout(function() { card.classList.remove('preview-switching'); }, 420);
+      });
+      document.querySelectorAll('[data-preview-channel]').forEach(function(button) {
+        const isActive = button.dataset.previewChannel === nextChannel;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      flashPreviewState();
+
+      if (!options || !options.auto) {
+        schedulePreviewAutoRotate(8200);
+      }
+    }
+
+    document.querySelectorAll('[data-preview-channel]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        setPreviewChannel(button.dataset.previewChannel);
+      });
+    });
+
+    setPreviewChannel('WhatsApp', { auto: true });
+    schedulePreviewAutoRotate(8200);
+  })();
+</script>
 
 <footer>
   <div class="footer-container">
     <div class="footer-grid">
       <div class="footer-col">
         <a href="/" class="brand" style="color:white;margin-bottom:16px;">
-          <div class="brand-icon">W</div>
-          <span>Work2U</span>
+          <img class="brand-icon" src="/assets/work2u-logo.svg" alt="Work2U" />
         </a>
-        <p style="color:var(--gray-300);font-size:14px;margin-top:12px;line-height:1.6;">The all-in-one CRM platform for modern businesses. Built with ❤️ in Malaysia by Saga X Ventures.</p>
+        <p style="color:var(--gray-300);font-size:14px;margin-top:0;line-height:1.6;">Built for operators who want less noise, cleaner follow-up, and a calmer way to run business.</p>
+        <p style="color:var(--gray-300);font-size:14px;margin-top:12px;line-height:1.6;">A calm all-in-one CRM platform for teams that want clearer billing, less admin drift, and a better daily operating rhythm. Built in Malaysia by Saga X Ventures.</p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
         <a href="#features">Features</a>
         <a href="#modules">Modules</a>
         <a href="#pricing">Pricing</a>
-        <a href="https://crm.work2u.io/dashboard">Open CRM</a>
+        <a href="/crm" onclick="return openWork2UEntry(false);">Open CRM</a>
       </div>
       <div class="footer-col">
         <h4>Resources</h4>
         <a href="#faq">FAQ</a>
-        <a href="#">Documentation</a>
-        <a href="#">API Reference</a>
-        <a href="#">Changelog</a>
+        <a href="/docs/index.html">Documentation</a>
+        <a href="/docs/work2u-data-api-map.md">API Reference</a>
+        <a href="/docs/changelog.md">Changelog</a>
+        <a href="/launch-checklist.html">Launch Checklist</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/service-policy.html">Service Policy</a>
       </div>
       <div class="footer-col">
-        <h4>Contact</h4>
+        <h4>Company</h4>
+        <a href="https://sagaxventures.com">Saga X Ventures (NS0246319-H)</a>
+        <a href="https://sagaxventures.com">sagaxventures.com</a>
         <a href="mailto:enquiry@work2u.io">enquiry@work2u.io</a>
         <a href="https://wa.me/60137732703">+60 13 773 2703</a>
-        <a href="https://sagaxventures.com">Saga X Ventures</a>
+        <a href="https://maps.google.com/?q=136-1,%20Jalan%20Komersial%20Senawang,%20Taipan%201,%2070450%20Seremban,%20Negeri%20Sembilan">136-1, Jalan Komersial Senawang, Taipan 1, 70450 Seremban, Negeri Sembilan</a>
       </div>
     </div>
     <div class="footer-bottom">
-      © 2026 Work2U CRM · A product by Saga X Ventures (NS0246319-H)
+      2026 Work2U CRM - A product by Saga X Ventures (NS0246319-H)
     </div>
   </div>
 </footer>

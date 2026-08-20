@@ -1,0 +1,13 @@
+{
+  "name": "work2u-crm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Work2U CRM static site and Vercel API routes",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
