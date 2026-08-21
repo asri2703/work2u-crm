@@ -9,6 +9,12 @@ This note captures the product and architecture ideas we should adapt for Work2U
 - Expose a strong API and developer-facing surface so automations stay maintainable.
 - Make the CRM feel like a buildable platform, not only a static app.
 
+> A deeper read of the Twenty repo, mapped concretely to Work2U's current code
+> (the dashboard `D` collections, `wsKey` isolation, the outbound queue, and the
+> Supabase plan), is in [study-twenty-crm.md](./study-twenty-crm.md). Short
+> version: adopt its **metadata-driven object model** (one registry, generic
+> renderer) — skip its Nx/NestJS/GraphQL scale.
+
 ## From OpenReply
 
 - Separate the web app from the long-running worker.
