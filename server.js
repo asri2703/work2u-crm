@@ -3722,25 +3722,83 @@ async function handleGoogleCallback(req, res, url) {
   }
 }
 
+/* Every call here spends the Work2U Groq key. This route used to accept any
+ * request and answer with Access-Control-Allow-Origin: *, which made it an
+ * open LLM proxy billed to this account.
+ *
+ * This server has no session layer — auth lives in the Vercel functions under
+ * api/, which cannot be required from here because they are ESM. So dev gets
+ * a per-address rate limit instead, which protects the bill without breaking
+ * the normal reason to reach this server from another device: checking the
+ * mobile layout from a phone on the same network. */
+const GROQ_WINDOW_MS = 60_000;
+const GROQ_MAX_PER_WINDOW = 12;
+const groqHits = new Map();
+
+function groqRateLimited(req) {
+  const who = req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const hits = (groqHits.get(who) || []).filter((t) => now - t < GROQ_WINDOW_MS);
+  hits.push(now);
+  groqHits.set(who, hits);
+
+  // Keep the map from growing without bound on a long-running server.
+  if (groqHits.size > 500) {
+    for (const [key, times] of groqHits) {
+      if (!times.length || now - times[times.length - 1] > GROQ_WINDOW_MS) groqHits.delete(key);
+    }
+  }
+  return hits.length > GROQ_MAX_PER_WINDOW;
+}
+
+/* The split deployment in the README has crm.work2u.io calling api.work2u.io,
+ * which is cross-origin. Matching a single origin would break that, so the
+ * allowed set is a comma-separated list, defaulting to this app's own base
+ * URL when unset. */
+function allowedOrigins() {
+  const configured = String(process.env.WORK2U_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return configured.length ? configured : [appBaseUrl().replace(/\/$/, '')];
+}
+
+function groqCors(req) {
+  const origin = (req.headers.origin || '').replace(/\/$/, '');
+  const headers = {
+    'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  };
+  if (origin && allowedOrigins().includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = req.headers.origin;
+    headers['Access-Control-Allow-Credentials'] = 'true';
+  }
+  return headers;
+}
+
 async function handleGroq(req, res) {
+  const cors = groqCors(req);
+
   if (req.method === 'OPTIONS') {
-    res.writeHead(200, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
+    res.writeHead(204, cors);
     return res.end();
   }
   if (req.method !== 'POST') {
-    return send(res, 405, { error: 'POST only' }, { 'Access-Control-Allow-Origin': '*' });
+    return send(res, 405, { error: 'POST only' }, cors);
+  }
+  if (groqRateLimited(req)) {
+    return send(res, 429, { error: 'Too many assistant requests, try again shortly' }, cors);
   }
 
   const body = await readBody(req);
-  const prompt = body && typeof body === 'object' ? body.prompt : '';
-  if (!prompt) return send(res, 400, { error: 'Missing prompt' }, { 'Access-Control-Allow-Origin': '*' });
+  const rawPrompt = body && typeof body === 'object' ? body.prompt : '';
+  if (!rawPrompt) return send(res, 400, { error: 'Missing prompt' }, cors);
+  // Cap the input as well as the output so one request cannot run up a bill.
+  const prompt = String(rawPrompt).slice(0, 8000);
 
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return send(res, 500, { error: 'GROQ_API_KEY not configured' }, { 'Access-Control-Allow-Origin': '*' });
+  if (!apiKey) return send(res, 500, { error: 'GROQ_API_KEY not configured' }, cors);
 
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -3764,8 +3822,11 @@ async function handleGroq(req, res) {
     });
 
     if (!r.ok) {
-      const err = await r.text();
-      return send(res, r.status, { error: 'Groq error', detail: err }, { 'Access-Control-Allow-Origin': '*' });
+      // The upstream body can name the model, quota, and account, so it is
+      // logged rather than handed back to the caller.
+      const detail = await r.text();
+      console.error('Groq error', r.status, detail);
+      return send(res, 502, { error: 'Assistant is unavailable right now' }, cors);
     }
 
     const data = await r.json();
@@ -3773,10 +3834,12 @@ async function handleGroq(req, res) {
       res,
       200,
       { text: data.choices?.[0]?.message?.content || 'No response' },
-      { 'Access-Control-Allow-Origin': '*' }
+      cors
     );
   } catch (e) {
-    return send(res, 500, { error: e.message }, { 'Access-Control-Allow-Origin': '*' });
+    // e.message can carry the upstream URL and request detail.
+    console.error('Groq request failed', e);
+    return send(res, 500, { error: 'Assistant request failed' }, cors);
   }
 }
 
