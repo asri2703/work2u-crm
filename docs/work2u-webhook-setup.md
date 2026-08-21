@@ -90,3 +90,47 @@ stripe trigger checkout.session.completed
 3. simpan secret dalam `.env.local`
 4. deploy production endpoint
 5. semak billing event log selepas payment test
+
+## 4. Telegram And WhatsApp Bot Webhooks
+
+### Telegram
+
+- inbound endpoint: `POST /api/telegram/webhook`
+- generic endpoint: `POST /api/work2u/channel/webhook`
+- bot token: simpan di `TELEGRAM_BOT_TOKEN`
+- webhook secret: simpan di `TELEGRAM_WEBHOOK_SECRET`
+
+Telegram inbound message akan auto simpan `chat_id` dan `username`, jadi outbound reply boleh guna mapping itu kemudian.
+
+### WhatsApp via Baileys relay
+
+- inbound endpoint: `POST /api/whatsapp/webhook`
+- generic endpoint: `POST /api/work2u/channel/webhook`
+- relay endpoint: simpan di `WHATSAPP_BAILEYS_ENDPOINT`
+- relay token: simpan di `WHATSAPP_BAILEYS_TOKEN`
+- webhook secret: simpan di `WHATSAPP_WEBHOOK_SECRET`
+
+### Suggested payload shape
+
+```json
+{
+  "channel": "telegram",
+  "event": "message",
+  "chatId": "123456789",
+  "username": "clientname",
+  "name": "Client Name",
+  "message": "Hello",
+  "workspaceName": "Work2U"
+}
+```
+
+```json
+{
+  "channel": "whatsapp",
+  "event": "message",
+  "from": "60123456789",
+  "name": "Client Name",
+  "message": "Hello",
+  "workspaceName": "Work2U"
+}
+```

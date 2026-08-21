@@ -605,7 +605,7 @@
           Work2U is designed to help users act faster, keep context together, and reduce the mental load of remembering every next step.
         </p>
         <ul>
-          <li>survey-first onboarding</li>
+          <li>registration-first onboarding</li>
           <li>CRM, tasks, clients, and cases</li>
           <li>internal calendar and reminders</li>
         </ul>
@@ -637,11 +637,11 @@
     </div>
 
     <div class="note-bar">
-      Work2U keeps the core workflow calm and practical: survey first, login next, then a dashboard that adapts to how the user actually works.
+      Work2U keeps the core workflow calm and practical: register first, login next, then a dashboard that adapts to how the user actually works.
     </div>
 
     <div class="roadmap-note">
-      <span>Survey-first onboarding</span>
+      <span>Registration-first onboarding</span>
       <span>Internal calendar first</span>
       <span>Malaysia + global billing</span>
       <span>AI assist, not AI overload</span>
@@ -652,7 +652,7 @@
       <section class="panel timeline-card">
         <div class="step">Now</div>
         <h3>Core workflow and internal calendar</h3>
-        <p>Focus on survey onboarding, CRM core, email sending, reminders, and the internal calendar layer that makes follow-up easier.</p>
+        <p>Focus on registration onboarding, CRM core, email sending, reminders, and the internal calendar layer that makes follow-up easier.</p>
       </section>
       <section class="panel timeline-card">
         <div class="step">Next</div>
@@ -916,11 +916,23 @@
         <p>Setup notes for Stripe, Billplz, and other webhook-driven flows.</p>
         <div class="meta">Important for payments and automation.</div>
       </a>
+      <a class="panel doc-card" data-tags="launch messaging telegram whatsapp bot env" href="./work2u-messaging-setup.md">
+        <div class="tag">Launch</div>
+        <h3>Messaging Setup</h3>
+        <p>Telegram bot token, WhatsApp Baileys relay, and client mapping notes.</p>
+        <div class="meta">Useful when wiring inbox and follow-up channels.</div>
+      </a>
       <a class="panel doc-card" data-tags="launch env config" href="./work2u-env-playbook.md">
         <div class="tag">Launch</div>
         <h3>Env Playbook</h3>
         <p>Guidance for local, Malaysia, and global environment splits plus launch readiness.</p>
         <div class="meta">Useful when preparing deployment values.</div>
+      </a>
+      <a class="panel doc-card" data-tags="launch deployment split architecture" href="./work2u-split-project-architecture.md">
+        <div class="tag">Launch</div>
+        <h3>Split Project Architecture</h3>
+        <p>Explains how landing, CRM, and backend deployments are separated across domains and Vercel projects.</p>
+        <div class="meta">Use this when planning domain and deployment ownership.</div>
       </a>
       <a class="panel doc-card" data-tags="launch changelog release notes" href="./changelog.md">
         <div class="tag">Launch</div>

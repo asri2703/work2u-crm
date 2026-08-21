@@ -4,6 +4,12 @@ Work2U is an all-in-one business operating system built to help teams follow up 
 
 This repository contains the public landing page, the CRM dashboard, and the docs and schema references that support the V1 build.
 
+Work2U is being shaped as a split deployment model so each layer can grow at its own pace:
+
+- `work2u.io` for the public landing and marketing site
+- `crm.work2u.io` for the authenticated CRM app
+- `api.work2u.io` for backend, webhook, and automation services later
+
 It is designed for people who want a cleaner operating rhythm without paying for a heavy suite they do not fully use.
 
 ## What Work2U Does
@@ -39,7 +45,7 @@ Work2U is designed for:
 
 ## What Makes It Different
 
-- survey-first onboarding so the dashboard adapts to the user
+- registration-first onboarding so the dashboard adapts to the user
 - internal calendar so tasks can become reminders automatically
 - Resend + Work2U domain email for cleaner communication
 - regional billing support for Malaysia and global customers
@@ -66,7 +72,7 @@ The pricing approach is meant to stay lighter than common all-in-one business su
 ## Current Focus
 
 - email-first login and onboarding
-- survey-driven workspace setup
+- registration-driven workspace setup
 - internal calendar and reminder flow
 - billing, invoice, and receipt support
 - AI help for drafting and follow-up
@@ -195,6 +201,7 @@ Most useful references:
 
 - [Work2U Product Spec v1](./docs/work2u-product-spec-v1.md)
 - [Work2U V1 Build Order](./docs/work2u-v1-build-order.md)
+- [Work2U Split Project Architecture](./docs/work2u-split-project-architecture.md)
 - [Work2U Supabase Execution Checklist](./docs/work2u-supabase-execution-checklist.md)
 - [Work2U Supabase Deploy Checklist](./docs/work2u-supabase-deploy-checklist.md)
 - [Work2U Internal Calendar](./docs/work2u-internal-calendar.md)

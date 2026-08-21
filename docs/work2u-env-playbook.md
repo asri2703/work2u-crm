@@ -14,6 +14,8 @@ Saya semak susunan env yang ada sekarang. Struktur asas sudah lengkap untuk deve
 - Resend: siap selepas `RESEND_API_KEY` diisi
 - AI: complete
 - WhatsApp: complete
+- Telegram bot: ready once `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_SECRET` are added
+- Baileys relay: ready once `WHATSAPP_BAILEYS_ENDPOINT` and `WHATSAPP_BAILEYS_TOKEN` are added
 - Billplz: complete
 - Stripe: `STRIPE_WEBHOOK_SECRET` masih kosong
 
@@ -74,6 +76,10 @@ Use `.env.production.my` for the live file and `.env.production.my.example` as t
 - `BILLPLZ_COLLECTION_ID`
 - `BILLPLZ_X_SIGNATURE_KEY`
 - `WHATSAPP_WEBHOOK_SECRET` if WhatsApp live routing is enabled
+- `WHATSAPP_BAILEYS_ENDPOINT`
+- `WHATSAPP_BAILEYS_TOKEN`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_WEBHOOK_SECRET`
 
 ### Global production
 
@@ -83,6 +89,10 @@ Use `.env.production.global` for the live file and `.env.production.global.examp
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `WHATSAPP_WEBHOOK_SECRET` if WhatsApp live routing is enabled
+- `WHATSAPP_BAILEYS_ENDPOINT`
+- `WHATSAPP_BAILEYS_TOKEN`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_WEBHOOK_SECRET`
 
 ### Recommended rule
 
@@ -156,6 +166,7 @@ Use `.env.production.global` for the live file and `.env.production.global.examp
 - email sending
 - WhatsApp QR/session connector
 - Telegram bot via `work2u_bot`
+- Baileys relay for WhatsApp if you want no official WhatsApp API dependency
 
 ### AI
 

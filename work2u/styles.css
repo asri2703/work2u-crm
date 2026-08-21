@@ -346,6 +346,12 @@ button {
   color: var(--accent-2);
 }
 
+.soft-btn.active {
+  background: rgba(21, 101, 216, 0.14);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(21, 101, 216, 0.18);
+}
+
 .ghost-btn:hover,
 .primary-btn:hover,
 .soft-btn:hover {
@@ -507,6 +513,40 @@ button {
 .status-pill.bad {
   background: rgba(220, 38, 38, 0.12);
   color: var(--bad);
+}
+
+.timeline-kind {
+  letter-spacing: 0.01em;
+}
+
+.timeline-kind.note {
+  background: rgba(15, 118, 110, 0.11);
+  color: var(--accent-2);
+}
+
+.timeline-kind.inbound {
+  background: rgba(21, 101, 216, 0.12);
+  color: var(--accent);
+}
+
+.timeline-kind.outbound {
+  background: rgba(180, 83, 9, 0.12);
+  color: var(--accent-3);
+}
+
+.timeline-kind.task {
+  background: rgba(15, 118, 110, 0.14);
+  color: var(--good);
+}
+
+.timeline-kind.invoice {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--bad);
+}
+
+.timeline-kind.webhook {
+  background: rgba(21, 101, 216, 0.14);
+  color: var(--accent);
 }
 
 .action-card,
@@ -1413,6 +1453,72 @@ button {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+}
+
+.lab-tabs {
+  align-items: center;
+}
+
+.lab-tab {
+  min-width: 92px;
+}
+
+.lab-field-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.lab-field-head label {
+  margin-bottom: 0;
+}
+
+.toast-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-item {
+  min-width: 240px;
+  max-width: 320px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 4px;
+  backdrop-filter: blur(14px);
+}
+
+.toast-item strong {
+  font-size: 13px;
+}
+
+.toast-item span {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.toast-item.good {
+  border-color: rgba(15, 157, 88, 0.18);
+}
+
+.toast-item.warn {
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+.toast-item.bad {
+  border-color: rgba(220, 38, 38, 0.22);
 }
 
 .plan-grid {

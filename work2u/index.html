@@ -191,6 +191,7 @@
           <div class="auth-checklist" id="auth-checklist"></div>
 
           <div class="summary-card" id="survey-summary"></div>
+          <div class="summary-card" id="onboarding-snapshot"></div>
 
           <div class="auth-status" id="auth-status">Connect Supabase auth to enable email login.</div>
 
@@ -306,6 +307,7 @@
         <button class="nav-item active" data-view="overview">Overview</button>
         <button class="nav-item" data-view="setup">Setup</button>
         <button class="nav-item" data-view="workspace">Workspace</button>
+        <button class="nav-item" data-view="objects">Objects</button>
         <button class="nav-item" data-view="hub">Communication</button>
         <button class="nav-item" data-view="tasks">Tasks</button>
         <button class="nav-item" data-view="clients">Clients</button>
@@ -315,6 +317,7 @@
         <button class="nav-item" data-view="billing">Billing</button>
         <button class="nav-item" data-view="reports">Reports</button>
         <button class="nav-item" data-view="admin">Admin</button>
+        <button class="nav-item" data-view="webhook-lab">Webhook Lab</button>
       </nav>
 
       <div class="sidebar-note">
@@ -346,6 +349,8 @@
       <section class="view" id="view-root"></section>
     </main>
   </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true" hidden></div>
 
   <div class="overlay" id="member-overlay" hidden>
     <div class="overlay-card">

@@ -9,6 +9,7 @@
   workspaceSearch: 'work2u-v2-workspace-search',
   expenseReceiptFilter: 'work2u-v2-expense-receipt-filter',
   expenseReceiptSearch: 'work2u-v2-expense-receipt-search',
+  aiDraftPrompt: 'work2u-v2-ai-draft-prompt',
   leads: 'work2u-v2-leads',
   clients: 'work2u-v2-clients',
   tasks: 'work2u-v2-tasks',
@@ -18,7 +19,12 @@
   invoices: 'work2u-v2-invoices',
   expenses: 'work2u-v2-expenses',
   ai: 'work2u-v2-ai',
-  aiSource: 'work2u-v2-ai-source'
+  aiSource: 'work2u-v2-ai-source',
+  hubComposer: 'work2u-v2-hub-composer',
+  socialComposer: 'work2u-v2-social-composer',
+  autoWorkflowIndex: 'work2u-v2-auto-workflow-index',
+  webhookLab: 'work2u-v2-webhook-lab',
+  objectInspector: 'work2u-v2-object-inspector'
 };
 
 const VIEW_META = {
@@ -36,6 +42,11 @@ const VIEW_META = {
     title: 'Workspace',
     subtitle: 'Manage leads, clients, tasks, cases, and services in one place.',
     note: 'This is the Sprint 1 core workspace for everyday CRM operations.'
+  },
+  objects: {
+    title: 'Objects',
+    subtitle: 'See the CRM object model, relationships, and field hints in one clean map.',
+    note: 'This is the reference screen for how leads, clients, tasks, cases, and outbound jobs fit together.'
   },
   hub: {
     title: 'Communication',
@@ -81,6 +92,11 @@ const VIEW_META = {
     title: 'Admin',
     subtitle: 'Audit billing, plan usage, and platform state.',
     note: 'Super Admin only. Review subscriptions, events, and plan health.'
+  },
+  'webhook-lab': {
+    title: 'Webhook Lab',
+    subtitle: 'Test Telegram and WhatsApp inbound payloads against the local Work2U webhook.',
+    note: 'Use this page to verify payload shape, mapping, and response without external tools.'
   }
 };
 
@@ -293,6 +309,9 @@ const sampleClients = () => ([
     status: 'active',
     service: 'Listing + lead follow-up',
     value: 3200,
+    email: 'aina@rahmanproperty.my',
+    phone: '+6012-345 6789',
+    telegramUsername: 'ainarahman',
     timeline: [
       'Lead captured from WhatsApp.',
       'Quotation sent.',
@@ -307,6 +326,9 @@ const sampleClients = () => ([
     status: 'active',
     service: 'Policy renewal assistant',
     value: 1800,
+    email: 'daniel@tantakaful.my',
+    phone: '+6011-223 3445',
+    telegramUsername: 'danieltan',
     timeline: [
       'Client converted from email enquiry.',
       'Documents requested.',
@@ -372,6 +394,43 @@ const sampleThreads = () => ([
   }
 ]);
 
+function defaultWebhookLab() {
+  return {
+    channel: 'telegram',
+    endpoint: '/api/telegram/webhook',
+    secret: '',
+    exampleMode: 'telegram',
+    payloadText: JSON.stringify({
+      channel: 'telegram',
+      event: 'message',
+      update: {
+        update_id: 10001,
+        message: {
+          message_id: 17,
+          date: 1735065600,
+          chat: {
+            id: 123456789,
+            username: 'clientname',
+            first_name: 'Client',
+            type: 'private'
+          },
+          from: {
+            id: 123456789,
+            username: 'clientname',
+            first_name: 'Client'
+          },
+          text: 'Hello Work2U'
+        }
+      },
+      workspaceName: 'Work2U'
+    }, null, 2),
+    responseText: '',
+    responseStatus: '',
+    loading: false,
+    error: ''
+  };
+}
+
 const sampleInvoices = () => ([
   { id: 'inv-1', number: 'INV-2026-001', client: 'Aina Rahman', amount: 3200, status: 'sent', due: 'Today', region: 'Malaysia' },
   { id: 'inv-2', number: 'INV-2026-002', client: 'Daniel Tan', amount: 1800, status: 'paid', due: 'Paid', region: 'Global' },
@@ -389,6 +448,25 @@ const sampleCalendar = () => ([
   { id: 'cal-2', title: 'Daniel follow-up reminder', time: 'Tomorrow, 10:30 AM', type: 'reminder' },
   { id: 'cal-3', title: 'Invoice review', time: 'Friday, 3:00 PM', type: 'billing' }
 ]);
+
+function defaultAutoWorkflowIndex() {
+  return {};
+}
+
+function defaultSocialComposer() {
+  return {
+    platform: 'instagram',
+    objective: 'post',
+    campaign: '',
+    audience: 'Prospects',
+    postDate: 'Tomorrow',
+    postTime: '10:00 AM',
+    caption: '',
+    cta: 'Book a call',
+    hashtags: '#work2u #crm',
+    status: 'draft'
+  };
+}
 
 const state = {
   view: load(STORAGE.view, 'overview'),
@@ -410,8 +488,21 @@ const state = {
   members: load(STORAGE.members, defaultMembers()),
   workspaceSearch: load(STORAGE.workspaceSearch, ''),
   publicConfig: null,
+  work2uBootstrap: null,
+  outboundJobs: null,
+  outboundJobsLoading: false,
+  outboundJobsError: null,
+  toast: null,
+  channelActivity: null,
+  channelActivityLoading: false,
+  channelActivityError: null,
+  clientActivity: null,
+  clientActivityLoading: false,
+  clientActivityError: null,
+  clientActivityClientId: null,
   onboardingWelcomeOpen: false,
   onboardingWelcomeSeen: load(STORAGE.onboardingSeen, false),
+  surveySync: { status: 'idle', note: 'Saved locally' },
   leads: load(STORAGE.leads, sampleLeads()),
   clients: load(STORAGE.clients, sampleClients()),
   tasks: load(STORAGE.tasks, sampleTasks()),
@@ -424,6 +515,11 @@ const state = {
   ai: load(STORAGE.ai, [
     { role: 'assistant', text: 'Hi! I can help draft replies, summarize conversations, and turn your idea into a workflow.', at: 'Welcome' }
   ]),
+  aiDraftPrompt: load(STORAGE.aiDraftPrompt, ''),
+  receiptExpenseTypeAutoApplied: load(STORAGE.receiptExpenseTypeAutoApplied, ''),
+  socialComposer: load(STORAGE.socialComposer, defaultSocialComposer()),
+  autoWorkflowIndex: load(STORAGE.autoWorkflowIndex, defaultAutoWorkflowIndex()),
+  webhookLab: load(STORAGE.webhookLab, defaultWebhookLab()),
   billing: null,
   billingAdmin: null,
   expenseRollup: null,
@@ -448,6 +544,16 @@ const state = {
   activeThreadId: null,
   activeClientId: null,
   moduleInspector: null,
+  taskDragId: null,
+  objectInspector: load(STORAGE.objectInspector, 'lead'),
+  hubComposer: load(STORAGE.hubComposer, {
+    channel: 'whatsapp',
+    target: '',
+    name: '',
+    username: '',
+    chatId: '',
+    message: ''
+  }),
   memberEditor: null,
   workspaceEditor: null,
   workspaceInspector: null
@@ -455,6 +561,7 @@ const state = {
 
 let supabaseClient = null;
 let supabaseInitPromise = null;
+let toastTimer = null;
 
 function load(key, fallback) {
   try {
@@ -738,10 +845,10 @@ function refreshOnboardingWizard() {
 
   if (copy) {
     copy.textContent = stage === 'survey'
-      ? 'Step 1 of 3 is active. Fill in the survey so Work2U can recommend the right package and workflow.'
+      ? 'Step 1 of 3 is active. Complete registration so Work2U can recommend the right package and workflow.'
       : stage === 'login'
         ? 'Step 2 of 3 is active. Choose a login path so we can open the dashboard with your settings.'
-      : 'Step 3 of 3 is active. Your dashboard is ready, so you can move straight into the CRM.';
+        : 'Step 3 of 3 is active. Your dashboard is ready, so you can move straight into the CRM.';
   }
 }
 
@@ -1142,6 +1249,39 @@ function updateShell() {
   });
 }
 
+function renderToast() {
+  const host = document.getElementById('toast-stack');
+  if (!host) return;
+  const toast = state.toast;
+  if (!toast?.message) {
+    host.innerHTML = '';
+    host.hidden = true;
+    return;
+  }
+
+  host.hidden = false;
+  host.innerHTML = `
+    <div class="toast-item ${esc(toast.tone || 'good')}">
+      <strong>${esc(toast.title || 'Work2U')}</strong>
+      <span>${esc(toast.message)}</span>
+    </div>
+  `;
+}
+
+function showToast(message, tone = 'good', title = 'Done') {
+  state.toast = {
+    message: String(message || '').trim(),
+    tone: String(tone || 'good').trim(),
+    title: String(title || 'Done').trim()
+  };
+  renderToast();
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    state.toast = null;
+    renderToast();
+  }, 2200);
+}
+
 function ensureSeedData() {
   if (!state.leads.length) state.leads = sampleLeads();
   if (!state.clients.length) state.clients = sampleClients();
@@ -1492,6 +1632,7 @@ function render() {
     overview: renderOverview,
     setup: renderSetup,
     workspace: renderWorkspace,
+    objects: renderObjectModel,
     hub: renderHub,
     tasks: renderTasks,
     clients: renderClients,
@@ -1500,10 +1641,79 @@ function render() {
     access: renderAccess,
     billing: renderBilling,
     reports: renderReports,
-    admin: renderAdmin
+    admin: renderAdmin,
+    'webhook-lab': renderWebhookLab
   };
   root.innerHTML = views[safeView] ? views[safeView]() : renderOverview();
   syncAuthGate();
+  renderToast();
+}
+
+function work2uObjectCatalog() {
+  const fallback = [
+    {
+      key: 'lead',
+      title: 'Lead',
+      role: 'Prospect',
+      purpose: 'Capture interest before conversion.',
+      relations: ['task', 'client', 'outbound job'],
+      fields: ['name', 'company', 'stage', 'source', 'next follow-up', 'note']
+    },
+    {
+      key: 'client',
+      title: 'Client',
+      role: 'Account',
+      purpose: 'Store converted accounts and their service history.',
+      relations: ['task', 'invoice', 'receipt', 'case', 'thread'],
+      fields: ['name', 'company', 'status', 'service', 'timeline']
+    },
+    {
+      key: 'task',
+      title: 'Task',
+      role: 'Work item',
+      purpose: 'Track stage, progress, owner, and due date.',
+      relations: ['lead', 'client', 'calendar', 'case'],
+      fields: ['title', 'stage', 'progress', 'due', 'owner']
+    },
+    {
+      key: 'case',
+      title: 'Case',
+      role: 'Support / exception',
+      purpose: 'Handle service issues and exceptions with a clear owner.',
+      relations: ['client', 'task', 'thread'],
+      fields: ['title', 'type', 'status', 'client', 'summary']
+    },
+    {
+      key: 'service',
+      title: 'Service',
+      role: 'Offer',
+      purpose: 'Define what can later flow into billing.',
+      relations: ['client', 'invoice'],
+      fields: ['name', 'description', 'price', 'active']
+    },
+    {
+      key: 'outbound-job',
+      title: 'Outbound job',
+      role: 'Queued action',
+      purpose: 'Track every send attempt with retry and event history.',
+      relations: ['email', 'WhatsApp', 'Telegram', 'invoice', 'magic link'],
+      fields: ['kind', 'channel', 'target', 'status', 'attempts']
+    }
+  ];
+  return (state.work2uBootstrap?.objectCatalog || fallback).map((item) => ({
+    key: item.key || item.id || 'object',
+    title: item.title || item.name || item.key || 'Object',
+    role: item.role || item.type || '',
+    purpose: item.purpose || item.description || '',
+    relations: Array.isArray(item.relations) ? item.relations : [],
+    fields: Array.isArray(item.fields) ? item.fields : []
+  }));
+}
+
+function setObjectInspector(key) {
+  state.objectInspector = String(key || 'lead');
+  save(STORAGE.objectInspector, state.objectInspector);
+  render();
 }
 
 function renderOverview() {
@@ -1549,7 +1759,10 @@ function renderOverview() {
 
     ${renderTrialBanner()}
     ${renderCoreFlow()}
+    ${renderP0LaunchPad()}
+    ${renderCRMFlowBoard()}
     ${renderModuleMatrix(data)}
+    ${renderP0Roadmap()}
 
     <section class="metric-grid">
       ${pageCards([
@@ -1618,13 +1831,421 @@ function renderOverview() {
           </div>
         </div>
         <div class="stack">
-          ${miniLine('1. Survey', 'Capture persona, channels, language, and AI preference')}
+          ${miniLine('1. Register', 'Capture persona, channels, language, and AI preference')}
           ${miniLine('2. Login', 'Use email magic link')}
           ${miniLine('3. Connect', 'Attach messaging, email, and internal calendar')}
           ${miniLine('4. Bill', `Use ${readiness.region === 'Malaysia' ? 'Billplz' : 'Stripe'} for the active region`)}
           ${miniLine('5. Go live', 'Check entitlements, webhook events, and the final launch checklist')}
         </div>
       </div>
+    </section>
+  `;
+}
+
+function renderCRMFlowBoard() {
+  const leadCounts = {
+    hot: state.leads.filter((item) => item.stage === 'hot').length,
+    warm: state.leads.filter((item) => item.stage === 'warm').length,
+    cold: state.leads.filter((item) => item.stage === 'cold').length
+  };
+  const clientCounts = {
+    active: state.clients.filter((item) => item.status === 'active').length,
+    paused: state.clients.filter((item) => item.status === 'paused').length,
+    closed: state.clients.filter((item) => item.status === 'closed').length
+  };
+  const taskCounts = {
+    todo: state.tasks.filter((item) => item.stage === 'todo').length,
+    doing: state.tasks.filter((item) => item.stage === 'doing').length,
+    review: state.tasks.filter((item) => item.stage === 'review').length,
+    done: state.tasks.filter((item) => item.stage === 'done').length
+  };
+  const nextLead = state.leads.find((item) => item.stage === 'hot') || state.leads[0];
+  const nextClient = state.clients.find((item) => item.status === 'active') || state.clients[0];
+  const nextTask = state.tasks.find((item) => item.stage !== 'done') || state.tasks[0];
+
+  return `
+    <section class="split" aria-label="CRM flow board" style="margin-top:18px;">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>CRM flow board</h3>
+            <p>Leads, clients, and tasks move together so follow-up stays easy to manage.</p>
+          </div>
+          <span class="status-pill">Live flow</span>
+        </div>
+        <div class="grid-2">
+          ${pageCards([
+            { label: 'Hot leads', value: leadCounts.hot, sub: `${leadCounts.warm} warm · ${leadCounts.cold} cold` },
+            { label: 'Active clients', value: clientCounts.active, sub: `${clientCounts.paused} paused · ${clientCounts.closed} closed` },
+            { label: 'In progress', value: taskCounts.doing, sub: `${taskCounts.todo} todo · ${taskCounts.review} review` },
+            { label: 'Done tasks', value: taskCounts.done, sub: 'Closed work and completed follow-ups' }
+          ])}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>What needs attention</h3>
+            <p>Use the next actions to keep the workspace moving without hunting for records.</p>
+          </div>
+        </div>
+        <div class="stack">
+          ${miniLine('Lead follow-up', nextLead ? `${nextLead.name} · ${nextLead.company || 'No company'} · ${nextLead.nextFollowUp || 'No follow-up set'}` : 'No lead yet')}
+          ${miniLine('Client status', nextClient ? `${nextClient.name} · ${nextClient.service || 'No service'} · RM ${money(nextClient.value)}` : 'No client yet')}
+          ${miniLine('Task focus', nextTask ? `${nextTask.title} · ${nextTask.stage} · due ${nextTask.due || 'No due date'}` : 'No task yet')}
+          ${miniLine('Flow rule', 'Move lead to client, then attach task and billing in the same workspace')}
+        </div>
+        <div class="topbar-actions" style="margin-top:16px;">
+          <button class="primary-btn" type="button" onclick="openWorkspaceEditor('lead')">Add lead</button>
+          <button class="soft-btn" type="button" onclick="openWorkspaceEditor('client')">Add client</button>
+          <button class="soft-btn" type="button" onclick="openWorkspaceEditor('task')">Add task</button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderP0LaunchPad() {
+  const shortcuts = [
+    { title: 'New lead', copy: 'Capture a new prospect and set the first follow-up.', action: "openWorkspaceEditor('lead')" },
+    { title: 'New client', copy: 'Add a converted account and attach the service timeline.', action: "openWorkspaceEditor('client')" },
+    { title: 'New task', copy: 'Create a task with progress and due date.', action: "openWorkspaceEditor('task')" },
+    { title: 'New case', copy: 'Log a service issue or exception.', action: "openWorkspaceEditor('case')" },
+    { title: 'New service', copy: 'Define an offer that can flow into billing.', action: "openWorkspaceEditor('service')" }
+  ];
+
+  const nextViews = [
+    { title: 'Object model', copy: 'See the CRM objects, relations, and field hints.', action: "setView('objects')" },
+    { title: 'Calendar', copy: 'Use the internal calendar as the reminder layer.', action: "setView('calendar')" },
+    { title: 'Billing', copy: 'Check route, trial status, and package limits.', action: "setView('billing')" },
+    { title: 'Communication', copy: 'Draft or send follow-up from the unified inbox.', action: "setView('hub')" },
+    { title: 'Workspace', copy: 'Search across leads, clients, tasks, and services.', action: "setView('workspace')" }
+  ];
+
+  return `
+    <section class="split" aria-label="P0 launch pad" style="margin-top:18px;">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>P0 launch pad</h3>
+            <p>Fast actions that help the workspace feel alive from day one.</p>
+          </div>
+          <span class="status-pill">Ready</span>
+        </div>
+        <div class="grid-2">
+          ${shortcuts.map((item) => `
+            <button class="action-card" type="button" onclick="${item.action}" style="text-align:left;cursor:pointer;">
+              <strong>${esc(item.title)}</strong>
+              <p>${esc(item.copy)}</p>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Fast navigation</h3>
+            <p>Jump directly to the module that matches the next job.</p>
+          </div>
+        </div>
+        <div class="stack">
+          ${nextViews.map((item, index) => `
+            <div class="list-item">
+              <div>
+                <strong>${index + 1}. ${esc(item.title)}</strong>
+                <div class="tiny">${esc(item.copy)}</div>
+              </div>
+              <button class="soft-btn" type="button" onclick="${item.action}">Open</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderP0Roadmap() {
+  const p0Cards = [
+    {
+      label: 'Identity and entry',
+      value: 'In place',
+      sub: 'Registration before login and email auth are the default entry flow.'
+    },
+    {
+      label: 'Core data',
+      value: 'In place',
+      sub: 'Leads, clients, tasks, services, and cases anchor the CRM.'
+    },
+    {
+      label: 'Internal calendar',
+      value: 'In place',
+      sub: 'Tasks can stay synced to reminders without external calendar dependency.'
+    },
+    {
+      label: 'Messaging',
+      value: 'In place',
+      sub: 'Resend, templates, and follow-up routes are ready for the workspace.'
+    },
+    {
+      label: 'Billing',
+      value: 'Active',
+      sub: 'Malaysia uses Billplz and global uses Stripe with trial routing.'
+    }
+  ];
+
+  const nextUp = [
+    { title: 'Invoices and receipts', copy: 'Keep documents attached to the client and ready for send or download.' },
+    { title: 'Monthly close', copy: 'Use receipt keeping and expense rollups to make P&L easier to review.' },
+    { title: 'Automation bridge', copy: 'Connect WhatsApp, Telegram, and webhook jobs after the foundation is stable.' },
+    { title: 'Reports', copy: 'Expose revenue, expenses, and margin views for pricing decisions.' }
+  ];
+
+  return `
+    <section class="split" aria-label="P0 build roadmap">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>P0 build board</h3>
+            <p>What we want in place first before expanding into the heavier automation layer.</p>
+          </div>
+          <span class="status-pill">Foundation</span>
+        </div>
+        <div class="grid-2">
+          ${pageCards(p0Cards)}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Next up after P0</h3>
+            <p>The features we should turn on right after the foundation is stable.</p>
+          </div>
+        </div>
+        <div class="stack">
+          ${nextUp.map((item, index) => `
+            <div class="action-card">
+              <div class="pill-line">
+                <span class="status-pill">0${index + 1}</span>
+                <span class="status-pill">${esc(item.title)}</span>
+              </div>
+              <p style="margin-top:10px;">${esc(item.copy)}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderObjectModel() {
+  const catalog = work2uObjectCatalog();
+  const bootstrap = state.work2uBootstrap || {};
+  const queue = bootstrap.outboundQueue || { summary: {}, total: 0, jobs: [], events: [] };
+  const selectedKey = state.objectInspector || catalog[0]?.key || 'lead';
+  const selected = catalog.find((item) => item.key === selectedKey) || catalog[0] || null;
+  const normalizeKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const relationActions = {
+    lead: "openModuleShortcut('leads')",
+    client: "openModuleShortcut('clients')",
+    task: "openModuleShortcut('tasks')",
+    case: "openModuleShortcut('communication')",
+    service: "openModuleShortcut('billing')",
+    calendar: "setView('calendar')",
+    thread: "setView('hub')",
+    invoice: "setView('billing')",
+    receipt: "setView('billing')",
+    'outbound-job': "setView('admin')",
+    'magic-link': "setView('admin')"
+  };
+  const selectedRelations = (selected?.relations || []).map((relation) => {
+    const key = normalizeKey(relation);
+    return {
+      raw: relation,
+      key,
+      object: catalog.find((item) => item.key === key) || null,
+      action: relationActions[key] || null
+    };
+  });
+  const lifecycle = [
+    { step: 'Lead', copy: 'Capture interest, score the prospect, and set the next follow-up.' },
+    { step: 'Client', copy: 'Convert the record, attach services, and preserve the business timeline.' },
+    { step: 'Task', copy: 'Track execution stage, progress, and due dates for daily work.' },
+    { step: 'Case', copy: 'Handle exceptions and support issues without breaking context.' },
+    { step: 'Invoice / Receipt', copy: 'Bill the client and keep proof of payment attached.' },
+    { step: 'Outbound job', copy: 'Log every send attempt so WhatsApp, email, and Telegram stay traceable.' }
+  ];
+  const objectActions = {
+    lead: "openModuleShortcut('leads')",
+    client: "openModuleShortcut('clients')",
+    task: "openModuleShortcut('tasks')",
+    case: "openModuleShortcut('communication')",
+    service: "openModuleShortcut('billing')",
+    'outbound-job': "setView('admin')"
+  };
+
+  return `
+    <section class="stack">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Object model</h3>
+            <p>Work2U keeps the CRM built around a small set of clear objects so every module stays connected.</p>
+          </div>
+          <div class="pill-line">
+            <span class="status-pill">${esc(catalog.length)} objects</span>
+            <span class="status-pill">${esc(queue.total || 0)} outbound jobs</span>
+            <button class="soft-btn" type="button" onclick="syncWork2uBootstrapFromServer()">Refresh model</button>
+          </div>
+        </div>
+        <div class="grid-2">
+          ${pageCards([
+            { label: 'Lead', value: state.leads.length, sub: 'Prospects before conversion' },
+            { label: 'Client', value: state.clients.length, sub: 'Converted accounts' },
+            { label: 'Task', value: state.tasks.length, sub: 'Stage + progress work items' },
+            { label: 'Outbound jobs', value: queue.total || 0, sub: 'Queue and event log' }
+          ])}
+        </div>
+      </div>
+
+      <section class="split">
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Entity catalog</h3>
+              <p>Each object has a clear role, relation, and field set.</p>
+            </div>
+          </div>
+          <div class="stack">
+            ${catalog.map((item) => `
+              <article class="action-card ${selectedKey === item.key ? 'active' : ''}" style="cursor:pointer;" onclick="setObjectInspector('${esc(item.key)}')">
+                <div class="pill-line" style="justify-content:space-between;">
+                  <div style="display:flex;flex-direction:column;gap:4px;">
+                    <strong>${esc(item.title)}</strong>
+                    <span class="tiny">${esc(item.role || item.key)}</span>
+                  </div>
+                  <span class="status-pill">${esc(item.key)}</span>
+                </div>
+                <p style="margin-top:10px;">${esc(item.purpose)}</p>
+                <div class="stack" style="margin-top:12px;">
+                  ${miniLine('Relations', (item.relations || []).join(' · ') || '-')}
+                  ${miniLine('Fields', (item.fields || []).join(' · ') || '-')}
+                </div>
+                <div class="topbar-actions" style="margin-top:14px;">
+                  <button class="soft-btn" type="button" onclick="event.stopPropagation(); setObjectInspector('${esc(item.key)}')">Inspect</button>
+                  <button class="soft-btn" type="button" onclick="event.stopPropagation(); ${objectActions[item.key] || "setView('workspace')"}">Open module</button>
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Selected object</h3>
+              <p>Inspect the active object and its surrounding relationships.</p>
+            </div>
+            <span class="status-pill">${esc(selected?.key || 'lead')}</span>
+          </div>
+          <article class="report-card">
+            <div class="report-top">
+              <div>
+                <div class="tiny">${esc(selected?.role || 'Object')}</div>
+                <strong>${esc(selected?.title || 'Object')}</strong>
+              </div>
+              <span class="status-pill">${esc((selected?.relations || []).length)} relations</span>
+            </div>
+            <p class="report-copy">${esc(selected?.purpose || 'Select an object to inspect it.')}</p>
+            <div class="stack" style="margin-top:12px;">
+              ${miniLine('Fields', (selected?.fields || []).join(' · ') || '-')}
+              ${miniLine('Relations', (selected?.relations || []).join(' · ') || '-')}
+              ${miniLine('Open path', objectActions[selected?.key] ? 'Open the related module from this object' : 'Use the workspace or admin module')}
+            </div>
+            <div class="topbar-actions" style="margin-top:14px;">
+              <button class="primary-btn" type="button" onclick="${objectActions[selected?.key] || "setView('workspace')"}">Open related module</button>
+              <button class="soft-btn" type="button" onclick="setView('admin')">Open queue</button>
+            </div>
+          </article>
+          <div class="report-card" style="margin-top:16px;">
+            <div class="report-top">
+              <div>
+                <div class="tiny">Relationship graph</div>
+                <strong>Connected objects and modules</strong>
+              </div>
+            </div>
+            <div class="stack" style="margin-top:12px;">
+              ${selectedRelations.map((relation) => `
+                <div class="list-item" style="align-items:flex-start;">
+                  <div style="display:flex;flex-direction:column;gap:4px;">
+                    <strong>${esc(relation.object?.title || relation.raw)}</strong>
+                    <div class="tiny">${esc(relation.object?.purpose || 'Supporting record or module')}</div>
+                  </div>
+                  <div class="pill-line">
+                    <span class="status-pill">${esc(relation.key)}</span>
+                    ${relation.object ? `<button class="soft-btn" type="button" onclick="setObjectInspector('${esc(relation.object.key)}')">Inspect</button>` : ''}
+                    ${relation.action ? `<button class="soft-btn" type="button" onclick="${relation.action}">Open</button>` : ''}
+                  </div>
+                </div>
+              `).join('') || '<div class="tiny">No relationships defined yet.</div>'}
+            </div>
+          </div>
+          <div class="report-card" style="margin-top:16px;">
+            <div class="report-top">
+              <div>
+                <div class="tiny">Queue behavior</div>
+                <strong>Outbound jobs are log-first</strong>
+              </div>
+            </div>
+            <div class="stack" style="margin-top:12px;">
+              ${miniLine('Queue summary', `${esc(queue.summary?.queued || 0)} queued · ${esc(queue.summary?.sent || 0)} sent · ${esc(queue.summary?.failed || 0)} failed`)}
+              ${miniLine('Channel readiness', `${bootstrap.channels?.whatsappRelayReady ? 'WhatsApp relay ready' : 'WhatsApp relay pending'} · ${bootstrap.channels?.telegramBotReady ? 'Telegram bot ready' : 'Telegram bot pending'}`)}
+              ${miniLine('Channel rules', 'WhatsApp uses a relay endpoint. Telegram requires bot token + chat id.')}
+              ${miniLine('Retry behavior', 'Failed jobs can be replayed from the admin queue.')}
+              ${miniLine('Next use', 'Connect leads, clients, and messages to keep follow-up traceable.')}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="split">
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Lifecycle map</h3>
+              <p>This is the shortest path from prospect to client to cashflow.</p>
+            </div>
+          </div>
+          <div class="stack">
+            ${lifecycle.map((item, index) => `
+              <div class="list-item">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <strong>${index + 1}. ${esc(item.step)}</strong>
+                  <div class="tiny">${esc(item.copy)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Object map shortcuts</h3>
+              <p>Jump into the linked module from the current object.</p>
+            </div>
+          </div>
+          <div class="stack">
+            ${catalog.map((item) => `
+              <div class="list-item">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <strong>${esc(item.title)}</strong>
+                  <div class="tiny">${esc((item.relations || []).join(' · ') || 'No relations')}</div>
+                </div>
+                <button class="soft-btn" type="button" onclick="setObjectInspector('${esc(item.key)}')">Inspect</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
     </section>
   `;
 }
@@ -1725,7 +2346,7 @@ function renderCoreFlow() {
   const coreSteps = [
     {
       title: 'Capture',
-      copy: 'Survey, leads, and incoming messages land into one structured workspace.'
+      copy: 'Registration, leads, and incoming messages land into one structured workspace.'
     },
     {
       title: 'Coordinate',
@@ -1913,7 +2534,7 @@ function renderSetup() {
             ${miniLine('Communication', 'Routes follow-up to the best channel')}
             ${miniLine('AI', 'Uses your mode and tone preference')}
             ${miniLine('Billing', 'Keeps limits in line with your package')}
-            ${miniLine('Access', 'Prepares roles and scopes for team growth')}
+            ${miniLine('Access', `${recommendedAccessRole(p.persona)} role by default with scoped team growth`)}
           </div>
         </div>
       </div>
@@ -1923,6 +2544,20 @@ function renderSetup() {
 
 function renderHub() {
   const thread = state.threads.find((item) => item.id === state.activeThreadId) || state.threads[0];
+  const composer = state.hubComposer || {};
+  const social = defaultSocialComposerState();
+  const activeComposer = {
+    channel: composer.channel || thread?.channel || 'whatsapp',
+    target: composer.target || '',
+    name: composer.name || thread?.name || '',
+    username: composer.username || '',
+    chatId: composer.chatId || '',
+    message: composer.message || ''
+  };
+  const activity = state.channelActivity || { events: [], summary: { inbound: 0, outbound: 0, channels: {} } };
+  const recentActivity = (activity.events || []).slice(0, 6);
+  const socialUnlocked = canUseFeature('socialManagement');
+  const socialTemplate = socialTemplatePreset(social);
   const aiTip = thread?.channel === 'email'
     ? 'Use a formal reply with the document attached.'
     : thread?.channel === 'telegram'
@@ -1978,10 +2613,168 @@ function renderHub() {
             <input id="hub-input" type="text" placeholder="Try: Draft a polite WhatsApp reply and mention the revised quotation." />
             <button class="primary-btn" type="button" onclick="runHubDraft()">Draft with AI</button>
           </div>
+          <div class="panel" style="box-shadow:none;">
+            <div class="section-title">
+              <div>
+                <h3>Follow-up playbooks</h3>
+                <p>Load a ready prompt for the next action in your CRM flow.</p>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="soft-btn" type="button" onclick="seedHubPlaybook('invoice-reminder')">Invoice reminder</button>
+              <button class="soft-btn" type="button" onclick="seedHubPlaybook('vendor-follow-up')">Vendor follow-up</button>
+              <button class="soft-btn" type="button" onclick="seedHubPlaybook('receipt-approval')">Receipt approval</button>
+            </div>
+          </div>
+          <div class="panel" style="box-shadow:none;">
+            <div class="section-title">
+              <div>
+                <h3>Channel composer</h3>
+                <p>Write once, then send through WhatsApp or Telegram.</p>
+              </div>
+              <div class="pill-line">
+                <span class="status-pill">${esc(label(activeComposer.channel))}</span>
+                <button class="soft-btn" type="button" onclick="copyHubDraftToComposer()">Use AI draft</button>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="hub-channel">Channel</label>
+                <select id="hub-channel" onchange="setHubComposerChannel(this.value)">
+                  <option value="whatsapp" ${String(activeComposer.channel).toLowerCase() === 'whatsapp' ? 'selected' : ''}>WhatsApp</option>
+                  <option value="telegram" ${String(activeComposer.channel).toLowerCase() === 'telegram' ? 'selected' : ''}>Telegram</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="hub-target">Target / phone</label>
+                <input id="hub-target" value="${esc(activeComposer.target)}" placeholder="6012xxxxxxx or relay id" oninput="updateHubComposerField('target', this.value)" />
+              </div>
+              <div class="field">
+                <label for="hub-name">Contact name</label>
+                <input id="hub-name" value="${esc(activeComposer.name)}" placeholder="Client name" oninput="updateHubComposerField('name', this.value)" />
+              </div>
+              <div class="field">
+                <label for="hub-username">Telegram username</label>
+                <input id="hub-username" value="${esc(activeComposer.username)}" placeholder="@username" oninput="updateHubComposerField('username', this.value)" />
+              </div>
+              <div class="field">
+                <label for="hub-chat-id">Telegram chat_id</label>
+                <input id="hub-chat-id" value="${esc(activeComposer.chatId)}" placeholder="123456789" oninput="updateHubComposerField('chatId', this.value)" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Message</label>
+              <textarea id="hub-compose-message" placeholder="Type the message you want to send..." oninput="updateHubComposerField('message', this.value)">${esc(activeComposer.message)}</textarea>
+            </div>
+            <div class="topbar-actions">
+              <div class="tiny" style="flex:1;align-self:center;">
+                WhatsApp uses relay or Baileys endpoint. Telegram needs a real chat_id after the client starts the bot.
+              </div>
+              <button class="primary-btn" type="button" onclick="sendChannelMessageFromHub()">Send now</button>
+            </div>
+          </div>
+          <div class="panel" style="box-shadow:none;">
+            <div class="section-title">
+              <div>
+                <h3>Social management</h3>
+                <p>Plan posts, campaigns, and reminders from the same Hub.</p>
+              </div>
+              <span class="status-pill">${socialUnlocked ? 'Unlocked' : 'Elite locked'}</span>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="social-platform">Platform</label>
+                <select id="social-platform" onchange="updateSocialComposerField('platform', this.value)">
+                  ${['instagram', 'facebook', 'linkedin', 'tiktok', 'x'].map((platform) => `<option value="${platform}" ${String(social.platform || '').toLowerCase() === platform ? 'selected' : ''}>${platform}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label for="social-objective">Objective</label>
+                <select id="social-objective" onchange="updateSocialComposerField('objective', this.value)">
+                  ${['post', 'story', 'campaign', 'announcement', 'reel'].map((objective) => `<option value="${objective}" ${String(social.objective || '').toLowerCase() === objective ? 'selected' : ''}>${objective}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label for="social-campaign">Campaign name</label>
+                <input id="social-campaign" value="${esc(social.campaign || '')}" placeholder="Ramadan campaign" oninput="updateSocialComposerField('campaign', this.value)" />
+              </div>
+              <div class="field">
+                <label for="social-audience">Audience</label>
+                <input id="social-audience" value="${esc(social.audience || '')}" placeholder="Prospects, clients, followers" oninput="updateSocialComposerField('audience', this.value)" />
+              </div>
+              <div class="field">
+                <label for="social-date">Post date</label>
+                <input id="social-date" type="text" value="${esc(social.postDate || '')}" placeholder="Tomorrow or 2026-08-21" oninput="updateSocialComposerField('postDate', this.value)" />
+              </div>
+              <div class="field">
+                <label for="social-time">Post time</label>
+                <input id="social-time" type="text" value="${esc(social.postTime || '')}" placeholder="10:00 AM" oninput="updateSocialComposerField('postTime', this.value)" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="social-caption">Caption draft</label>
+              <textarea id="social-caption" placeholder="Write the caption or let AI help draft it." oninput="updateSocialComposerField('caption', this.value)">${esc(social.caption || '')}</textarea>
+            </div>
+            <div class="stack" style="margin-top:14px;">
+              ${miniLine('Platform recipe', socialTemplate.format)}
+              ${miniLine('Post length', socialTemplate.length)}
+              ${miniLine('Hook', socialTemplate.hook)}
+              ${miniLine('Template brief', socialTemplate.brief)}
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="social-cta">CTA</label>
+                <input id="social-cta" value="${esc(social.cta || '')}" placeholder="Book a demo" oninput="updateSocialComposerField('cta', this.value)" />
+              </div>
+              <div class="field">
+                <label for="social-hashtags">Hashtags</label>
+                <input id="social-hashtags" value="${esc(social.hashtags || '')}" placeholder="#work2u #crm" oninput="updateSocialComposerField('hashtags', this.value)" />
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="soft-btn" type="button" onclick="applySocialTemplateDraft()" ${socialUnlocked ? '' : 'disabled'}>Use template</button>
+              <button class="soft-btn" type="button" onclick="seedSocialPrompt()" ${socialUnlocked ? '' : 'disabled'}>Draft with AI</button>
+              <button class="soft-btn" type="button" onclick="syncSocialWorkflowFromComposer()" ${socialUnlocked ? '' : 'disabled'}>Sync to calendar</button>
+              <button class="primary-btn" type="button" onclick="setView('calendar')">Open calendar</button>
+            </div>
+            <div class="stack" style="margin-top:14px;">
+              ${miniLine('Reminder layer', 'Social plans can create one task and one calendar event automatically.') }
+              ${miniLine('Publishing rule', socialUnlocked ? 'Use this as a draft-and-schedule workflow.' : 'Unlock social management with Elite or Enterprise.') }
+              ${miniLine('Suggested CTA', socialTemplate.cta)}
+              ${miniLine('Suggested hashtags', socialTemplate.hashtags)}
+            </div>
+          </div>
           <div class="list">
             ${miniLine('Suggested tone', aiTip)}
             ${miniLine('Next action', 'Create follow-up task or schedule a reminder')}
             ${miniLine('Channel rule', 'Send only when the channel is connected and consent exists')}
+          </div>
+          <div class="report-card" style="box-shadow:none;">
+            <div class="report-top">
+              <div>
+                <div class="tiny">Reply tracking</div>
+                <strong>Inbound and outbound activity</strong>
+              </div>
+              <div class="pill-line">
+                <span class="status-pill">${esc(activity.summary?.inbound || 0)} inbound</span>
+                <span class="status-pill">${esc(activity.summary?.outbound || 0)} outbound</span>
+                <button class="soft-btn" type="button" onclick="syncChannelActivityFromServer()">Refresh activity</button>
+              </div>
+            </div>
+            <div class="stack" style="margin-top:14px;">
+              ${state.channelActivityError ? miniLine('Activity error', state.channelActivityError) : ''}
+              ${state.channelActivityLoading ? miniLine('Activity status', 'Loading channel activity...') : ''}
+              ${recentActivity.map((item) => `
+                <div class="list-item" style="align-items:flex-start;">
+                  <div style="display:flex;flex-direction:column;gap:4px;">
+                    <strong>${esc(item.name || item.contact || item.event_type || 'Activity')}</strong>
+                    <div class="tiny">${esc(label(item.channel || 'whatsapp'))} · ${esc(item.direction || 'inbound')} · ${esc(item.status || 'received')}</div>
+                    <div class="tiny">${esc(item.message || 'No message body')}</div>
+                  </div>
+                  <span class="status-pill ${String(item.direction || '').toLowerCase() === 'outbound' ? '' : 'warn'}">${esc(item.direction || 'inbound')}</span>
+                </div>
+              `).join('') || '<div class="tiny">No channel activity yet.</div>'}
+            </div>
           </div>
         </div>
       </div>
@@ -1989,33 +2782,204 @@ function renderHub() {
   `;
 }
 
+function taskStageMeta(stage = 'todo') {
+  const map = {
+    todo: {
+      label: 'To Do',
+      copy: 'Not started yet. Capture the next action clearly so work does not stall.',
+      next: 'Move to in progress'
+    },
+    doing: {
+      label: 'In Progress',
+      copy: 'Work is moving. Keep the owner and due date visible so the team stays aligned.',
+      next: 'Send to review'
+    },
+    review: {
+      label: 'Review',
+      copy: 'Needs a final check before it can be closed or handed over.',
+      next: 'Mark complete'
+    },
+    done: {
+      label: 'Done',
+      copy: 'Completed and archived for record keeping.',
+      next: 'Reopen if needed'
+    }
+  };
+
+  return map[String(stage || 'todo').toLowerCase()] || map.todo;
+}
+
+function nextTaskStage(stage = 'todo') {
+  return {
+    todo: 'doing',
+    doing: 'review',
+    review: 'done',
+    done: 'done'
+  }[String(stage || 'todo').toLowerCase()] || 'todo';
+}
+
+function taskProgressForStage(stage = 'todo') {
+  return {
+    todo: 15,
+    doing: 55,
+    review: 80,
+    done: 100
+  }[String(stage || 'todo').toLowerCase()] ?? 0;
+}
+
+async function advanceTaskStage(taskId) {
+  const list = Array.isArray(state.tasks) ? state.tasks : [];
+  const current = list.find((item) => item.id === taskId);
+  if (!current) return null;
+  return moveTaskToStage(taskId, nextTaskStage(current.stage));
+}
+
+async function moveTaskToStage(taskId, stage) {
+  const list = Array.isArray(state.tasks) ? state.tasks : [];
+  const index = list.findIndex((item) => item.id === taskId);
+  if (index < 0) return null;
+  const current = list[index];
+  const nextStage = String(stage || current.stage || 'todo').toLowerCase();
+  if (nextStage === String(current.stage || 'todo').toLowerCase()) {
+    showToast('This task is already completed.', 'warn', 'Tasks');
+    return current;
+  }
+
+  const updated = {
+    ...current,
+    stage: nextStage,
+    progress: taskProgressForStage(nextStage),
+    updatedAt: nowIso()
+  };
+
+  const nextTasks = [...list];
+  nextTasks[index] = updated;
+  state.tasks = nextTasks;
+  persistCollection('tasks');
+  await workspaceApiRequest('tasks', 'PATCH', current.id, updated);
+  render();
+  showToast(`Task moved to ${taskStageMeta(nextStage).label}.`, 'good', 'Tasks');
+  return updated;
+}
+
+function beginTaskDrag(taskId, event) {
+  state.taskDragId = taskId;
+  if (event?.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(taskId));
+  }
+}
+
+function endTaskDrag() {
+  state.taskDragId = null;
+  document.querySelectorAll('.task-stage-dropzone.drag-over').forEach((el) => el.classList.remove('drag-over'));
+}
+
+function markTaskDropZone(event) {
+  event.currentTarget?.classList.add('drag-over');
+}
+
+function clearTaskDropZone(event) {
+  event.currentTarget?.classList.remove('drag-over');
+}
+
+function allowTaskDrop(event) {
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+}
+
+async function dropTaskStage(event, stage) {
+  event.preventDefault();
+  event.currentTarget?.classList.remove('drag-over');
+  const taskId = event.dataTransfer?.getData('text/plain') || state.taskDragId;
+  state.taskDragId = null;
+  if (!taskId) return null;
+  return moveTaskToStage(taskId, stage);
+}
+
 function renderTasks() {
   const groups = ['todo', 'doing', 'review', 'done'];
   const labels = { todo: 'To Do', doing: 'In Progress', review: 'Review', done: 'Done' };
+  const totalTasks = state.tasks.length;
+  const openTasks = state.tasks.filter((task) => task.stage !== 'done').length;
+  const averageProgress = totalTasks
+    ? Math.round(state.tasks.reduce((sum, task) => sum + Number(task.progress || 0), 0) / totalTasks)
+    : 0;
   return `
-    <section class="grid-4">
-      ${groups.map((stage) => `
-        <article class="panel">
-          <div class="section-title">
-            <div>
-              <h3>${labels[stage]}</h3>
-              <p>${state.tasks.filter((task) => task.stage === stage).length} tasks</p>
-            </div>
+    <section class="split">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Tasks</h3>
+            <p>Track stage, progress, due dates, and ownership in one place.</p>
           </div>
-          <div class="stack">
-            ${state.tasks.filter((task) => task.stage === stage).map((task) => `
-              <div class="action-card">
-                <strong>${esc(task.title)}</strong>
-                <p>Owner: ${esc(task.owner)} · Due ${esc(task.due)}</p>
-                <div class="bar"><span style="width:${task.progress}%"></span></div>
-                <div class="pill-line">
-                  <span class="status-pill">${esc(task.progress)}%</span>
+          <div class="pill-line">
+            <span class="status-pill">${totalTasks} total</span>
+            <span class="status-pill warn">${openTasks} open</span>
+            <span class="status-pill">${averageProgress}% avg</span>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          ${pageCards([
+            { label: 'Todo', value: state.tasks.filter((task) => task.stage === 'todo').length, sub: 'Waiting to start' },
+            { label: 'Doing', value: state.tasks.filter((task) => task.stage === 'doing').length, sub: 'Work in motion' },
+            { label: 'Review', value: state.tasks.filter((task) => task.stage === 'review').length, sub: 'Needs a final check' },
+            { label: 'Done', value: state.tasks.filter((task) => task.stage === 'done').length, sub: 'Completed items' }
+          ])}
+        </div>
+        <div class="stack">
+          ${groups.map((stage) => `
+            <article class="panel task-stage-dropzone" style="box-shadow:none;" ondragover="allowTaskDrop(event)" ondrop="dropTaskStage(event, '${stage}')" ondragenter="markTaskDropZone(event)" ondragleave="clearTaskDropZone(event)">
+              <div class="section-title">
+                <div>
+                  <h3>${labels[stage]}</h3>
+                  <p>${state.tasks.filter((task) => task.stage === stage).length} tasks · ${taskStageMeta(stage).copy}</p>
                 </div>
+                <span class="status-pill">${taskStageMeta(stage).label}</span>
               </div>
-            `).join('')}
+              <div class="stack">
+                ${state.tasks.filter((task) => task.stage === stage).map((task) => `
+                  <div class="action-card task-card" draggable="true" ondragstart="beginTaskDrag(${JSON.stringify(task.id)}, event)" ondragend="endTaskDrag(event)">
+                    <div class="pill-line">
+                      <span class="status-pill">${esc(taskStageMeta(task.stage).label)}</span>
+                      <span class="status-pill">${esc(task.progress)}%</span>
+                    </div>
+                    <strong style="display:block;margin-top:10px;">${esc(task.title)}</strong>
+                    <p>${esc(taskStageMeta(task.stage).copy)}</p>
+                    <p>Owner: ${esc(task.owner)} · Due ${esc(task.due || 'No due date')}</p>
+                    <div class="bar"><span style="width:${task.progress}%"></span></div>
+                    <div class="pill-line" style="margin-top:10px;">
+                      <span class="tiny">Next: ${esc(taskStageMeta(task.stage).next)}</span>
+                      <div class="pill-line">
+                        ${task.stage !== 'done' ? `<button class="soft-btn" type="button" onclick="advanceTaskStage(${JSON.stringify(task.id)})">${esc(taskStageMeta(task.stage).next)}</button>` : ''}
+                        <button class="ghost-btn" type="button" onclick="openWorkspaceEditor('task', ${JSON.stringify(task.id)})">Edit</button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Task actions</h3>
+            <p>Start new work or move existing work into the right lane.</p>
           </div>
-        </article>
-      `).join('')}
+        </div>
+        <div class="stack">
+          ${miniLine('Create task', 'Capture a task with owner, due date, and progress')}
+          ${miniLine('Sync reminder', 'Use the internal calendar to keep follow-up visible')}
+          ${miniLine('Keep moving', 'Open the related client or lead when the task is blocked')}
+        </div>
+        <div class="topbar-actions" style="margin-top:16px;">
+          <button class="primary-btn" type="button" onclick="openWorkspaceEditor('task')">Add task</button>
+          <button class="soft-btn" type="button" onclick="setView('calendar')">Open calendar</button>
+          <button class="soft-btn" type="button" onclick="setView('workspace')">Open workspace</button>
+        </div>
+      </div>
     </section>
   `;
 }
@@ -2090,7 +3054,7 @@ function workspaceText(kind, item) {
   ];
   if (kind === 'task') chunks.push(item.due, item.progress);
   if (kind === 'service') chunks.push(item.description, item.price);
-  if (kind === 'client') chunks.push((item.timeline || []).join(' '));
+  if (kind === 'client') chunks.push((item.timeline || []).join(' '), item.email, item.phone, item.telegramUsername, item.whatsapp);
   return chunks.filter(Boolean).join(' ').toLowerCase();
 }
 
@@ -2149,7 +3113,7 @@ function workspaceItemSummary(kind, item) {
     case 'lead':
       return `${item.company || 'No company'} · ${item.source || 'Unknown source'} · ${item.nextFollowUp || 'No follow-up'}`;
     case 'client':
-      return `${item.company || 'No company'} · ${item.service || 'No service'} · RM ${money(item.value)}`;
+      return `${item.company || 'No company'} · ${item.service || 'No service'} · RM ${money(item.value)}${item.phone ? ` · ${item.phone}` : ''}`;
     case 'task':
       return `Owner: ${item.owner || 'Unassigned'} · Due ${item.due || 'No due date'} · ${item.progress || 0}%`;
     case 'case':
@@ -2159,6 +3123,65 @@ function workspaceItemSummary(kind, item) {
     default:
       return '';
   }
+}
+
+function normalizeLeadIdentity(item = {}) {
+  return `${String(item.name || '').trim().toLowerCase()}|${String(item.company || '').trim().toLowerCase()}`;
+}
+
+async function convertLeadToClient(leadId) {
+  const lead = (state.leads || []).find((item) => item.id === leadId);
+  if (!lead) return;
+
+  const existingClient = (state.clients || []).find((item) => normalizeLeadIdentity(item) === normalizeLeadIdentity(lead));
+  const clientId = existingClient?.id || `client-${lead.id}`;
+  const timelineSource = [
+    ...(existingClient?.timeline || []),
+    `Converted from ${lead.source || 'lead'} lead.`,
+    lead.nextFollowUp ? `Lead follow-up was set for ${lead.nextFollowUp}.` : null,
+    lead.note ? `Lead note: ${lead.note}` : null
+  ].filter(Boolean);
+
+  const nextClient = {
+    ...existingClient,
+    id: clientId,
+    name: lead.name || existingClient?.name || 'New Client',
+    company: lead.company || existingClient?.company || '',
+    status: 'active',
+    service: existingClient?.service || `Converted from ${lead.source || 'lead'} lead`,
+    value: Number(existingClient?.value ?? lead.value ?? 0),
+    timeline: [...new Set(timelineSource)]
+  };
+
+  const nextTask = {
+    id: `task-${Date.now()}`,
+    title: `${lead.name || 'Lead'} follow-up after conversion`,
+    stage: 'todo',
+    progress: 10,
+    due: lead.nextFollowUp || 'Today',
+    owner: 'Sales'
+  };
+
+  const nextClients = existingClient
+    ? state.clients.map((item) => (item.id === existingClient.id ? nextClient : item))
+    : [nextClient, ...state.clients];
+  const nextLeads = (state.leads || []).filter((item) => item.id !== leadId);
+  const nextTasks = [nextTask, ...state.tasks];
+
+  await workspaceApiRequest('clients', existingClient ? 'PATCH' : 'POST', existingClient ? existingClient.id : null, nextClient);
+  await workspaceApiRequest('leads', 'DELETE', leadId);
+  await workspaceApiRequest('tasks', 'POST', null, nextTask);
+
+  state.clients = nextClients;
+  state.leads = nextLeads;
+  state.tasks = nextTasks;
+  persistCollection('clients');
+  persistCollection('leads');
+  persistCollection('tasks');
+  state.activeClientId = nextClient.id;
+  state.workspaceInspector = { kind: 'client', id: nextClient.id };
+  updateAuthStatus('Lead converted into a client and a follow-up task was created.', 'good');
+  render();
 }
 
 function openWorkspaceEditor(kind, id = null) {
@@ -2233,6 +3256,9 @@ function renderWorkspaceEditor() {
           <div class="form-grid">
             ${field('Name', 'editor-name', item.name || '')}
             ${field('Company', 'editor-company', item.company || '')}
+            ${field('Email', 'editor-email', item.email || '')}
+            ${field('Phone', 'editor-phone', item.phone || '')}
+            ${field('Telegram username', 'editor-telegram-username', item.telegramUsername || '')}
             ${selectField('Status', 'editor-status', item.status || 'active', ['active', 'paused', 'closed'])}
             ${field('Service', 'editor-service', item.service || '')}
             ${field('Value', 'editor-value', item.value ?? 0)}
@@ -2373,7 +3399,8 @@ function renderWorkspaceDetail() {
           ['Value', `RM ${money(item.value)}`],
           ['Next follow-up', item.nextFollowUp || '-'],
           ['Note', item.note || '-'],
-          ['Engagement', item.stage === 'hot' ? 'Reply now and push to quotation.' : 'Keep nudging with reminders.']
+          ['Engagement', item.stage === 'hot' ? 'Reply now and push to quotation.' : 'Keep nudging with reminders.'],
+          ['Conversion path', item.stage === 'hot' ? 'Ready to convert into a client and create a task.' : 'Nurture first, then convert when ready.']
         ];
       case 'client':
         return [
@@ -2432,6 +3459,7 @@ function renderWorkspaceDetail() {
     <div class="stack">
       ${detail.map(([labelText, value]) => miniLine(labelText, value)).join('')}
       <div class="topbar-actions">
+        ${kind === 'lead' ? '<button class="primary-btn" type="button" onclick="convertLeadToClient(\'' + item.id + '\')">Convert to client</button>' : ''}
         <button class="ghost-btn" type="button" onclick="openWorkspaceEditor('${kind}', '${item.id}')">Open editor</button>
         <button class="ghost-btn" type="button" onclick="deleteWorkspaceRecord('${kind}', '${item.id}')">Delete</button>
       </div>
@@ -2559,6 +3587,9 @@ async function saveWorkspaceEntity() {
         id,
         name: editorValue('editor-name').trim() || 'New Client',
         company: editorValue('editor-company').trim(),
+        email: editorValue('editor-email').trim(),
+        phone: editorValue('editor-phone').trim(),
+        telegramUsername: editorValue('editor-telegram-username').trim().replace(/^@/, ''),
         status: editorValue('editor-status'),
         service: editorValue('editor-service').trim(),
         value: Number(editorValue('editor-value') || 0),
@@ -2651,6 +3682,15 @@ async function deleteWorkspaceRecord(kind, id) {
 
 function renderClients() {
   const client = state.clients.find((item) => item.id === state.activeClientId) || state.clients[0];
+  const activeCount = state.clients.filter((item) => item.status === 'active').length;
+  const pausedCount = state.clients.filter((item) => item.status === 'paused').length;
+  const totalValue = state.clients.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  const timelineItems = clientTimelineEntries(client);
+  const timelineCounts = timelineItems.reduce((acc, item) => {
+    const key = String(item.kind || 'note').toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, { note: 0, inbound: 0, outbound: 0, task: 0, invoice: 0 });
   return `
     <section class="split">
       <div class="panel">
@@ -2659,6 +3699,16 @@ function renderClients() {
             <h3>Clients</h3>
             <p>Every client keeps a timeline and next step.</p>
           </div>
+          <div class="pill-line">
+            <span class="status-pill">${state.clients.length} total</span>
+            <span class="status-pill">${activeCount} active</span>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          ${pageCards([
+            { label: 'Portfolio value', value: `RM ${money(totalValue)}`, sub: 'Total active client value' },
+            { label: 'Paused clients', value: pausedCount, sub: 'Need reactivation or review' }
+          ])}
         </div>
         <div class="client-list">
           ${state.clients.map((item) => `
@@ -2681,18 +3731,42 @@ function renderClients() {
             <h3>${esc(client?.name || 'Client timeline')}</h3>
             <p>${esc(client?.company || '')}</p>
           </div>
-          <button class="soft-btn" onclick="setView('hub')">Open inbox</button>
+          <div class="pill-line">
+            <button class="soft-btn" onclick="setView('hub')">Open inbox</button>
+            <button class="soft-btn" onclick="setView('billing')">Open billing</button>
+            <button class="soft-btn" onclick="syncClientActivityFromServer()">Refresh timeline</button>
+          </div>
+        </div>
+        <div class="stack" style="margin-bottom:14px;">
+          <div class="pill-line">
+            <span class="status-pill">Notes ${timelineCounts.note || 0}</span>
+            <span class="status-pill">Inbound ${timelineCounts.inbound || 0}</span>
+            <span class="status-pill">Outbound ${timelineCounts.outbound || 0}</span>
+            <span class="status-pill">Tasks ${timelineCounts.task || 0}</span>
+            <span class="status-pill">Invoices ${timelineCounts.invoice || 0}</span>
+          </div>
+          ${client?.email ? miniLine('Email', client.email) : ''}
+          ${client?.phone ? miniLine('Phone', client.phone) : ''}
+          ${client?.telegramUsername ? miniLine('Telegram', `@${client.telegramUsername}`) : ''}
         </div>
         <div class="stack">
-          ${(client?.timeline || []).map((entry, index) => `
+          ${state.clientActivityError ? miniLine('Timeline error', state.clientActivityError) : ''}
+          ${state.clientActivityLoading ? miniLine('Timeline status', 'Loading client timeline...') : ''}
+          ${timelineItems.map((entry, index) => `
             <div class="list-item">
               <div>
-                <strong>Step ${index + 1}</strong>
-                <div class="tiny">${esc(entry)}</div>
+                <strong>${esc(entry.title || `Step ${index + 1}`)}</strong>
+                <div class="tiny">${esc(entry.copy || '')}</div>
+                ${entry.meta ? `<div class="tiny">${esc(entry.meta)}</div>` : ''}
               </div>
-              <span class="tag">${index === 0 ? 'Lead' : index === client.timeline.length - 1 ? 'Next' : 'Update'}</span>
+              <div class="pill-line" style="justify-content:flex-end;">
+                <span class="tag timeline-kind ${esc(entry.kind || 'note')}">${esc(entry.kind || entry.tag || 'Update')}</span>
+                <span class="status-pill">${esc(entry.tag || 'Update')}</span>
+                ${entry.at ? `<span class="status-pill">${esc(entry.at)}</span>` : ''}
+              </div>
             </div>
           `).join('')}
+          ${!timelineItems.length ? '<div class="tiny">No timeline yet. Send a message or add notes to start the client history.</div>' : ''}
         </div>
       </div>
     </section>
@@ -2700,28 +3774,64 @@ function renderClients() {
 }
 
 function renderCalendar() {
+  const nextTasks = state.tasks.filter((item) => item.stage !== 'done').slice(0, 3);
+  const autoEvents = state.calendar.filter((item) => item.autoGenerated || item.autoWorkflowKey);
   return `
-    <section class="panel">
-      <div class="section-title">
-        <div>
-          <h3>Calendar sync</h3>
-          <p>Task reminders and meetings are grouped by priority.</p>
+    <section class="split">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Calendar sync</h3>
+            <p>Task reminders and meetings are grouped by priority.</p>
+          </div>
+          <span class="status-pill">Internal calendar ready</span>
         </div>
-        <span class="status-pill">Internal calendar ready</span>
-      </div>
-      <div class="grid-3">
-        ${state.calendar.map((item) => `
-          <article class="calendar-card">
-            <div class="thread-top">
-              <div>
-                <div class="thread-title">${esc(item.title)}</div>
-                <div class="tiny">${esc(item.time)}</div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          ${pageCards([
+            { label: 'Calendar events', value: state.calendar.length, sub: 'Meetings and reminders' },
+            { label: 'Auto-synced', value: autoEvents.length, sub: 'Tasks, invoices, receipts, social' },
+            { label: 'Open tasks', value: state.tasks.filter((task) => task.stage !== 'done').length, sub: 'Due follow-up items' },
+            { label: 'Reminder source', value: 'Internal', sub: 'No external calendar dependency' }
+          ])}
+        </div>
+        <div class="topbar-actions" style="margin-bottom:14px;">
+          <button class="soft-btn" type="button" onclick="resyncBusinessWorkflowReminders()">Resync reminders</button>
+          <button class="soft-btn" type="button" onclick="openWorkspaceEditor('task')">Add task reminder</button>
+          <button class="primary-btn" type="button" onclick="setView('tasks')">Open tasks</button>
+        </div>
+        <div class="grid-3">
+          ${state.calendar.map((item) => `
+            <article class="calendar-card">
+              <div class="thread-top">
+                <div>
+                  <div class="thread-title">${esc(item.title)}</div>
+                  <div class="tiny">${esc(item.time)}</div>
+                </div>
+                <span class="status-pill">${esc(item.type || (item.autoGenerated ? 'synced' : 'event'))}</span>
               </div>
-              <span class="status-pill">${esc(item.type)}</span>
-            </div>
-            <div class="thread-preview">Synced task reminders should show up here once calendar integration is connected.</div>
-          </article>
-        `).join('')}
+              <div class="thread-preview">${esc(item.autoWorkflowKey ? 'Auto-synced from a receipt, invoice, social post, or task.' : 'Manual calendar item from the internal scheduling layer.')}</div>
+            </article>
+          `).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h3>Reminder rhythm</h3>
+            <p>Keep the calendar aligned with tasks, billing, and client follow-up.</p>
+          </div>
+        </div>
+        <div class="stack">
+          ${miniLine('Next task', nextTasks[0] ? `${nextTasks[0].title} · due ${nextTasks[0].due}` : 'No task due right now')}
+          ${miniLine('Next meeting', state.calendar[0] ? `${state.calendar[0].title} · ${state.calendar[0].time}` : 'No meeting yet')}
+          ${miniLine('Reminder layer', 'Calendar events should trigger reminders, not extra admin work')}
+          ${miniLine('Action', 'Create a task first, then sync the reminder to the calendar')}
+          ${miniLine('Auto-sync', autoEvents.length ? `${autoEvents.length} reminder(s) already linked to business records.` : 'No auto-linked reminders yet.')}
+        </div>
+        <div class="topbar-actions" style="margin-top:16px;">
+          <button class="primary-btn" type="button" onclick="resyncBusinessWorkflowReminders()">Resync reminders</button>
+          <button class="soft-btn" type="button" onclick="setView('workspace')">Open workspace</button>
+        </div>
       </div>
     </section>
   `;
@@ -2751,7 +3861,7 @@ function renderAI() {
           `).join('')}
         </div>
         <div style="margin-top:16px;" class="input-row">
-          <input id="ai-prompt" type="text" placeholder="Tell AI what you want to do..." />
+          <input id="ai-prompt" type="text" value="${esc(state.aiDraftPrompt || '')}" placeholder="Tell AI what you want to do..." oninput="updateAiDraftPrompt(this.value)" />
           <button class="primary-btn" type="button" onclick="sendAI()">Send</button>
         </div>
       </div>
@@ -2767,6 +3877,24 @@ function renderAI() {
           ${miniLine('Summarize', 'Summarize the last thread into action items.')}
           ${miniLine('Workflow', 'Turn this business idea into a step-by-step flow.')}
           ${miniLine('Reminder', 'Build a follow-up reminder sequence for this client.')}
+        </div>
+        <div class="panel" style="margin-top:18px;">
+          <div class="section-title">
+            <div>
+              <h3>Receipt and invoice helpers</h3>
+              <p>Load a prompt based on the latest billing context.</p>
+            </div>
+          </div>
+          <div class="pill-line" style="margin-bottom:12px;">
+            <span class="status-pill">Receipt approval</span>
+            <span class="status-pill">Invoice reminder</span>
+            <span class="status-pill">Vendor follow-up</span>
+          </div>
+          <div class="topbar-actions">
+            <button class="soft-btn" type="button" onclick="seedAiPromptFromReceiptApproval()">Receipt approval</button>
+            <button class="soft-btn" type="button" onclick="seedAiPromptFromInvoiceReminder()">Invoice reminder</button>
+            <button class="soft-btn" type="button" onclick="seedAiPromptFromVendorFollowUp()">Vendor follow-up</button>
+          </div>
         </div>
         <div style="margin-top:18px;" class="panel">
           <div class="tiny">AI source</div>
@@ -3060,13 +4188,25 @@ function renderReports() {
   const someVisibleSelected = visibleSelectedCount > 0 && visibleSelectedCount < recentReceipts.length;
   const receiptCounts = receiptUniverse.reduce((acc, receipt) => {
     const status = String(receipt.reviewStatus || 'pending').toLowerCase();
+    const amount = Number(receipt.totalAmount || receipt.total_amount || 0) || 0;
     acc.total += 1;
+    acc.amount += amount;
     if (status === 'approved') acc.approved += 1;
     else if (status === 'flagged') acc.flagged += 1;
     else acc.pending += 1;
+    if (status === 'approved') acc.approvedAmount += amount;
+    else if (status === 'flagged') acc.flaggedAmount += amount;
+    else acc.pendingAmount += amount;
+    const vendorName = String(receipt.vendorName || receipt.vendor_name || receipt.fileName || receipt.file_name || 'Unknown').trim();
+    if (vendorName) acc.vendorMap[vendorName] = (acc.vendorMap[vendorName] || 0) + amount;
     return acc;
-  }, { total: 0, pending: 0, approved: 0, flagged: 0 });
+  }, { total: 0, pending: 0, approved: 0, flagged: 0, amount: 0, approvedAmount: 0, pendingAmount: 0, flaggedAmount: 0, vendorMap: {} });
   const receiptSearchValue = String(state.expenseReceiptSearch || '');
+  const topVendor = Object.entries(receiptCounts.vendorMap || {})
+    .sort((a, b) => b[1] - a[1])
+    .find(([name, amount]) => name && amount > 0) || null;
+  const receiptCloseRate = receiptCounts.total > 0 ? Math.round((receiptCounts.approved / receiptCounts.total) * 100) : 0;
+  const expenseCoach = buildReceiptExpenseCoach(receiptUniverse);
   const cashBase = Math.max(revenue + expected, 0);
   const collectedRate = cashBase > 0 ? Math.min(100, Math.round((revenue / cashBase) * 100)) : 0;
   const expensePressure = revenue > 0 ? Math.min(100, Math.round((expenses / Math.max(revenue, 1)) * 100)) : 0;
@@ -3185,6 +4325,22 @@ function renderReports() {
       <div class="report-card">
         <div class="report-top">
           <div>
+            <div class="tiny">Receipt close assistant</div>
+            <strong>Month-end ready summary</strong>
+          </div>
+          <span class="status-pill">${receiptCloseRate}%</span>
+        </div>
+        <p class="report-copy">This helps the finance flow by grouping receipt value, review status, and the biggest vendor before month close.</p>
+        <div class="stack" style="margin-top:14px;">
+          ${miniLine('Approved amount', `RM ${money(receiptCounts.approvedAmount)}`)}
+          ${miniLine('Pending amount', `RM ${money(receiptCounts.pendingAmount)}`)}
+          ${miniLine('Receipt value total', `RM ${money(receiptCounts.amount)}`)}
+          ${miniLine('Top vendor', topVendor ? `${esc(topVendor[0])} · RM ${money(topVendor[1])}` : 'No receipt vendors yet')}
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-top">
+          <div>
             <div class="tiny">Expense pressure</div>
             <strong>Cost load against revenue</strong>
           </div>
@@ -3212,6 +4368,40 @@ function renderReports() {
           ${miniLine('Pending', `${receiptCounts.pending} receipts`)}
           ${miniLine('Flagged', `${receiptCounts.flagged} receipts`)}
           <div class="bar"><span style="width:${Math.max(8, approvalRate)}%"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="split" style="margin-top:18px;">
+      <div class="report-card">
+        <div class="report-top">
+          <div>
+            <div class="tiny">Expense coach</div>
+            <strong>Auto-suggest monthly spend</strong>
+          </div>
+          <span class="status-pill">${esc(expenseCoach.suggestedType || 'other')}</span>
+        </div>
+        <p class="report-copy">Work2U reads the recent receipts and groups spend into useful categories so monthly planning stays light.</p>
+        <div class="stack" style="margin-top:14px;">
+          ${miniLine('Suggested reserve', `RM ${money(expenseCoach.monthlyReserve)}`)}
+          ${miniLine('Top category', expenseCoach.topTypes[0] ? `${esc(expenseCoach.topTypes[0].type)} · RM ${money(expenseCoach.topTypes[0].amount)}` : 'No receipt data yet')}
+          ${miniLine('Top vendor', expenseCoach.topVendor ? `${esc(expenseCoach.topVendor[0])} · RM ${money(expenseCoach.topVendor[1])}` : 'No vendor data yet')}
+          ${expenseCoach.topTypes.length ? expenseCoach.topTypes.map((item) => miniLine(`Type: ${esc(item.type)}`, `RM ${money(item.amount)} across ${item.count} receipt(s)`)).join('') : ''}
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-top">
+          <div>
+            <div class="tiny">AI handoff</div>
+            <strong>Draft from receipts or invoices</strong>
+          </div>
+          <span class="status-pill">${esc(state.profile.aiMode || 'Suggest only')}</span>
+        </div>
+        <p class="report-copy">If you spot a receipt or invoice that needs a follow-up note, load a ready-made prompt into AI Copilot.</p>
+        <div class="topbar-actions" style="margin-top:14px;">
+          <button class="soft-btn" type="button" onclick="seedAiPromptFromReceipt()">Use latest receipt</button>
+          <button class="soft-btn" type="button" onclick="seedAiPromptFromInvoice()">Use latest invoice</button>
+          <button class="primary-btn" type="button" onclick="setView('ai')">Open AI Copilot</button>
         </div>
       </div>
     </section>
@@ -3390,9 +4580,9 @@ function renderReports() {
           <label class="field-label" for="receipt-workspace-id">Workspace ID</label>
           <input id="receipt-workspace-id" class="text-input" type="text" value="${esc(rollupWorkspaceId)}" placeholder="Workspace ID" />
           <label class="field-label" for="receipt-file">Receipt file</label>
-          <input id="receipt-file" class="text-input" type="file" accept="image/*,application/pdf" />
+          <input id="receipt-file" class="text-input" type="file" accept="image/*,application/pdf" onchange="syncReceiptExpenseSuggestion()" />
           <label class="field-label" for="receipt-vendor">Vendor name</label>
-          <input id="receipt-vendor" class="text-input" type="text" value="" placeholder="E.g. Shell, Canva, AWS" />
+          <input id="receipt-vendor" class="text-input" type="text" value="" placeholder="E.g. Shell, Canva, AWS" oninput="syncReceiptExpenseSuggestion()" />
           <div class="grid-2">
             <div class="field">
               <label class="field-label" for="receipt-date">Receipt date</label>
@@ -3426,7 +4616,7 @@ function renderReports() {
             </div>
             <div class="field">
               <label class="field-label" for="receipt-expense-type">Expense type</label>
-              <select id="receipt-expense-type">
+              <select id="receipt-expense-type" onchange="lockReceiptExpenseTypeManual(this.value)">
                 <option value="direct" selected>direct</option>
                 <option value="overhead">overhead</option>
                 <option value="travel">travel</option>
@@ -3435,6 +4625,10 @@ function renderReports() {
                 <option value="subscription">subscription</option>
                 <option value="other">other</option>
               </select>
+              <div class="topbar-actions" style="margin-top:10px;">
+                <button class="soft-btn" type="button" onclick="applyReceiptExpenseSuggestionFromForm()">Suggest category</button>
+              </div>
+              <div class="tiny" id="receipt-expense-hint" style="margin-top:8px;">Type a vendor name to see a category suggestion.</div>
             </div>
           </div>
           <div class="field">
@@ -3446,7 +4640,7 @@ function renderReports() {
             </select>
           </div>
           <label class="field-label" for="receipt-notes">Notes</label>
-          <textarea id="receipt-notes" placeholder="Optional note for this receipt"></textarea>
+          <textarea id="receipt-notes" placeholder="Optional note for this receipt" oninput="syncReceiptExpenseSuggestion()"></textarea>
         </div>
         <div class="topbar-actions" style="margin-top:14px;">
           <button class="primary-btn" type="button" onclick="uploadExpenseReceiptFromForm()">Upload receipt</button>
@@ -3536,6 +4730,7 @@ function renderAdmin() {
             <span class="status-pill">${esc(admin.source || 'local')}</span>
             <span class="status-pill">${esc(latestEvent?.event_type || 'no events')}</span>
             <button class="soft-btn" type="button" onclick="syncBillingAdminFromServer()">Refresh audit</button>
+            <button class="soft-btn" type="button" onclick="setView('webhook-lab')">Open webhook lab</button>
           </div>
         </div>
         <div class="grid-2" style="margin-bottom:18px;">
@@ -3681,6 +4876,152 @@ function renderAdmin() {
               `).join('')}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <section class="split">
+        <div class="report-card">
+          <div class="report-top">
+            <div>
+              <div class="tiny">Object model</div>
+              <strong>CRM entities and relations</strong>
+            </div>
+            <button class="soft-btn" type="button" onclick="syncWork2uBootstrapFromServer()">Refresh model</button>
+          </div>
+          <div class="stack" style="margin-top:14px;">
+            ${((state.work2uBootstrap?.objectCatalog || []).length ? state.work2uBootstrap.objectCatalog : [
+              { key: 'lead', title: 'Lead', purpose: 'Prospect before conversion.', relations: ['task', 'client'], fields: ['name', 'stage', 'source'] },
+              { key: 'client', title: 'Client', purpose: 'Converted account with billing context.', relations: ['invoice', 'case', 'task'], fields: ['name', 'service', 'status'] },
+              { key: 'task', title: 'Task', purpose: 'Work item with stage and progress.', relations: ['lead', 'client', 'calendar'], fields: ['title', 'stage', 'progress'] },
+              { key: 'case', title: 'Case', purpose: 'Support or exception record.', relations: ['client', 'task'], fields: ['title', 'status', 'summary'] },
+              { key: 'service', title: 'Service', purpose: 'Offer that can flow into billing.', relations: ['client', 'invoice'], fields: ['name', 'price', 'active'] },
+              { key: 'outbound-job', title: 'Outbound job', purpose: 'Queue and log outgoing messages.', relations: ['email', 'WhatsApp', 'Telegram'], fields: ['kind', 'channel', 'target'] }
+            ]).map((item) => `
+              <div class="list-item" style="align-items:flex-start;">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <strong>${esc(item.title)}</strong>
+                  <div class="tiny">${esc(item.purpose)}</div>
+                  <div class="tiny">Relations: ${esc((item.relations || []).join(' · ') || '-')}</div>
+                  <div class="tiny">Fields: ${esc((item.fields || []).join(' · ') || '-')}</div>
+                </div>
+                <span class="status-pill">${esc(item.key)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-top">
+            <div>
+              <div class="tiny">Outbound queue</div>
+              <strong>Send log and retry lane</strong>
+            </div>
+            <div class="pill-line">
+              <span class="status-pill">${esc(state.outboundJobs?.summary?.queued || 0)} queued</span>
+              <button class="soft-btn" type="button" onclick="syncOutboundJobsFromServer()">Refresh queue</button>
+              <button class="primary-btn" type="button" onclick="processOutboundJobsFromServer()">Process queue</button>
+            </div>
+          </div>
+          <div class="stack" style="margin-top:14px;">
+            ${miniLine('Processed', `${esc(state.outboundJobs?.summary?.sent || 0)} sent · ${esc(state.outboundJobs?.summary?.failed || 0)} failed · ${esc(state.outboundJobs?.summary?.skipped || 0)} skipped`)}
+            ${miniLine('Events', `${esc((state.outboundJobs?.events || []).length || 0)} recent queue events`)}
+            ${state.outboundJobsError ? miniLine('Queue error', state.outboundJobsError) : ''}
+            ${state.outboundJobsLoading ? miniLine('Queue status', 'Loading outbound jobs...') : ''}
+          </div>
+          <div class="stack" style="margin-top:14px;">
+            ${(state.outboundJobs?.jobs || []).slice(0, 6).map((job) => `
+              <div class="list-item" style="align-items:flex-start;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <strong>${esc(job.subject || job.kind || 'Outbound job')}</strong>
+                  <div class="tiny">${esc(job.kind || 'generic')} · ${esc(job.channel || 'email')} · ${esc(job.target || '-')} · ${esc(job.attempts || 0)} attempt(s)</div>
+                  <div class="tiny">${esc(job.note || job.error || job.result?.reason || 'Queued or processed')}</div>
+                </div>
+                <div class="pill-line">
+                  <span class="status-pill ${String(job.status || '').toLowerCase() === 'failed' ? 'warn' : ''}">${esc(job.status || 'queued')}</span>
+                  <button class="soft-btn" type="button" onclick="retryOutboundJobFromServer('${esc(job.id)}')">Retry</button>
+                </div>
+              </div>
+            `).join('') || '<div class="tiny">No outbound jobs yet.</div>'}
+          </div>
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function renderWebhookLab() {
+  const lab = state.webhookLab || defaultWebhookLab();
+  const safeChannel = String(lab.channel || 'telegram').toLowerCase() === 'whatsapp' ? 'whatsapp' : 'telegram';
+  const exampleMode = String(lab.exampleMode || (safeChannel === 'whatsapp' ? 'baileys' : 'telegram')).toLowerCase() === 'baileys'
+    ? 'baileys'
+    : 'telegram';
+  const endpointHint = safeChannel === 'whatsapp' ? '/api/whatsapp/webhook' : '/api/telegram/webhook';
+  const payloadText = lab.payloadText || JSON.stringify(defaultWebhookLabPayload(exampleMode), null, 2);
+  const responseBox = lab.responseText || 'No response yet. Send a test payload to see the webhook reply here.';
+  return `
+    <section class="split">
+      <div class="report-card">
+        <div class="report-top">
+          <div>
+            <div class="tiny">Webhook lab</div>
+            <strong>Test inbound payloads locally</strong>
+          </div>
+          <div class="pill-line lab-tabs">
+            <span class="status-pill">${esc(safeChannel)}</span>
+            <button class="soft-btn lab-tab ${exampleMode === 'telegram' ? 'active' : ''}" type="button" onclick="setWebhookLabExample('telegram')">Telegram</button>
+            <button class="soft-btn lab-tab ${exampleMode === 'baileys' ? 'active' : ''}" type="button" onclick="setWebhookLabExample('baileys')">Baileys</button>
+          </div>
+        </div>
+        <div class="stack" style="margin-top:14px;">
+          ${miniLine('Recommended endpoint', endpointHint)}
+          ${miniLine('Generic endpoint', '/api/work2u/channel/webhook')}
+          ${miniLine('Secret header', 'x-work2u-webhook-secret')}
+        </div>
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="field">
+            <label>Endpoint</label>
+            <input value="${esc(lab.endpoint || endpointHint)}" oninput="updateWebhookLabField('endpoint', this.value)" />
+          </div>
+          <div class="field">
+            <label>Webhook secret</label>
+            <input value="${esc(lab.secret || '')}" placeholder="Optional" oninput="updateWebhookLabField('secret', this.value)" />
+          </div>
+        </div>
+        <div class="field">
+          <div class="lab-field-head">
+            <label>Payload JSON</label>
+            <div class="topbar-actions">
+              <button class="soft-btn" type="button" onclick="copyWebhookLabEndpoint()">Copy endpoint</button>
+              <button class="soft-btn" type="button" onclick="copyWebhookLabPayload()">Copy payload</button>
+            </div>
+          </div>
+          <textarea rows="18" oninput="updateWebhookLabField('payloadText', this.value)">${esc(payloadText)}</textarea>
+        </div>
+        <div class="topbar-actions" style="margin-top:14px;">
+          <button class="primary-btn" type="button" onclick="sendWebhookLabRequest()">Send test</button>
+        </div>
+        ${lab.error ? `
+          <div class="report-card" style="margin-top:14px;border-color:rgba(220,38,38,0.24);background:rgba(220,38,38,0.05);">
+            ${miniLine('Lab error', lab.error)}
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="report-card">
+        <div class="report-top">
+          <div>
+            <div class="tiny">Webhook response</div>
+            <strong>Live request result</strong>
+          </div>
+          <span class="status-pill ${lab.loading ? 'warn' : ''}">${esc(lab.responseStatus || (lab.loading ? 'Sending...' : 'Ready'))}</span>
+        </div>
+        <div class="stack" style="margin-top:14px;">
+          ${miniLine('How it works', 'This page sends POST requests to the Work2U webhook route so you can verify payload shape and mapping.') }
+          ${miniLine('Telegram mapping', 'Inbound Telegram payloads store chat_id and username for later outbound replies.') }
+          ${miniLine('Baileys mapping', 'Baileys usually forwards an incoming WhatsApp event as event incoming with data set to the raw payload.') }
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Raw response</label>
+          <textarea rows="20" readonly>${esc(responseBox)}</textarea>
         </div>
       </div>
     </section>
@@ -4059,10 +5400,16 @@ function normalizeAccessRole(role) {
   return 'User';
 }
 
+function recommendedAccessRole(persona = state.profile?.persona) {
+  const value = String(persona || '').toLowerCase();
+  if (value.includes('corporate')) return 'Super Admin';
+  return 'Admin';
+}
+
 function roleCapabilities(role) {
   const normalized = normalizeAccessRole(role);
   const base = {
-    views: ['overview', 'setup', 'workspace', 'hub', 'tasks', 'clients', 'calendar', 'ai'],
+    views: ['overview', 'setup', 'workspace', 'objects', 'hub', 'tasks', 'clients', 'calendar', 'ai'],
     canManageMembers: false,
     canViewBilling: false,
     canViewReports: false,
@@ -4072,7 +5419,7 @@ function roleCapabilities(role) {
   if (normalized === 'Admin') {
     return {
       ...base,
-      views: [...base.views, 'access', 'billing', 'reports'],
+      views: [...base.views, 'access', 'billing', 'reports', 'webhook-lab'],
       canManageMembers: true,
       canViewBilling: true,
       canViewReports: true
@@ -4081,7 +5428,7 @@ function roleCapabilities(role) {
 
   if (normalized === 'Super Admin') {
     return {
-      views: ['overview', 'setup', 'workspace', 'hub', 'tasks', 'clients', 'calendar', 'ai', 'access', 'billing', 'reports', 'admin'],
+      views: ['overview', 'setup', 'workspace', 'objects', 'hub', 'tasks', 'clients', 'calendar', 'ai', 'access', 'billing', 'reports', 'admin', 'webhook-lab'],
       canManageMembers: true,
       canViewBilling: true,
       canViewReports: true,
@@ -4255,12 +5602,12 @@ function authMethodDetails(method = state.auth.method) {
     email: {
       title: 'Email login',
       copy: supabaseReady
-        ? 'Best when you want a simple magic-link sign in and plan to send messages from your own mailbox or a Work2U domain mailbox.'
+        ? 'Work2U V1 uses email login only. The survey is saved first so your package, role, and workspace defaults are ready before the magic link arrives.'
         : 'Supabase Auth needs to be connected before email magic links can work in production.',
       steps: [
         'Enter your email address in the field below.',
         'We send a magic link to verify the sign in.',
-        'After sign in, Work2U opens the dashboard with your survey settings.'
+        'After sign in, Work2U opens the dashboard with your registration settings.'
       ]
     }
   };
@@ -4364,7 +5711,9 @@ function updateSurveySummary() {
   state.survey = survey;
   save(STORAGE.survey, survey);
   const recommendation = recommendPackage(survey);
+  const accessRole = recommendedAccessRole(survey.role);
   const summary = document.getElementById('survey-summary');
+  const snapshot = document.getElementById('onboarding-snapshot');
   const packagePill = document.getElementById('auth-package-pill');
   if (summary) {
     const recommendationPlan = packageEntitlements(recommendation.name);
@@ -4401,6 +5750,14 @@ function updateSurveySummary() {
           <strong>${esc(humanizeList((survey.needs || []).map(featureLabel)))}</strong>
         </div>
         <div>
+          <span class="tiny">Access role</span>
+          <strong>${esc(accessRole)}</strong>
+        </div>
+        <div>
+          <span class="tiny">Login</span>
+          <strong>Email only</strong>
+        </div>
+        <div>
           <span class="tiny">Region</span>
           <strong>${esc(survey.region)}</strong>
         </div>
@@ -4410,6 +5767,35 @@ function updateSurveySummary() {
         </div>
       </div>
       ${locked.length ? `<div class="summary-copy" style="margin-top:10px;">${esc(locked.join(' '))}</div>` : ''}
+    `;
+  }
+  if (snapshot) {
+    const roleCopy = accessRole === 'Super Admin'
+      ? 'Full platform control for plans, billing, access, and all workspaces.'
+      : 'Workspace owner access for clients, tasks, billing, and reports.';
+    snapshot.innerHTML = `
+      <div class="summary-title">Register flow</div>
+      <div class="summary-package">Survey → email login → dashboard</div>
+      <div class="summary-copy">The survey chooses the default package and access role before sign-in.</div>
+      <div class="summary-grid">
+        <div>
+          <span class="tiny">Package</span>
+          <strong>${esc(recommendation.name)}</strong>
+        </div>
+        <div>
+          <span class="tiny">Access role</span>
+          <strong>${esc(accessRole)}</strong>
+        </div>
+        <div>
+          <span class="tiny">Login</span>
+          <strong>Email magic link</strong>
+        </div>
+        <div>
+          <span class="tiny">Channels</span>
+          <strong>${esc(humanizeList((survey.channels || []).map(label)))}</strong>
+        </div>
+      </div>
+      <div class="summary-copy" style="margin-top:10px;">${esc(roleCopy)}</div>
     `;
   }
   if (packagePill) packagePill.textContent = recommendation.name;
@@ -4463,6 +5849,748 @@ async function getPublicConfig() {
     state.publicConfig = data;
     return data;
   } catch {
+    return null;
+  }
+}
+
+async function syncWork2uBootstrapFromServer() {
+  try {
+    const response = await fetch('/api/work2u/bootstrap');
+    if (!response.ok) return null;
+    const data = await response.json();
+    state.work2uBootstrap = data;
+    render();
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function syncOutboundJobsFromServer() {
+  if (!isSuperAdmin()) return null;
+  state.outboundJobsLoading = true;
+  state.outboundJobsError = null;
+  render();
+  try {
+    const response = await fetch('/api/work2u/outbound/jobs?limit=25');
+    if (!response.ok) {
+      throw new Error('Unable to load outbound jobs');
+    }
+    const data = await response.json();
+    state.outboundJobs = data;
+    render();
+    return data;
+  } catch (error) {
+    state.outboundJobsError = error.message || 'Unable to load outbound jobs';
+    return null;
+  } finally {
+    state.outboundJobsLoading = false;
+  }
+}
+
+async function processOutboundJobsFromServer(limit = 10) {
+  if (!isSuperAdmin()) return null;
+  state.outboundJobsLoading = true;
+  state.outboundJobsError = null;
+  updateAuthStatus('Processing outbound queue...', 'warn');
+  try {
+    const response = await fetch('/api/work2u/outbound/jobs/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'process', limit })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Unable to process outbound queue');
+    }
+    await syncOutboundJobsFromServer();
+    updateAuthStatus(`Processed ${data.processed || 0} outbound job(s).`, 'good');
+    return data;
+  } catch (error) {
+    state.outboundJobsError = error.message || 'Unable to process outbound queue';
+    updateAuthStatus(state.outboundJobsError, 'bad');
+    return null;
+  } finally {
+    state.outboundJobsLoading = false;
+    render();
+  }
+}
+
+async function retryOutboundJobFromServer(jobId) {
+  if (!isSuperAdmin() || !jobId) return null;
+  state.outboundJobsLoading = true;
+  state.outboundJobsError = null;
+  render();
+  try {
+    const response = await fetch('/api/work2u/outbound/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'retry', jobId })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Unable to retry outbound job');
+    }
+    await syncOutboundJobsFromServer();
+    updateAuthStatus('Outbound job retried.', 'good');
+    return data;
+  } catch (error) {
+    state.outboundJobsError = error.message || 'Unable to retry outbound job';
+    updateAuthStatus(state.outboundJobsError, 'bad');
+    return null;
+  } finally {
+    state.outboundJobsLoading = false;
+    render();
+  }
+}
+
+async function syncChannelActivityFromServer() {
+  state.channelActivityLoading = true;
+  state.channelActivityError = null;
+  render();
+  try {
+    const response = await fetch('/api/work2u/channel/activity?limit=20');
+    if (!response.ok) {
+      throw new Error('Unable to load channel activity');
+    }
+    const data = await response.json();
+    state.channelActivity = data;
+    render();
+    return data;
+  } catch (error) {
+    state.channelActivityError = error.message || 'Unable to load channel activity';
+    render();
+    return null;
+  } finally {
+    state.channelActivityLoading = false;
+    render();
+  }
+}
+
+function clientContactQuery(client = {}) {
+  const values = [
+    client.telegramUsername,
+    client.telegram,
+    client.chatId,
+    client.chat_id,
+    client.phone,
+    client.whatsapp,
+    client.email,
+    client.name,
+    client.company
+  ];
+  return values.map((value) => String(value || '').trim()).find(Boolean) || '';
+}
+
+function normalizeClientContactValue(value) {
+  return String(value || '').trim().toLowerCase().replace(/^@/, '');
+}
+
+function normalizeClientPhoneValue(value) {
+  return String(value || '').replace(/[^\d]/g, '');
+}
+
+function activityMatchesClient(activity = {}, client = {}) {
+  const keys = [
+    client.email,
+    client.phone,
+    client.telegramUsername,
+    client.telegram,
+    client.chatId,
+    client.chat_id,
+    client.whatsapp,
+    client.name,
+    client.company
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+
+  if (!keys.length) return false;
+
+  const haystack = [
+    activity.contact,
+    activity.chat_id,
+    activity.username,
+    activity.phone,
+    activity.name,
+    activity.thread_id,
+    activity.message,
+    activity.payload?.contact,
+    activity.payload?.chatId,
+    activity.payload?.chat_id,
+    activity.payload?.username,
+    activity.payload?.telegramUsername,
+    activity.payload?.phone,
+    activity.payload?.from,
+    activity.payload?.to
+  ]
+    .map((value) => String(value || '').toLowerCase())
+    .join(' | ');
+
+  return keys.some((key) => {
+    const normalized = normalizeClientContactValue(key);
+    const phone = normalizeClientPhoneValue(key);
+    const variants = [normalized, normalized.replace(/\s+/g, ''), phone].filter(Boolean);
+    return variants.some((variant) => haystack.includes(variant));
+  });
+}
+
+function recordMatchesClient(record = {}, client = {}, fields = []) {
+  const tokens = [
+    client.name,
+    client.company,
+    client.email,
+    client.phone,
+    client.telegramUsername,
+    client.telegram,
+    client.chatId,
+    client.chat_id
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+
+  if (!tokens.length) return false;
+
+  const haystack = fields
+    .flatMap((field) => {
+      const value = record?.[field];
+      if (Array.isArray(value)) return value;
+      return [value];
+    })
+    .concat(record?.summary, record?.note, record?.description)
+    .map((value) => String(value || '').toLowerCase())
+    .join(' | ');
+
+  return tokens.some((token) => {
+    const normalized = normalizeClientContactValue(token);
+    const phone = normalizeClientPhoneValue(token);
+    return [normalized, normalized.replace(/\s+/g, ''), phone].filter(Boolean).some((variant) => haystack.includes(variant));
+  });
+}
+
+function timelineEntrySortValue(entry = {}) {
+  return [
+    entry.sortAt || '',
+    entry.at || '',
+    entry.kind === 'note' ? '0' : '1',
+    entry.title || ''
+  ].join('|');
+}
+
+function clientTimelineEntries(client = {}) {
+  const notes = Array.isArray(client.timeline)
+    ? client.timeline.map((entry, index) => ({
+        kind: 'note',
+        title: `Step ${index + 1}`,
+        copy: entry,
+        tag: index === 0 ? 'Lead' : index === client.timeline.length - 1 ? 'Next' : 'Update',
+        at: '',
+        sortAt: `0-${index}`
+      }))
+    : [];
+
+  const activitySource = state.clientActivityClientId === client.id && Array.isArray(state.clientActivity?.events)
+    ? state.clientActivity.events
+    : Array.isArray(state.channelActivity?.events)
+      ? state.channelActivity.events
+      : [];
+
+  const activity = activitySource
+    .filter((item) => activityMatchesClient(item, client))
+    .slice(0, 6)
+    .map((item) => ({
+      kind: String(item.direction || 'inbound').toLowerCase() === 'outbound' ? 'outbound' : 'inbound',
+      title: `${label(item.channel || 'whatsapp')} ${item.direction || 'inbound'}`,
+      copy: item.message || 'No message body',
+      tag: `${item.direction || 'inbound'} · ${item.status || 'received'}`,
+      at: item.updated_at || item.created_at || '',
+      meta: item.name || item.contact || item.thread_id || '',
+      sortAt: item.updated_at || item.created_at || ''
+    }));
+
+  const taskItems = (state.tasks || [])
+    .filter((task) => recordMatchesClient(task, client, ['title', 'owner', 'clientName', 'summary']))
+    .slice(0, 3)
+    .map((task) => ({
+      kind: 'task',
+      title: task.title || 'Task',
+      copy: `Owner: ${task.owner || 'Unassigned'} · Stage: ${task.stage || 'todo'} · Progress: ${task.progress || 0}%`,
+      tag: 'Task',
+      at: task.due || '',
+      meta: task.owner || '',
+      sortAt: task.due || ''
+    }));
+
+  const invoiceItems = (state.invoices || [])
+    .filter((invoice) => recordMatchesClient(invoice, client, ['client', 'name', 'number', 'status']))
+    .slice(0, 3)
+    .map((invoice) => ({
+      kind: 'invoice',
+      title: invoice.number || 'Invoice',
+      copy: `RM ${money(invoice.amount || 0)} · ${invoice.status || 'draft'}${invoice.due ? ` · due ${invoice.due}` : ''}`,
+      tag: 'Invoice',
+      at: invoice.due || '',
+      meta: invoice.region || '',
+      sortAt: invoice.due || ''
+    }));
+
+  return [...notes, ...activity, ...taskItems, ...invoiceItems]
+    .slice(0, 12)
+    .sort((a, b) => timelineEntrySortValue(a).localeCompare(timelineEntrySortValue(b)));
+}
+
+async function syncClientActivityFromServer(client = null) {
+  const targetClient = client || state.clients.find((item) => item.id === state.activeClientId) || state.clients[0] || null;
+  if (!targetClient) return null;
+
+  const contact = clientContactQuery(targetClient);
+  state.clientActivityLoading = true;
+  state.clientActivityError = null;
+  state.clientActivityClientId = targetClient.id;
+  render();
+  try {
+    const query = contact ? `?limit=20&contact=${encodeURIComponent(contact)}` : '?limit=20';
+    const response = await fetch(`/api/work2u/channel/activity${query}`);
+    if (!response.ok) {
+      throw new Error('Unable to load client timeline');
+    }
+    const data = await response.json();
+    state.clientActivity = data;
+    render();
+    return data;
+  } catch (error) {
+    state.clientActivityError = error.message || 'Unable to load client timeline';
+    render();
+    return null;
+  } finally {
+    state.clientActivityLoading = false;
+    render();
+  }
+}
+
+function defaultWebhookLabPayload(channel = 'telegram') {
+  const normalized = String(channel).toLowerCase();
+  if (normalized === 'whatsapp' || normalized === 'baileys') {
+    return {
+      channel: 'whatsapp',
+      provider: 'baileys',
+      event: 'incoming',
+      data: {
+        key: {
+          remoteJid: '60123456789@s.whatsapp.net',
+          fromMe: false,
+          id: 'BAILEYS_MESSAGE_001'
+        },
+        pushName: 'Client Name',
+        messageTimestamp: '1735065600',
+        message: {
+          conversation: 'Hello Work2U'
+        }
+      },
+      workspaceName: state.profile.workspaceName || 'Work2U'
+    };
+  }
+
+  return {
+    channel: 'telegram',
+    event: 'message',
+    update: {
+      update_id: 10001,
+      message: {
+        message_id: 17,
+        date: 1735065600,
+        chat: {
+          id: 123456789,
+          username: 'clientname',
+          first_name: 'Client',
+          type: 'private'
+        },
+        from: {
+          id: 123456789,
+          username: 'clientname',
+          first_name: 'Client'
+        },
+        text: 'Hello Work2U'
+      }
+    },
+    workspaceName: state.profile.workspaceName || 'Work2U'
+  };
+}
+
+function updateWebhookLab(nextPatch = {}) {
+  state.webhookLab = {
+    ...(state.webhookLab || defaultWebhookLab()),
+    ...nextPatch
+  };
+  save(STORAGE.webhookLab, state.webhookLab);
+}
+
+function updateWebhookLabField(key, value) {
+  updateWebhookLab({ [key]: value });
+}
+
+function setWebhookLabChannel(channel) {
+  const normalized = String(channel || 'telegram').toLowerCase() === 'whatsapp' ? 'whatsapp' : 'telegram';
+  const endpoint = normalized === 'whatsapp' ? '/api/whatsapp/webhook' : '/api/telegram/webhook';
+  updateWebhookLab({
+    channel: normalized,
+    endpoint,
+    exampleMode: normalized === 'whatsapp' ? 'baileys' : 'telegram',
+    payloadText: JSON.stringify(defaultWebhookLabPayload(normalized === 'whatsapp' ? 'baileys' : 'telegram'), null, 2),
+    error: '',
+    responseText: '',
+    responseStatus: ''
+  });
+  render();
+}
+
+function setWebhookLabExample(channel) {
+  const normalized = String(channel || 'telegram').toLowerCase() === 'baileys' ? 'baileys' : 'telegram';
+  const nextChannel = normalized === 'baileys' ? 'whatsapp' : 'telegram';
+  updateWebhookLab({
+    channel: nextChannel,
+    endpoint: nextChannel === 'whatsapp' ? '/api/whatsapp/webhook' : '/api/telegram/webhook',
+    exampleMode: normalized,
+    payloadText: JSON.stringify(defaultWebhookLabPayload(normalized), null, 2),
+    error: '',
+    responseText: '',
+    responseStatus: ''
+  });
+  render();
+}
+
+async function copyWebhookLabText(value, label) {
+  const text = String(value || '').trim();
+  if (!text) {
+    updateWebhookLab({ error: `Nothing to copy for ${label || 'this field'}.` });
+    render();
+    return false;
+  }
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', 'true');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const copied = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (!copied) throw new Error('Clipboard copy failed');
+    }
+
+    showToast(`${label || 'Value'} copied to clipboard`, 'good', 'Copied');
+    updateWebhookLab({
+      error: '',
+      responseStatus: `${label || 'Value'} copied`,
+      responseText: state.webhookLab?.responseText || ''
+    });
+    render();
+    return true;
+  } catch (error) {
+    updateWebhookLab({
+      error: error.message || `Unable to copy ${label || 'value'}.`
+    });
+    render();
+    return false;
+  }
+}
+
+function copyWebhookLabEndpoint() {
+  const lab = state.webhookLab || defaultWebhookLab();
+  const endpoint = String(lab.endpoint || (String(lab.channel || 'telegram').toLowerCase() === 'whatsapp' ? '/api/whatsapp/webhook' : '/api/telegram/webhook')).trim();
+  return copyWebhookLabText(endpoint, 'Endpoint');
+}
+
+function copyWebhookLabPayload() {
+  const lab = state.webhookLab || defaultWebhookLab();
+  const payload = String(lab.payloadText || JSON.stringify(defaultWebhookLabPayload(lab.exampleMode || lab.channel || 'telegram'), null, 2));
+  return copyWebhookLabText(payload, 'Payload');
+}
+
+async function sendWebhookLabRequest() {
+  const lab = state.webhookLab || defaultWebhookLab();
+  const endpoint = String(lab.endpoint || '').trim();
+  const payloadText = String(lab.payloadText || '').trim();
+  if (!endpoint) {
+    updateWebhookLab({ error: 'Please enter an endpoint.' });
+    render();
+    return null;
+  }
+  if (!payloadText) {
+    updateWebhookLab({ error: 'Please enter a JSON payload.' });
+    render();
+    return null;
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(payloadText);
+  } catch (error) {
+    updateWebhookLab({ error: `Payload JSON is invalid: ${error.message}` });
+    render();
+    return null;
+  }
+
+  updateWebhookLab({ loading: true, error: '', responseText: '', responseStatus: '' });
+  render();
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    const secret = String(lab.secret || '').trim();
+    if (secret) headers['x-work2u-webhook-secret'] = secret;
+
+    const response = await fetch(endpoint.startsWith('http') ? endpoint : endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+    const raw = await response.text();
+    let parsed = raw;
+    try {
+      parsed = raw ? JSON.parse(raw) : {};
+    } catch {
+      parsed = raw;
+    }
+
+    updateWebhookLab({
+      loading: false,
+      responseStatus: `${response.status} ${response.ok ? 'OK' : 'Error'}`,
+      responseText: typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2),
+      error: response.ok ? '' : (parsed?.error || parsed?.message || 'Webhook request failed')
+    });
+    render();
+    return parsed;
+  } catch (error) {
+    updateWebhookLab({
+      loading: false,
+      error: error.message || 'Webhook request failed',
+      responseStatus: 'Network error',
+      responseText: ''
+    });
+    render();
+    return null;
+  }
+}
+
+function updateHubComposerField(key, value) {
+  state.hubComposer = {
+    ...(state.hubComposer || {}),
+    [key]: value
+  };
+  save(STORAGE.hubComposer, state.hubComposer);
+}
+
+function setHubComposerChannel(channel) {
+  updateHubComposerField('channel', String(channel || 'whatsapp').toLowerCase());
+  render();
+}
+
+function copyHubDraftToComposer() {
+  const draft = document.getElementById('hub-draft')?.value || '';
+  updateHubComposerField('message', draft);
+  render();
+}
+
+function defaultSocialComposerState() {
+  return state.socialComposer && typeof state.socialComposer === 'object' ? state.socialComposer : defaultSocialComposer();
+}
+
+function updateSocialComposerField(key, value) {
+  state.socialComposer = {
+    ...defaultSocialComposerState(),
+    [key]: value
+  };
+  save(STORAGE.socialComposer, state.socialComposer);
+  render();
+}
+
+function updateSocialComposerFromInputs() {
+  const current = defaultSocialComposerState();
+  const next = {
+    ...current,
+    platform: document.getElementById('social-platform')?.value || current.platform,
+    objective: document.getElementById('social-objective')?.value || current.objective,
+    campaign: document.getElementById('social-campaign')?.value.trim() || current.campaign,
+    audience: document.getElementById('social-audience')?.value.trim() || current.audience,
+    postDate: document.getElementById('social-date')?.value || current.postDate,
+    postTime: document.getElementById('social-time')?.value || current.postTime,
+    cta: document.getElementById('social-cta')?.value.trim() || current.cta,
+    hashtags: document.getElementById('social-hashtags')?.value.trim() || current.hashtags,
+    caption: document.getElementById('social-caption')?.value.trim() || current.caption
+  };
+  state.socialComposer = next;
+  save(STORAGE.socialComposer, next);
+  return next;
+}
+
+function socialTemplatePreset(social = state.socialComposer || defaultSocialComposer()) {
+  const platform = String(social?.platform || 'instagram').toLowerCase();
+  const objective = String(social?.objective || 'post').toLowerCase();
+  const audience = String(social?.audience || 'Prospects').trim() || 'Prospects';
+  const campaign = String(social?.campaign || 'Work2U update').trim() || 'Work2U update';
+  const formatMap = {
+    instagram: 'Short hook, benefit bullets, and a clean CTA for a visual feed post.',
+    facebook: 'Friendly story-led copy with a simple value statement and clear next step.',
+    linkedin: 'Professional insight, one business takeaway, and a crisp action line.',
+    tiktok: 'Punchy hook, short caption, and a strong opening line for short-form video.',
+    x: 'Concise thought, one key insight, and a direct call to action.'
+  };
+  const objectiveMap = {
+    post: 'Publish a clear update that builds awareness and trust.',
+    story: 'Share a quick update that creates a fast response.',
+    campaign: 'Run a multi-post sequence with one focus and repeated CTA.',
+    announcement: 'Share a product, launch, or company update with confidence.',
+    reel: 'Use a short-form format with a strong opening hook.'
+  };
+  const ctaMap = {
+    post: 'Book a call',
+    story: 'Reply now',
+    campaign: 'Send me details',
+    announcement: 'Learn more',
+    reel: 'DM us now'
+  };
+  const hashtagMap = {
+    instagram: '#work2u #crm #businessautomation',
+    facebook: '#work2u #businessgrowth',
+    linkedin: '#work2u #sales #productivity',
+    tiktok: '#work2u #smallbusiness',
+    x: '#work2u #bizops'
+  };
+  const hookMap = {
+    instagram: `Need a faster way to follow up ${audience.toLowerCase()}?`,
+    facebook: `If your follow-up is spread across too many tools, this is for you.`,
+    linkedin: `A simple workflow can save teams hours every week.`,
+    tiktok: `Stop forgetting follow-ups and start closing faster.`,
+    x: `Follow-up should not depend on memory.`
+  };
+  const captionMap = {
+    instagram: `We built Work2U to help ${audience.toLowerCase()} manage follow-up, reminders, and client communication in one place.`,
+    facebook: `Work2U keeps your follow-up, reminders, and client messages organised so you can focus on the next important action.`,
+    linkedin: `Work2U helps teams keep follow-up, reminders, and client communication in one workspace with less friction.`,
+    tiktok: `One workspace for follow-up, reminders, and AI help.`,
+    x: `One workspace for follow-up, reminders, and AI help.`
+  };
+
+  return {
+    platform,
+    objective,
+    audience,
+    campaign,
+    format: formatMap[platform] || formatMap.instagram,
+    brief: objectiveMap[objective] || objectiveMap.post,
+    hook: hookMap[platform] || hookMap.instagram,
+    caption: captionMap[platform] || captionMap.instagram,
+    cta: social?.cta || ctaMap[objective] || 'Book a call',
+    hashtags: social?.hashtags || hashtagMap[platform] || '#work2u',
+    length: platform === 'linkedin' ? '120-180 words' : platform === 'x' ? '1-2 short lines' : '60-120 words',
+    prompt: [
+      `Write a ${objective} for ${platform}.`,
+      `Campaign: ${campaign}.`,
+      `Audience: ${audience}.`,
+      `Format: ${formatMap[platform] || formatMap.instagram}.`,
+      `Brief: ${objectiveMap[objective] || objectiveMap.post}.`,
+      `Start with this hook: ${hookMap[platform] || hookMap.instagram}`,
+      `Tone: friendly, clear, and ready to post from a mobile device.`
+    ].join(' ')
+  };
+}
+
+function applySocialTemplateDraft() {
+  const social = updateSocialComposerFromInputs();
+  const template = socialTemplatePreset(social);
+  state.socialComposer = {
+    ...social,
+    caption: `${template.hook}\n\n${template.caption}`,
+    cta: social.cta || template.cta,
+    hashtags: social.hashtags || template.hashtags
+  };
+  save(STORAGE.socialComposer, state.socialComposer);
+  render();
+  showToast(`Template drafted for ${template.platform}.`, 'good', 'Social');
+}
+
+function seedSocialPrompt() {
+  const social = updateSocialComposerFromInputs();
+  const template = socialTemplatePreset(social);
+  seedAiDraftPrompt(template.prompt, true);
+}
+
+function syncSocialWorkflowFromComposer() {
+  const social = updateSocialComposerFromInputs();
+  const result = syncSocialWorkflow(social);
+  if (result.task || result.event) {
+    showToast('Social campaign synced to tasks and calendar.', 'good', 'Social');
+  } else {
+    showToast('Social campaign is already synced.', 'warn', 'Social');
+  }
+  return result;
+}
+
+function resyncBusinessWorkflowReminders() {
+  const counts = syncBusinessWorkflowReminders({ includeSocial: true });
+  showToast(`Synced ${counts.tasks} task(s) and ${counts.calendar} calendar event(s).`, 'good', 'Calendar');
+  return counts;
+}
+
+async function sendChannelMessageFromHub() {
+  const composer = state.hubComposer || {};
+  const channel = String(composer.channel || 'whatsapp').toLowerCase();
+  const message = String(composer.message || '').trim();
+  const target = String(composer.target || '').trim();
+  const chatId = String(composer.chatId || '').trim();
+  const username = String(composer.username || '').trim();
+  const selectedThread = state.threads.find((thread) => thread.id === state.activeThreadId) || null;
+  const name = String(composer.name || '').trim() || selectedThread?.name || '';
+
+  if (!message) {
+    updateAuthStatus('Please write a message before sending.', 'warn');
+    return null;
+  }
+
+  if (channel === 'telegram' && !chatId && !username) {
+    updateAuthStatus('Telegram needs a chat_id or username before we can send.', 'warn');
+    return null;
+  }
+
+  if (channel === 'whatsapp' && !target) {
+    updateAuthStatus('WhatsApp needs a target phone number or relay id.', 'warn');
+    return null;
+  }
+
+  updateAuthStatus(`Sending ${label(channel)} message...`, 'warn');
+  try {
+    const response = await fetch('/api/work2u/channel/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel,
+        target: target || chatId || username,
+        to: target,
+        chatId,
+        username,
+        name,
+        message,
+        workspaceName: state.profile.workspaceName || 'Work2U',
+        source: 'hub',
+        process: true
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'Unable to send channel message');
+    }
+    updateHubComposerField('message', '');
+    render();
+    await syncChannelActivityFromServer();
+    updateAuthStatus('Message queued and processed.', 'good');
+    return data;
+  } catch (error) {
+    updateAuthStatus(error.message || 'Unable to send channel message', 'bad');
     return null;
   }
 }
@@ -4544,7 +6672,7 @@ async function applySession(session) {
         primaryGoal: survey.goal,
         package: recommendation.name,
         channels: survey.channels,
-        accessRole: state.profile.accessRole || defaultProfile().accessRole,
+        accessRole: recommendedAccessRole(survey.role),
         authMethod: authMethodLabel(authMethod),
         loginEmail: email,
         mailboxType: survey.mailboxType,
@@ -4708,6 +6836,7 @@ function setupSuggestion(kind) {
       primaryGoal: 'Follow up prospects',
       package: 'Starter',
       channels: ['whatsapp', 'email'],
+      accessRole: recommendedAccessRole('Freelancer'),
       aiMode: 'Suggest only',
       aiSource: 'Work2U managed',
       language: 'BM + English',
@@ -4721,6 +6850,7 @@ function setupSuggestion(kind) {
       primaryGoal: 'Follow up prospects',
       package: 'Elite',
       channels: ['whatsapp', 'email', 'telegram'],
+      accessRole: recommendedAccessRole('Property Agent'),
       aiMode: 'Draft only',
       aiSource: 'Work2U managed',
       language: 'BM + English',
@@ -4734,6 +6864,7 @@ function setupSuggestion(kind) {
       primaryGoal: 'Manage clients',
       package: 'Elite',
       channels: ['whatsapp', 'email'],
+      accessRole: recommendedAccessRole('Insurance Agent'),
       aiMode: 'Draft only',
       aiSource: 'Work2U managed',
       language: 'BM + English',
@@ -4747,6 +6878,7 @@ function setupSuggestion(kind) {
       primaryGoal: 'Coordinate team',
       package: 'Enterprise',
       channels: ['email', 'telegram'],
+      accessRole: recommendedAccessRole('Corporate Team'),
       aiMode: 'Semi-auto',
       aiSource: 'Work2U managed',
       language: 'English',
@@ -4760,6 +6892,7 @@ function setupSuggestion(kind) {
       primaryGoal: 'Track tasks',
       package: 'Starter',
       channels: ['whatsapp', 'email'],
+      accessRole: recommendedAccessRole('General Business'),
       aiMode: 'Suggest only',
       aiSource: 'Work2U managed',
       language: 'BM + English',
@@ -4806,6 +6939,7 @@ function saveSetupFromForm() {
     language: document.getElementById('setup-language').value,
     region: document.getElementById('setup-region').value,
     teamSize: document.getElementById('setup-team').value,
+    accessRole: recommendedAccessRole(document.getElementById('setup-persona').value),
     setupComplete: true,
     onboardingStep: 'complete',
     notes: document.getElementById('setup-notes').value.trim()
@@ -4890,6 +7024,7 @@ function selectThread(id) {
 function selectClient(id) {
   state.activeClientId = id;
   render();
+  void syncClientActivityFromServer(state.clients.find((item) => item.id === id) || null);
 }
 
 function sendAI() {
@@ -4899,6 +7034,8 @@ function sendAI() {
   const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   state.ai.push({ role: 'user', text: prompt, at: timestamp });
   input.value = '';
+  state.aiDraftPrompt = '';
+  save(STORAGE.aiDraftPrompt, '');
   save(STORAGE.ai, state.ai);
   render();
 
@@ -4932,6 +7069,11 @@ ${prompt}`
       save(STORAGE.ai, state.ai);
       render();
     });
+}
+
+function updateAiDraftPrompt(value) {
+  state.aiDraftPrompt = String(value || '');
+  save(STORAGE.aiDraftPrompt, state.aiDraftPrompt);
 }
 
 function runHubDraft() {
@@ -5070,6 +7212,7 @@ async function syncRecentExpenseReceiptsFromServer() {
       throw new Error(data?.error?.message || 'Could not load recent receipts');
     }
     state.expenseReceipts = Array.isArray(data?.data?.receipts) ? data.data.receipts.map(normalizeRecentReceipt) : [];
+    syncBusinessWorkflowReminders({ receipts: state.expenseReceipts, invoices: state.invoices, includeSocial: false });
     state.expenseReceiptsError = null;
     state.expenseReceiptsLoading = false;
     render();
@@ -5156,6 +7299,550 @@ function receiptSearchText(receipt) {
     receipt.receiptDate,
     receipt.expenseMonth
   ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function normalizeExpenseHintText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s@.-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function guessReceiptExpenseType(receipt = {}) {
+  const text = normalizeExpenseHintText([
+    receipt.vendorName,
+    receipt.fileName,
+    receipt.notes,
+    receipt.category,
+    receipt.expenseType
+  ].filter(Boolean).join(' '));
+
+  const hints = [
+    ['subscription', ['resend', 'supabase', 'vercel', 'stripe', 'quickbooks', 'notion', 'monday', 'asana', 'canva', 'adobe', 'slack', 'google workspace', 'icloud', 'office 365']],
+    ['tools', ['hosting', 'server', 'domain', 'app', 'software', 'tool', 'api', 'database', 'backup', 'automation', 'crm']],
+    ['marketing', ['meta', 'facebook', 'instagram', 'tiktok', 'ads', 'adwords', 'marketing', 'campaign', 'boost']],
+    ['travel', ['grab', 'bolt', 'airasia', 'airport', 'flight', 'hotel', 'taxi', 'tol', 'toll', 'fuel', 'petrol', 'parking']],
+    ['overhead', ['bill', 'utility', 'rent', 'electric', 'water', 'office', 'stationery', 'admin', 'support']],
+    ['direct', ['client', 'project', 'deal', 'commission', 'sale', 'property', 'insurance', 'freelance', 'service']]
+  ];
+
+  for (const [type, keywords] of hints) {
+    if (keywords.some((keyword) => text.includes(keyword))) {
+      return type;
+    }
+  }
+
+  return String(receipt.expenseType || 'other').toLowerCase() || 'other';
+}
+
+function buildReceiptExpenseCoach(receipts = []) {
+  const list = Array.isArray(receipts) ? receipts : [];
+  const summary = list.reduce((acc, receipt) => {
+    const amount = Number(receipt.totalAmount || receipt.total_amount || 0) || 0;
+    const type = guessReceiptExpenseType(receipt);
+    const vendor = String(receipt.vendorName || receipt.vendor_name || receipt.fileName || receipt.file_name || 'Unknown').trim();
+    acc.total += amount;
+    acc.byType[type] = (acc.byType[type] || 0) + amount;
+    acc.byVendor[vendor] = (acc.byVendor[vendor] || 0) + amount;
+    acc.countByType[type] = (acc.countByType[type] || 0) + 1;
+    return acc;
+  }, { total: 0, byType: {}, byVendor: {}, countByType: {} });
+
+  const sortedTypes = Object.entries(summary.byType).sort((a, b) => b[1] - a[1]);
+  const topTypes = sortedTypes.slice(0, 3).map(([type, amount]) => ({
+    type,
+    amount,
+    count: summary.countByType[type] || 0
+  }));
+  const topVendor = Object.entries(summary.byVendor).sort((a, b) => b[1] - a[1])[0] || null;
+  const monthlyReserve = summary.total ? Math.round(summary.total * 1.08) : 0;
+
+  return {
+    total: summary.total,
+    monthlyReserve,
+    topTypes,
+    topVendor,
+    suggestedType: topTypes[0]?.type || 'other'
+  };
+}
+
+function receiptSuggestionForForm() {
+  return guessReceiptExpenseType({
+    vendorName: document.getElementById('receipt-vendor')?.value || '',
+    fileName: document.getElementById('receipt-file')?.files?.[0]?.name || '',
+    notes: document.getElementById('receipt-notes')?.value || '',
+    expenseType: document.getElementById('receipt-expense-type')?.value || ''
+  });
+}
+
+function receiptSuggestionContext() {
+  const vendor = document.getElementById('receipt-vendor')?.value || '';
+  const fileName = document.getElementById('receipt-file')?.files?.[0]?.name || '';
+  const notes = document.getElementById('receipt-notes')?.value || '';
+  const current = document.getElementById('receipt-expense-type')?.value || '';
+  const suggestion = guessReceiptExpenseType({
+    vendorName: vendor,
+    fileName,
+    notes,
+    expenseType: current
+  });
+  return { vendor, fileName, notes, current, suggestion };
+}
+
+function syncReceiptExpenseSuggestion() {
+  const select = document.getElementById('receipt-expense-type');
+  const hint = document.getElementById('receipt-expense-hint');
+  if (!select) return null;
+  const { vendor, suggestion } = receiptSuggestionContext();
+  const current = String(select.value || '').toLowerCase();
+  const autoApplied = String(state.receiptExpenseTypeAutoApplied || '').toLowerCase();
+  const shouldAutoApply = !current
+    || ['direct', 'other'].includes(current)
+    || current === autoApplied;
+
+  if (shouldAutoApply) {
+    select.value = suggestion;
+    state.receiptExpenseTypeAutoApplied = suggestion;
+    save(STORAGE.receiptExpenseTypeAutoApplied, suggestion);
+  }
+
+  if (hint) {
+    hint.textContent = vendor
+      ? `Suggested category: ${suggestion}${shouldAutoApply ? '' : ' (manual override active)'}`
+      : 'Type a vendor name to see a category suggestion.';
+  }
+
+  return suggestion;
+}
+
+function lockReceiptExpenseTypeManual(value) {
+  state.receiptExpenseTypeAutoApplied = '';
+  save(STORAGE.receiptExpenseTypeAutoApplied, '');
+  const hint = document.getElementById('receipt-expense-hint');
+  if (hint) {
+    hint.textContent = value ? `Manual category selected: ${value}` : 'Manual category selected.';
+  }
+}
+
+function applyReceiptExpenseSuggestionFromForm() {
+  const suggested = receiptSuggestionForForm();
+  const select = document.getElementById('receipt-expense-type');
+  if (select) select.value = suggested;
+  state.receiptExpenseTypeAutoApplied = suggested;
+  save(STORAGE.receiptExpenseTypeAutoApplied, suggested);
+  const notes = document.getElementById('receipt-notes');
+  const vendor = document.getElementById('receipt-vendor')?.value.trim() || 'receipt';
+  if (notes && !String(notes.value || '').trim()) {
+    notes.value = `Suggested by Work2U for ${vendor}: ${suggested}`;
+  }
+  const hint = document.getElementById('receipt-expense-hint');
+  if (hint) hint.textContent = `Suggested category: ${suggested}`;
+  showToast(`Suggested expense type: ${suggested}`, 'good', 'Receipt coach');
+}
+
+function receiptAiPrompt(receipt = {}, kind = 'receipt-summary') {
+  const vendor = String(receipt.vendorName || receipt.vendor_name || receipt.fileName || receipt.file_name || 'this receipt').trim();
+  const amount = Number(receipt.totalAmount || receipt.total_amount || 0) || 0;
+  const month = String(receipt.expenseMonth || receipt.expense_month || currentMonthKey().slice(0, 7)).trim();
+  const status = String(receipt.reviewStatus || receipt.review_status || 'pending').trim();
+  const type = String(receipt.expenseType || receipt.expense_type || guessReceiptExpenseType(receipt)).trim();
+  const fileName = String(receipt.fileName || receipt.file_name || '-').trim();
+  const fileKind = String(kind || 'receipt-summary').toLowerCase();
+
+  if (fileKind === 'receipt-approval') {
+    return [
+      `Review this receipt and decide whether to approve, flag, or request more details.`,
+      `Vendor: ${vendor}.`,
+      `File: ${fileName}.`,
+      `Amount: ${amount ? `RM ${money(amount)}` : 'not specified'}.`,
+      `Month: ${month}.`,
+      `Current review status: ${status}.`,
+      `Expense category guess: ${type}.`,
+      `Return a short approval note and a one-line reason.`
+    ].join(' ');
+  }
+
+  if (fileKind === 'vendor-follow-up') {
+    return [
+      `Draft a vendor follow-up message for this receipt.`,
+      `Vendor: ${vendor}.`,
+      `File: ${fileName}.`,
+      `Amount: ${amount ? `RM ${money(amount)}` : 'not specified'}.`,
+      `Ask for missing invoice details, clearer receipt info, or any confirmation needed for bookkeeping.`,
+      `Tone: polite, concise, and businesslike.`
+    ].join(' ');
+  }
+
+  if (fileKind === 'invoice-reminder' || fileKind === 'invoice-follow-up' || fileKind === 'invoice') {
+    const invoiceAmount = Number(receipt.amount || receipt.totalAmount || receipt.total_amount || 0) || 0;
+    const dueText = String(receipt.due || receipt.dueDate || receipt.due_date || 'soon').trim();
+    return [
+      `Write a short invoice reminder message for invoice ${String(receipt.number || receipt.invoiceNumber || 'unknown')}.`,
+      `Client: ${String(receipt.client || receipt.clientName || 'Unknown')}.`,
+      `Amount: ${invoiceAmount ? `RM ${money(invoiceAmount)}` : 'not specified'}.`,
+      `Due: ${dueText}.`,
+      `Tone: polite, clear, and action-focused.`,
+      `Please include the next step and keep it suitable for WhatsApp and email.`
+    ].join(' ');
+  }
+
+  return [
+    `Draft a short AI assistant note for this receipt and suggest the next business action.`,
+    `Vendor: ${vendor}.`,
+    `File: ${fileName}.`,
+    `Amount: ${amount ? `RM ${money(amount)}` : 'not specified'}.`,
+    `Month: ${month}.`,
+    `Status: ${status}.`,
+    `Current expense type: ${type}.`,
+    `Goal: tell me if it should be categorized, approved, flagged, or followed up with the vendor.`
+  ].join(' ');
+}
+
+function seedAiDraftPrompt(prompt, openAiView = true) {
+  const next = String(prompt || '').trim();
+  if (!next) {
+    showToast('No prompt available yet.', 'warn', 'AI helper');
+    return;
+  }
+  state.aiDraftPrompt = next;
+  save(STORAGE.aiDraftPrompt, next);
+  if (openAiView) {
+    setView('ai');
+  } else {
+    render();
+  }
+  setTimeout(() => {
+    const input = document.getElementById('ai-prompt');
+    if (input) {
+      input.value = next;
+      input.focus();
+      input.setSelectionRange(next.length, next.length);
+    }
+  }, 0);
+  showToast('AI prompt loaded.', 'good', 'AI helper');
+}
+
+function seedAiPromptFromReceipt(receiptId) {
+  const cleanId = decodeReceiptId(receiptId);
+  const receipt = (Array.isArray(state.expenseReceipts) ? state.expenseReceipts : []).find((item) => item.id === cleanId)
+    || currentReceiptDrawerReceipt()
+    || state.expenseReceiptUpload?.receipt
+    || null;
+  if (!receipt) {
+    showToast('No receipt selected yet.', 'warn', 'AI helper');
+    return;
+  }
+  seedAiDraftPrompt(receiptAiPrompt(receipt, 'receipt-summary'), true);
+}
+
+function seedAiPromptFromReceiptApproval(receiptId) {
+  const cleanId = decodeReceiptId(receiptId);
+  const receipt = (Array.isArray(state.expenseReceipts) ? state.expenseReceipts : []).find((item) => item.id === cleanId)
+    || currentReceiptDrawerReceipt()
+    || state.expenseReceiptUpload?.receipt
+    || null;
+  if (!receipt) {
+    showToast('No receipt selected yet.', 'warn', 'AI helper');
+    return;
+  }
+  seedAiDraftPrompt(receiptAiPrompt(receipt, 'receipt-approval'), true);
+}
+
+function seedAiPromptFromVendorFollowUp(receiptId) {
+  const cleanId = decodeReceiptId(receiptId);
+  const receipt = (Array.isArray(state.expenseReceipts) ? state.expenseReceipts : []).find((item) => item.id === cleanId)
+    || currentReceiptDrawerReceipt()
+    || state.expenseReceiptUpload?.receipt
+    || null;
+  if (!receipt) {
+    showToast('No receipt selected yet.', 'warn', 'AI helper');
+    return;
+  }
+  seedAiDraftPrompt(receiptAiPrompt(receipt, 'vendor-follow-up'), true);
+}
+
+function seedAiPromptFromInvoice(invoiceId) {
+  const receipt = (Array.isArray(state.invoices) ? state.invoices : []).find((item) => item.id === invoiceId)
+    || state.invoices.find((item) => String(item.status || '').toLowerCase() !== 'paid')
+    || state.invoices[0]
+    || null;
+  if (!receipt) {
+    showToast('No invoice selected yet.', 'warn', 'AI helper');
+    return;
+  }
+  seedAiDraftPrompt(receiptAiPrompt(receipt, 'invoice-reminder'), true);
+}
+
+function seedAiPromptFromInvoiceReminder(invoiceId) {
+  return seedAiPromptFromInvoice(invoiceId);
+}
+
+function latestRecordByType(collection, predicate = null) {
+  const items = Array.isArray(collection) ? collection : [];
+  if (typeof predicate !== 'function') {
+    return items[0] || null;
+  }
+  return items.find(predicate) || items[0] || null;
+}
+
+function buildHubPlaybookPrompt(kind = 'invoice-reminder') {
+  const thread = state.threads.find((item) => item.id === state.activeThreadId) || state.threads[0] || {};
+  const client = state.clients.find((item) => item.name === thread.name || item.company === thread.name) || state.clients[0] || {};
+  const invoice = latestRecordByType(state.invoices, (item) => String(item.status || '').toLowerCase() !== 'paid') || state.invoices[0] || {};
+  const receipt = latestRecordByType(state.expenseReceipts, null) || state.expenseReceiptUpload?.receipt || {};
+  const channel = String(thread.channel || 'whatsapp').toLowerCase();
+  const name = String(thread.name || client.name || client.company || 'client').trim();
+
+  switch (String(kind || '').toLowerCase()) {
+    case 'receipt-approval':
+      return [
+        `Draft a short internal follow-up asking the team to review this receipt.`,
+        `Receipt vendor: ${String(receipt.vendorName || receipt.vendor_name || 'Unknown').trim()}.`,
+        `Expense type: ${String(receipt.expenseType || receipt.expense_type || 'other').trim()}.`,
+        `Tone: clear, concise, and approval-focused.`,
+        `The reply should work for ${channel} workflow handoff.`
+      ].join(' ');
+    case 'vendor-follow-up':
+      return [
+        `Draft a polite vendor follow-up for missing receipt details or tax invoice confirmation.`,
+        `Vendor: ${String(receipt.vendorName || receipt.vendor_name || 'Unknown').trim()}.`,
+        `Ask for the missing document, invoice number, or tax breakdown if needed.`,
+        `Tone: polite, concise, and businesslike.`,
+        `Keep it suitable for ${channel} messaging.`
+      ].join(' ');
+    case 'invoice-reminder':
+    default:
+      return [
+        `Draft a payment reminder for ${name}.`,
+        `Invoice: ${String(invoice.number || invoice.invoiceNumber || 'unknown').trim()}.`,
+        `Amount: ${Number(invoice.amount || 0) ? `RM ${money(Number(invoice.amount || 0))}` : 'not specified'}.`,
+        `Due: ${String(invoice.due || invoice.dueDate || invoice.due_date || 'soon').trim()}.`,
+        `Tone: polite, warm, and action-focused.`,
+        `Keep it suitable for ${channel} follow-up.`
+      ].join(' ');
+  }
+}
+
+function seedHubPlaybook(kind = 'invoice-reminder') {
+  const input = document.getElementById('hub-input');
+  if (!input) return;
+  input.value = buildHubPlaybookPrompt(kind);
+  runHubDraft();
+}
+
+function ensureAutoWorkflowIndex() {
+  if (!state.autoWorkflowIndex || typeof state.autoWorkflowIndex !== 'object' || Array.isArray(state.autoWorkflowIndex)) {
+    state.autoWorkflowIndex = defaultAutoWorkflowIndex();
+    save(STORAGE.autoWorkflowIndex, state.autoWorkflowIndex);
+  }
+  return state.autoWorkflowIndex;
+}
+
+function autoWorkflowKey(kind, sourceId, variant = 'main') {
+  return [kind, sourceId, variant].map((part) => String(part || '').trim()).filter(Boolean).join('|');
+}
+
+function markAutoWorkflow(key, meta = {}) {
+  const index = ensureAutoWorkflowIndex();
+  index[key] = {
+    ...(index[key] || {}),
+    ...meta,
+    at: nowIso()
+  };
+  save(STORAGE.autoWorkflowIndex, index);
+  return index[key];
+}
+
+function autoWorkflowSeen(key) {
+  return !!ensureAutoWorkflowIndex()[key];
+}
+
+function reminderTimeFromText(value, fallback = 'Today') {
+  const text = String(value || '').trim();
+  if (!text) return fallback;
+  if (/today/i.test(text) && !/,/.test(text)) return `${text}, 9:00 AM`;
+  if (/tomorrow/i.test(text) && !/,/.test(text)) return `${text}, 10:00 AM`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return `Due ${text.slice(0, 10)}`;
+  return text;
+}
+
+function createAutoTask(task, key, meta = {}) {
+  if (!key || autoWorkflowSeen(key)) return null;
+  const exists = (Array.isArray(state.tasks) ? state.tasks : []).find((item) => item.autoWorkflowKey === key || item.sourceKey === key);
+  if (exists) {
+    markAutoWorkflow(key, { kind: 'task', ...meta, existingId: exists.id });
+    return exists;
+  }
+
+  const nextTask = {
+    id: `task-auto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    stage: 'todo',
+    progress: 0,
+    owner: state.profile.persona || state.profile.workspaceName || 'Work2U',
+    note: '',
+    autoGenerated: true,
+    autoWorkflowKey: key,
+    sourceKey: key,
+    ...task,
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  };
+
+  state.tasks = [nextTask, ...(Array.isArray(state.tasks) ? state.tasks : [])];
+  persistCollection('tasks');
+  markAutoWorkflow(key, { kind: 'task', taskId: nextTask.id, ...meta });
+  return nextTask;
+}
+
+function createAutoCalendarEvent(event, key, meta = {}) {
+  if (!key || autoWorkflowSeen(key)) return null;
+  const exists = (Array.isArray(state.calendar) ? state.calendar : []).find((item) => item.autoWorkflowKey === key || item.sourceKey === key);
+  if (exists) {
+    markAutoWorkflow(key, { kind: 'calendar', ...meta, existingId: exists.id });
+    return exists;
+  }
+
+  const nextEvent = {
+    id: `cal-auto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    autoGenerated: true,
+    autoWorkflowKey: key,
+    sourceKey: key,
+    ...event,
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  };
+
+  state.calendar = [nextEvent, ...(Array.isArray(state.calendar) ? state.calendar : [])];
+  persistCollection('calendar');
+  markAutoWorkflow(key, { kind: 'calendar', eventId: nextEvent.id, ...meta });
+  return nextEvent;
+}
+
+function syncReceiptWorkflow(receipt) {
+  const sourceId = String(receipt?.id || receipt?.receiptId || receipt?.fileName || receipt?.file_name || '').trim();
+  if (!sourceId) return { task: null, event: null };
+
+  const vendor = String(receipt.vendorName || receipt.vendor_name || receipt.fileName || receipt.file_name || 'receipt').trim();
+  const status = String(receipt.reviewStatus || receipt.review_status || 'pending').toLowerCase();
+  const dueText = reminderTimeFromText(receipt.receiptDate || receipt.expenseMonth || 'Today');
+  const reminderKey = autoWorkflowKey('receipt', sourceId, status === 'approved' ? 'archive' : 'review');
+  const taskTitle = status === 'approved'
+    ? `File receipt for ${vendor}`
+    : `Review receipt from ${vendor}`;
+  const eventTitle = status === 'approved'
+    ? `Receipt filed: ${vendor}`
+    : `Receipt review: ${vendor}`;
+
+  const task = createAutoTask({
+    title: taskTitle,
+    due: dueText,
+    note: status === 'approved' ? 'Ready for bookkeeping' : 'Needs approval before month close',
+    sourceKind: 'receipt',
+    sourceId
+  }, reminderKey, { sourceKind: 'receipt', sourceId, status });
+
+  const event = createAutoCalendarEvent({
+    title: eventTitle,
+    time: dueText,
+    type: status === 'approved' ? 'billing' : 'reminder',
+    sourceKind: 'receipt',
+    sourceId
+  }, reminderKey, { sourceKind: 'receipt', sourceId, status });
+
+  return { task, event };
+}
+
+function syncInvoiceWorkflow(invoice) {
+  const sourceId = String(invoice?.id || invoice?.number || invoice?.invoiceNumber || '').trim();
+  if (!sourceId) return { task: null, event: null };
+
+  const status = String(invoice.status || 'draft').toLowerCase();
+  if (status === 'paid') return { task: null, event: null };
+
+  const clientName = String(invoice.client || invoice.clientName || 'client').trim();
+  const dueText = reminderTimeFromText(invoice.due || invoice.dueDate || invoice.due_date || 'Today');
+  const reminderKey = autoWorkflowKey('invoice', sourceId, 'payment');
+  const invoiceNumber = String(invoice.number || invoice.invoiceNumber || sourceId).trim();
+
+  const task = createAutoTask({
+    title: `Follow up invoice ${invoiceNumber}`,
+    due: dueText,
+    note: `Payment reminder for ${clientName}`,
+    sourceKind: 'invoice',
+    sourceId
+  }, reminderKey, { sourceKind: 'invoice', sourceId, status });
+
+  const event = createAutoCalendarEvent({
+    title: `Invoice reminder: ${invoiceNumber}`,
+    time: dueText,
+    type: 'billing',
+    sourceKind: 'invoice',
+    sourceId
+  }, reminderKey, { sourceKind: 'invoice', sourceId, status });
+
+  return { task, event };
+}
+
+function syncSocialWorkflow(social = state.socialComposer || defaultSocialComposer()) {
+  const campaign = String(social?.campaign || '').trim();
+  const sourceId = campaign;
+  if (!sourceId) return { task: null, event: null };
+
+  const reminderKey = autoWorkflowKey('social', sourceId, 'campaign');
+  const platform = String(social.platform || 'instagram').toLowerCase();
+  const objective = String(social.objective || 'post').toLowerCase();
+  const title = `${campaign} (${platform})`;
+  const dueText = reminderTimeFromText(`${social.postDate || 'Tomorrow'}${social.postTime ? `, ${social.postTime}` : ''}`, 'Tomorrow, 10:00 AM');
+
+  const task = createAutoTask({
+    title: `Publish social post: ${title}`,
+    due: dueText,
+    note: social.cta ? `CTA: ${social.cta}` : 'Social campaign scheduled',
+    sourceKind: 'social',
+    sourceId
+  }, reminderKey, { sourceKind: 'social', sourceId, platform, objective });
+
+  const event = createAutoCalendarEvent({
+    title: `Social post: ${title}`,
+    time: dueText,
+    type: 'social',
+    sourceKind: 'social',
+    sourceId
+  }, reminderKey, { sourceKind: 'social', sourceId, platform, objective });
+
+  return { task, event };
+}
+
+function syncBusinessWorkflowReminders(options = {}) {
+  const receipts = Array.isArray(options.receipts) ? options.receipts : (Array.isArray(state.expenseReceipts) ? state.expenseReceipts : []);
+  const invoices = Array.isArray(options.invoices) ? options.invoices : (Array.isArray(state.invoices) ? state.invoices : []);
+  const social = options.social || state.socialComposer || defaultSocialComposer();
+  const counts = { tasks: 0, calendar: 0 };
+
+  receipts.forEach((receipt) => {
+    const result = syncReceiptWorkflow(receipt);
+    if (result.task) counts.tasks += 1;
+    if (result.event) counts.calendar += 1;
+  });
+
+  invoices.forEach((invoice) => {
+    const result = syncInvoiceWorkflow(invoice);
+    if (result.task) counts.tasks += 1;
+    if (result.event) counts.calendar += 1;
+  });
+
+  if (options.includeSocial !== false) {
+    const result = syncSocialWorkflow(social);
+    if (result.task) counts.tasks += 1;
+    if (result.event) counts.calendar += 1;
+  }
+
+  if (counts.tasks || counts.calendar) {
+    render();
+  }
+
+  return counts;
 }
 
 function filteredExpenseReceipts() {
@@ -5778,6 +8465,7 @@ function renderReceiptDetailDrawer() {
           <button class="primary-btn" type="button" onclick="setExpenseReceiptDrawerTab('timeline')">Open timeline</button>
           <button class="soft-btn" type="button" onclick="setExpenseReceiptDrawerTab('file')">Open file</button>
           <button class="soft-btn" type="button" onclick="reprocessReceiptOCR('${encodeURIComponent(receipt.id)}')">Reprocess OCR</button>
+          <button class="soft-btn" type="button" onclick="seedAiPromptFromReceipt('${encodeURIComponent(receipt.id)}')">Draft in AI</button>
           <button class="soft-btn" type="button" onclick="updateReceiptReview('${esc(receipt.id)}', 'approved')">Approve</button>
           <button class="soft-btn" type="button" onclick="updateReceiptReview('${esc(receipt.id)}', 'flagged')">Flag</button>
         </div>
@@ -5963,7 +8651,10 @@ async function uploadExpenseReceiptFromForm() {
 
     state.expenseReceiptUpload = data?.data || data;
     state.expenseReceiptError = null;
+    state.receiptExpenseTypeAutoApplied = '';
+    save(STORAGE.receiptExpenseTypeAutoApplied, '');
     await syncRecentExpenseReceiptsFromServer();
+    syncBusinessWorkflowReminders({ receipts: state.expenseReceipts, invoices: state.invoices, includeSocial: false });
     render();
     updateAuthStatus('Receipt uploaded and monthly rollup updated.', 'good');
     await refreshMonthlyExpenseRollup();
@@ -6073,6 +8764,10 @@ async function signOut() {
   state.expenseReceiptDrawerError = null;
   state.expenseReceiptUpload = null;
   state.expenseReceiptError = null;
+  state.clientActivity = null;
+  state.clientActivityLoading = false;
+  state.clientActivityError = null;
+  state.clientActivityClientId = null;
   save(STORAGE.auth, state.auth);
   updateAuthStatus('Signed out. Choose a login method to continue.', 'warn');
   render();
@@ -6082,6 +8777,7 @@ async function initialize() {
   document.body.dataset.theme = state.theme;
   ensureSeedData();
   await getPublicConfig();
+  await syncWork2uBootstrapFromServer();
   attachNav();
   wireAuthGate();
   wireShell();
@@ -6092,11 +8788,16 @@ async function initialize() {
   if (!state.activeClientId) state.activeClientId = state.clients[0]?.id || null;
   await bootstrapAuth();
   await hydrateWorkspaceCollectionsFromApi();
+  syncBusinessWorkflowReminders({ receipts: state.expenseReceipts, invoices: state.invoices, includeSocial: true });
   render();
   void syncBillingStateFromServer();
   void syncRecentExpenseReceiptsFromServer();
+  void syncWork2uBootstrapFromServer();
+  void syncChannelActivityFromServer();
+  void syncClientActivityFromServer(state.clients.find((item) => item.id === state.activeClientId) || null);
   if (isSuperAdmin()) {
     void syncBillingAdminFromServer();
+    void syncOutboundJobsFromServer();
   }
   saveThemeAndView();
 }

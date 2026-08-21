@@ -58,6 +58,10 @@ function appBaseUrl() {
   return process.env.APP_BASE_URL || `http://localhost:${PORT}`;
 }
 
+function runtimeDataDir() {
+  return process.env.VERCEL ? path.join('/tmp', 'work2u-crm') : path.join(ROOT, 'data');
+}
+
 function supabaseRestBase() {
   if (process.env.SUPABASE_URL) return String(process.env.SUPABASE_URL).replace(/\/+$/, '');
   if (process.env.SUPABASE_PROJECT_ID) {
@@ -547,6 +551,1027 @@ async function notifyPaymentReminderEmail({ email, name, invoiceNumber, amount, 
   });
 }
 
+function outboundRelayReady() {
+  return {
+    whatsappRelayReady: !!(process.env.WHATSAPP_BAILEYS_ENDPOINT || process.env.WHATSAPP_RELAY_URL),
+    telegramBotReady: !!process.env.TELEGRAM_BOT_TOKEN
+  };
+}
+
+async function sendWhatsAppOutboundMessage({ to, name, message, workspaceName, source, replyTo } = {}) {
+  const relayUrl = process.env.WHATSAPP_BAILEYS_ENDPOINT || process.env.WHATSAPP_RELAY_URL || '';
+  if (!relayUrl) {
+    return { skipped: true, reason: 'WhatsApp relay endpoint is not configured' };
+  }
+
+  const recipient = String(to || '').trim();
+  const body = String(message || '').trim();
+  if (!recipient || !body) return { skipped: true, reason: 'Missing WhatsApp recipient or message' };
+
+  const headers = { 'Content-Type': 'application/json' };
+  const token = process.env.WHATSAPP_BAILEYS_TOKEN || '';
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(relayUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      channel: 'whatsapp',
+      to: recipient,
+      name: String(name || '').trim(),
+      message: body,
+      workspaceName: String(workspaceName || 'Work2U').trim() || 'Work2U',
+      source: String(source || 'work2u').trim() || 'work2u',
+      replyTo: String(replyTo || '').trim()
+    })
+  });
+
+  const raw = await response.text();
+  let data = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = raw;
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || `WhatsApp relay responded with ${response.status}`);
+  }
+
+  return { ok: true, provider: 'whatsapp', raw: data };
+}
+
+async function sendTelegramOutboundMessage({ chatId, username, name, message, workspaceName, source } = {}) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
+  if (!botToken) {
+    return { skipped: true, reason: 'Telegram bot token is not configured' };
+  }
+
+  const targetValue = String(chatId || username || '').trim();
+  const recipientChatId = String(chatId || '').trim();
+  const recipientUsername = String(username || '').trim().replace(/^@/, '');
+  const body = String(message || '').trim();
+  if (!body) return { skipped: true, reason: 'Missing Telegram message' };
+
+  let resolvedChatId = recipientChatId;
+  let resolvedUsername = recipientUsername;
+
+  if (!resolvedChatId && targetValue && /^-?\d+$/.test(targetValue)) {
+    resolvedChatId = targetValue;
+  }
+
+  if (!resolvedUsername && targetValue && !/^-?\d+$/.test(targetValue)) {
+    resolvedUsername = targetValue.replace(/^@/, '');
+  }
+
+  if (!resolvedChatId && resolvedUsername) {
+    const mapping = await resolveChannelContactMapping({
+      channel: 'telegram',
+      username: resolvedUsername
+    }).catch(() => null);
+
+    if (mapping?.chat_id) {
+      resolvedChatId = String(mapping.chat_id).trim();
+    }
+  }
+
+  if (!resolvedChatId) {
+    return {
+      skipped: true,
+      reason: resolvedUsername
+        ? `Telegram needs a chat_id for @${resolvedUsername}. Ask the client to start the bot first so we can map the conversation.`
+        : 'Telegram needs a chat_id. Ask the client to start the bot first so we can map the conversation.'
+    };
+  }
+
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: resolvedChatId,
+      text: body,
+      disable_web_page_preview: true
+    })
+  });
+
+  const raw = await response.text();
+  let data = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = raw;
+  }
+
+  if (!response.ok || data?.ok === false) {
+    throw new Error(data?.description || data?.error || `Telegram sendMessage failed with status ${response.status}`);
+  }
+
+  return {
+    ok: true,
+    provider: 'telegram',
+    raw: data,
+    username: resolvedUsername || null,
+    chatId: resolvedChatId,
+    workspaceName: String(workspaceName || 'Work2U').trim() || 'Work2U',
+    name: String(name || '').trim() || null,
+    source: String(source || 'work2u').trim() || 'work2u'
+  };
+}
+
+async function sendChannelOutboundMessage(channel, payload = {}) {
+  const normalizedChannel = String(channel || '').toLowerCase();
+  const message = String(payload.message || '').trim();
+  if (normalizedChannel === 'whatsapp') {
+    return sendWhatsAppOutboundMessage({
+      to: payload.to || payload.phone || payload.whatsapp || payload.target,
+      name: payload.name,
+      message,
+      workspaceName: payload.workspaceName,
+      source: payload.source,
+      replyTo: payload.replyTo
+    });
+  }
+
+  if (normalizedChannel === 'telegram') {
+    const target = String(payload.chatId || payload.telegramChatId || payload.target || '').trim();
+    const username = String(payload.username || payload.telegramUsername || '').trim();
+    return sendTelegramOutboundMessage({
+      chatId: /^-?\d+$/.test(target) ? target : (payload.chatId || payload.telegramChatId || ''),
+      username: username || (!/^-?\d+$/.test(target) ? target : ''),
+      name: payload.name,
+      message,
+      workspaceName: payload.workspaceName,
+      source: payload.source
+    });
+  }
+
+  return { skipped: true, reason: `Unsupported channel ${normalizedChannel || 'unknown'}` };
+}
+
+function channelActivityStorePath() {
+  return path.join(runtimeDataDir(), 'work2u-channel-activity.json');
+}
+
+function channelContactStorePath() {
+  return path.join(runtimeDataDir(), 'work2u-channel-contacts.json');
+}
+
+function defaultChannelActivityStore() {
+  return { events: [] };
+}
+
+function defaultChannelContactStore() {
+  return { contacts: [] };
+}
+
+function normalizeChannelDirection(value, fallback = 'inbound') {
+  const next = String(value || fallback || '').toLowerCase();
+  return ['inbound', 'outbound'].includes(next) ? next : fallback;
+}
+
+function normalizeContactText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizePhoneText(value) {
+  return String(value || '').replace(/[^\d]/g, '');
+}
+
+function normalizeTelegramUsername(value) {
+  return normalizeContactText(String(value || '').replace(/^@/, ''));
+}
+
+function contactValueMatches(entryValue, queryValue) {
+  const nextEntry = String(entryValue || '').trim();
+  const nextQuery = String(queryValue || '').trim();
+  if (!nextEntry || !nextQuery) return false;
+  if (normalizeContactText(nextEntry) === normalizeContactText(nextQuery)) return true;
+  if (normalizePhoneText(nextEntry) && normalizePhoneText(nextEntry) === normalizePhoneText(nextQuery)) return true;
+  if (normalizeTelegramUsername(nextEntry) && normalizeTelegramUsername(nextEntry) === normalizeTelegramUsername(nextQuery)) return true;
+  return false;
+}
+
+function normalizeChannelActivity(entry = {}) {
+  const now = entry.created_at || entry.createdAt || nowIso();
+  return {
+    id: String(entry.id || `channel-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`),
+    direction: normalizeChannelDirection(entry.direction),
+    channel: String(entry.channel || 'whatsapp').toLowerCase(),
+    contact: String(entry.contact || entry.to || entry.from || entry.target || '').trim(),
+    chat_id: String(entry.chat_id || entry.chatId || '').trim(),
+    username: String(entry.username || entry.telegramUsername || '').trim().replace(/^@/, ''),
+    phone: String(entry.phone || entry.whatsapp || '').trim(),
+    name: String(entry.name || entry.contact_name || entry.contactName || '').trim(),
+    message: String(entry.message || entry.text || entry.body || '').trim(),
+    status: String(entry.status || 'received').trim(),
+    event_type: String(entry.event_type || entry.eventType || entry.direction || 'message').trim(),
+    thread_id: String(entry.thread_id || entry.threadId || '').trim(),
+    created_at: now,
+    updated_at: entry.updated_at || entry.updatedAt || now,
+    payload: entry.payload && typeof entry.payload === 'object' ? entry.payload : {},
+    metadata: entry.metadata && typeof entry.metadata === 'object' ? entry.metadata : {}
+  };
+}
+
+async function ensureChannelActivityStoreDir() {
+  await fsp.mkdir(path.dirname(channelActivityStorePath()), { recursive: true });
+}
+
+async function readChannelActivityStore() {
+  try {
+    const raw = await fsp.readFile(channelActivityStorePath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultChannelActivityStore(),
+      ...parsed,
+      events: Array.isArray(parsed?.events) ? parsed.events.map((item) => normalizeChannelActivity(item)) : []
+    };
+  } catch {
+    return defaultChannelActivityStore();
+  }
+}
+
+async function writeChannelActivityStore(store) {
+  await ensureChannelActivityStoreDir();
+  const nextStore = {
+    ...defaultChannelActivityStore(),
+    ...store,
+    events: Array.isArray(store?.events) ? store.events.map((item) => normalizeChannelActivity(item)).slice(0, 500) : []
+  };
+  await fsp.writeFile(channelActivityStorePath(), `${JSON.stringify(nextStore, null, 2)}\n`, 'utf8');
+}
+
+function normalizeChannelContact(entry = {}) {
+  const now = entry.created_at || entry.createdAt || nowIso();
+  return {
+    id: String(entry.id || `contact-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`),
+    channel: String(entry.channel || 'whatsapp').toLowerCase(),
+    contact: String(entry.contact || entry.target || entry.to || entry.phone || entry.username || entry.chat_id || '').trim(),
+    chat_id: String(entry.chat_id || entry.chatId || '').trim(),
+    username: String(entry.username || entry.telegramUsername || '').trim().replace(/^@/, ''),
+    phone: String(entry.phone || entry.whatsapp || '').trim(),
+    name: String(entry.name || entry.contactName || '').trim(),
+    thread_id: String(entry.thread_id || entry.threadId || '').trim(),
+    created_at: now,
+    updated_at: entry.updated_at || entry.updatedAt || now,
+    last_seen_at: entry.last_seen_at || entry.lastSeenAt || now,
+    payload: entry.payload && typeof entry.payload === 'object' ? entry.payload : {},
+    metadata: entry.metadata && typeof entry.metadata === 'object' ? entry.metadata : {}
+  };
+}
+
+function contactEntryMatches(entry = {}, query = {}) {
+  if (query.channel && String(entry.channel || '').toLowerCase() !== String(query.channel).toLowerCase()) {
+    return false;
+  }
+  const values = [query.contact, query.chatId, query.chat_id, query.username, query.phone, query.name, query.target].filter(Boolean);
+  if (!values.length) return true;
+  return values.some((value) =>
+    contactValueMatches(entry.contact, value)
+    || contactValueMatches(entry.chat_id, value)
+    || contactValueMatches(entry.username, value)
+    || contactValueMatches(entry.phone, value)
+    || contactValueMatches(entry.name, value)
+  );
+}
+
+async function ensureChannelContactStoreDir() {
+  await fsp.mkdir(path.dirname(channelContactStorePath()), { recursive: true });
+}
+
+async function readChannelContactStore() {
+  try {
+    const raw = await fsp.readFile(channelContactStorePath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultChannelContactStore(),
+      ...parsed,
+      contacts: Array.isArray(parsed?.contacts) ? parsed.contacts.map((item) => normalizeChannelContact(item)) : []
+    };
+  } catch {
+    return defaultChannelContactStore();
+  }
+}
+
+async function writeChannelContactStore(store) {
+  await ensureChannelContactStoreDir();
+  const nextStore = {
+    ...defaultChannelContactStore(),
+    ...store,
+    contacts: Array.isArray(store?.contacts) ? store.contacts.map((item) => normalizeChannelContact(item)).slice(0, 1000) : []
+  };
+  await fsp.writeFile(channelContactStorePath(), `${JSON.stringify(nextStore, null, 2)}\n`, 'utf8');
+}
+
+async function appendChannelContactMapping(entry = {}) {
+  const store = await readChannelContactStore();
+  const nextContact = normalizeChannelContact(entry);
+  const index = store.contacts.findIndex((item) => contactEntryMatches(item, {
+    channel: nextContact.channel,
+    contact: nextContact.contact,
+    chatId: nextContact.chat_id,
+    username: nextContact.username,
+    phone: nextContact.phone,
+    name: nextContact.name,
+    target: nextContact.contact
+  }));
+
+  if (index >= 0) {
+    store.contacts[index] = {
+      ...store.contacts[index],
+      ...nextContact,
+      id: store.contacts[index].id || nextContact.id,
+      created_at: store.contacts[index].created_at || nextContact.created_at
+    };
+  } else {
+    store.contacts.unshift(nextContact);
+  }
+
+  await writeChannelContactStore(store);
+  try {
+    await appendBillingEvent({
+      provider: nextContact.channel || 'whatsapp',
+      event_type: `channel.contact.${nextContact.channel || 'unknown'}`,
+      status: 'mapped',
+      owner_id: nextContact.metadata?.owner_id || 'work2u',
+      email: nextContact.metadata?.email || '',
+      workspace_name: nextContact.metadata?.workspaceName || nextContact.metadata?.workspace_name || '',
+      raw_payload: {
+        channel: nextContact.channel,
+        contact: nextContact.contact,
+        chat_id: nextContact.chat_id,
+        username: nextContact.username,
+        phone: nextContact.phone,
+        name: nextContact.name,
+        thread_id: nextContact.thread_id,
+        payload: nextContact.payload,
+        metadata: nextContact.metadata
+      }
+    });
+  } catch (error) {
+    console.warn('Channel contact sync failed:', error.message);
+  }
+  return nextContact;
+}
+
+async function readChannelContactMappings() {
+  const local = await readChannelContactStore();
+  const supabaseSnapshot = await readSupabaseBillingSnapshot().catch(() => null);
+  const remoteContacts = Array.isArray(supabaseSnapshot?.events)
+    ? supabaseSnapshot.events
+        .filter((event) => String(event.event_type || '').startsWith('channel.contact.'))
+        .map((event) => normalizeChannelContact({
+          id: event.id,
+          channel: event.provider || event.raw_payload?.channel || 'whatsapp',
+          contact: event.raw_payload?.contact || event.email || '',
+          chat_id: event.raw_payload?.chat_id || '',
+          username: event.raw_payload?.username || '',
+          phone: event.raw_payload?.phone || '',
+          name: event.raw_payload?.name || '',
+          thread_id: event.raw_payload?.thread_id || '',
+          created_at: event.created_at || event.updated_at || nowIso(),
+          updated_at: event.updated_at || nowIso(),
+          last_seen_at: event.updated_at || nowIso(),
+          payload: event.raw_payload?.payload || {},
+          metadata: { source: 'supabase' }
+        }))
+    : [];
+
+  const merged = [...remoteContacts, ...(local.contacts || [])];
+  const deduped = [];
+  for (const item of merged) {
+    const key = [
+      String(item.channel || '').toLowerCase(),
+      normalizeContactText(item.contact),
+      normalizePhoneText(item.chat_id || item.phone || ''),
+      normalizeTelegramUsername(item.username)
+    ].join('|');
+    if (deduped.some((entry) => entry.__key === key)) continue;
+    deduped.push({ ...item, __key: key });
+  }
+
+  return deduped.map(({ __key, ...item }) => item).slice(0, 100);
+}
+
+async function resolveChannelContactMapping(query = {}) {
+  const mappings = await readChannelContactMappings();
+  return mappings.find((item) => contactEntryMatches(item, query)) || null;
+}
+
+async function appendChannelActivity(entry = {}) {
+  const store = await readChannelActivityStore();
+  const nextEvent = normalizeChannelActivity(entry);
+  store.events = [nextEvent, ...(store.events || [])].slice(0, 500);
+  await writeChannelActivityStore(store);
+  try {
+    await appendBillingEvent({
+      id: nextEvent.id,
+      provider: nextEvent.channel,
+      event_type: `channel.${nextEvent.direction}.${nextEvent.event_type}`,
+      status: nextEvent.status,
+      owner_id: nextEvent.metadata?.owner_id || nextEvent.payload?.owner_id || nextEvent.payload?.workspaceName || nextEvent.metadata?.workspaceName || 'work2u',
+      email: nextEvent.payload?.email || '',
+      workspace_name: nextEvent.payload?.workspaceName || nextEvent.payload?.workspace_name || nextEvent.metadata?.workspaceName || '',
+      raw_payload: {
+        channel: nextEvent.channel,
+        direction: nextEvent.direction,
+        contact: nextEvent.contact,
+        chat_id: nextEvent.chat_id,
+        username: nextEvent.username,
+        phone: nextEvent.phone,
+        name: nextEvent.name,
+        message: nextEvent.message,
+        thread_id: nextEvent.thread_id,
+        payload: nextEvent.payload,
+        metadata: nextEvent.metadata
+      }
+    });
+  } catch (error) {
+    console.warn('Channel activity sync failed:', error.message);
+  }
+  return nextEvent;
+}
+
+async function listChannelActivity({ limit = 25, channel = '', direction = '', contact = '' } = {}) {
+  const supabaseSnapshot = await readSupabaseBillingSnapshot().catch(() => null);
+  const sourceEvents = Array.isArray(supabaseSnapshot?.events) && supabaseSnapshot.events.length
+    ? supabaseSnapshot.events
+        .filter((event) => String(event.event_type || '').startsWith('channel.') && !String(event.event_type || '').startsWith('channel.contact.'))
+        .map((event) => normalizeChannelActivity({
+          id: event.id,
+          direction: String(event.event_type || '').includes('.outbound.') ? 'outbound' : 'inbound',
+          channel: event.provider || 'whatsapp',
+          contact: event.raw_payload?.contact || event.email || '',
+          chat_id: event.raw_payload?.chat_id || '',
+          username: event.raw_payload?.username || '',
+          phone: event.raw_payload?.phone || '',
+          name: event.raw_payload?.name || '',
+          message: event.raw_payload?.message || '',
+          status: event.status || 'received',
+          event_type: event.event_type || 'channel.message',
+          thread_id: event.raw_payload?.thread_id || '',
+          created_at: event.created_at || event.updated_at || nowIso(),
+          updated_at: event.updated_at || nowIso(),
+          payload: event.raw_payload || {},
+          metadata: { source: 'supabase' }
+        }))
+    : (await readChannelActivityStore()).events || [];
+  const filtered = sourceEvents
+    .filter((item) => !channel || String(item.channel || '').toLowerCase() === String(channel).toLowerCase())
+    .filter((item) => !direction || String(item.direction || '').toLowerCase() === String(direction).toLowerCase())
+    .filter((item) => {
+      const contactQuery = String(contact || '').trim();
+      if (!contactQuery) return true;
+      return [
+        item.contact,
+        item.chat_id,
+        item.username,
+        item.phone,
+        item.name,
+        item.thread_id
+      ].some((value) => contactValueMatches(value, contactQuery));
+    });
+  const events = filtered.slice(0, Math.max(1, Math.min(100, Number(limit) || 25)));
+  const summary = events.reduce((acc, item) => {
+    const key = String(item.direction || 'inbound').toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    const channelKey = String(item.channel || 'unknown').toLowerCase();
+    acc.channels[channelKey] = (acc.channels[channelKey] || 0) + 1;
+    return acc;
+  }, { inbound: 0, outbound: 0, channels: {} });
+  return {
+    events,
+    summary,
+    total: sourceEvents.length
+  };
+}
+
+function webhookSecretCandidates(channel = '') {
+  const normalized = String(channel || '').toLowerCase();
+  const candidates = [
+    process.env.WORK2U_CHANNEL_WEBHOOK_SECRET,
+    normalized === 'whatsapp' ? process.env.WHATSAPP_WEBHOOK_SECRET : '',
+    normalized === 'telegram' ? process.env.TELEGRAM_WEBHOOK_SECRET : ''
+  ].filter(Boolean);
+  return Array.from(new Set(candidates));
+}
+
+function verifyChannelWebhookSecret(req, body, channel = '') {
+  const candidates = webhookSecretCandidates(channel);
+  if (!candidates.length) return true;
+  const provided = String(body?.secret || req.headers['x-work2u-webhook-secret'] || req.headers['x-webhook-secret'] || '').trim();
+  return candidates.includes(provided);
+}
+
+async function handleWork2uChannelWebhook(req, res, forcedChannel = '') {
+  if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+  const body = await readBody(req);
+  const channel = String(forcedChannel || body?.channel || req.headers['x-work2u-channel'] || 'whatsapp').toLowerCase();
+  if (!['whatsapp', 'telegram'].includes(channel)) {
+    return send(res, 400, { error: 'channel must be whatsapp or telegram' });
+  }
+
+  if (!verifyChannelWebhookSecret(req, body, channel)) {
+    return send(res, 401, { error: 'Invalid webhook secret' });
+  }
+
+  const eventType = String(body?.event || body?.type || body?.message_type || 'message').trim();
+  const telegramMessage = channel === 'telegram'
+    ? (body?.message && typeof body.message === 'object'
+      ? body.message
+      : (body?.update?.message && typeof body.update.message === 'object' ? body.update.message : null))
+    : null;
+  const whatsappMessage = channel === 'whatsapp'
+    ? (body?.message && typeof body.message === 'object'
+      ? body.message
+      : (body?.data?.message && typeof body.data.message === 'object' ? body.data.message : null))
+    : null;
+  const chatId = String(
+    body?.chatId
+    || body?.chat_id
+    || body?.data?.key?.remoteJid
+    || body?.data?.remoteJid
+    || telegramMessage?.chat?.id
+    || whatsappMessage?.key?.remoteJid
+    || ''
+  ).trim();
+  const username = String(
+    body?.username
+    || body?.telegramUsername
+    || telegramMessage?.from?.username
+    || telegramMessage?.chat?.username
+    || ''
+  ).trim().replace(/^@/, '');
+  const phone = String(
+    body?.phone
+    || body?.waId
+    || body?.wa_id
+    || body?.from
+    || body?.contact
+    || whatsappMessage?.from
+    || ''
+  ).trim();
+  const contact = String(
+    body?.from
+    || body?.contact
+    || phone
+    || username
+    || chatId
+    || telegramMessage?.chat?.title
+    || telegramMessage?.chat?.first_name
+    || body?.target
+    || ''
+  ).trim();
+  const name = String(
+    body?.name
+    || body?.contactName
+    || body?.chat_name
+    || telegramMessage?.from?.first_name
+    || telegramMessage?.from?.last_name
+    || telegramMessage?.chat?.title
+    || body?.data?.pushName
+    || ''
+  ).trim();
+  const message = String(
+    body?.text
+    || (typeof body?.message === 'string' ? body.message : '')
+    || body?.caption
+    || telegramMessage?.text
+    || telegramMessage?.caption
+    || whatsappMessage?.conversation
+    || whatsappMessage?.extendedTextMessage?.text
+    || whatsappMessage?.imageMessage?.caption
+    || whatsappMessage?.videoMessage?.caption
+    || ''
+  ).trim();
+  const threadId = String(
+    body?.threadId
+    || body?.thread_id
+    || telegramMessage?.message_id
+    || body?.data?.key?.id
+    || whatsappMessage?.key?.id
+    || ''
+  ).trim();
+  const status = String(body?.status || eventType || 'received').trim();
+
+  const event = await appendChannelActivity({
+    direction: 'inbound',
+    channel,
+    contact,
+    chat_id: chatId,
+    username,
+    phone,
+    name,
+    message,
+    status,
+    event_type: eventType,
+    thread_id: threadId,
+    payload: body || {},
+    metadata: {
+      source: 'webhook',
+      rawChannel: channel,
+      workspaceName: String(body?.workspaceName || body?.workspace_name || 'Work2U').trim() || 'Work2U'
+    }
+  }).catch((error) => ({
+    id: `channel-error-${Date.now()}`,
+    direction: 'inbound',
+    channel,
+    contact,
+    chat_id: chatId,
+    username,
+    phone,
+    name,
+    message,
+    status: 'log_failed',
+    event_type: eventType,
+    thread_id: threadId,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+    payload: { error: error.message || 'Channel activity log failed', body: body || {} },
+    metadata: { source: 'webhook', rawChannel: channel, workspaceName: String(body?.workspaceName || body?.workspace_name || 'Work2U').trim() || 'Work2U' }
+  }));
+
+  await appendChannelContactMapping({
+    channel,
+    contact,
+    chat_id: chatId,
+    username,
+    phone,
+    name,
+    thread_id: threadId,
+    payload: body || {},
+    metadata: {
+      source: 'webhook',
+      rawChannel: channel,
+      workspaceName: String(body?.workspaceName || body?.workspace_name || 'Work2U').trim() || 'Work2U'
+    }
+  }).catch((error) => {
+    console.warn('Channel contact mapping failed:', error.message);
+  });
+
+  return send(res, 200, {
+    received: true,
+    channel,
+    event,
+    message: 'Webhook event captured'
+  });
+}
+
+function outboundQueueStorePath() {
+  return path.join(runtimeDataDir(), 'work2u-outbound-jobs.json');
+}
+
+function defaultOutboundQueueStore() {
+  return { jobs: [], events: [] };
+}
+
+function normalizeOutboundStatus(value, fallback = 'queued') {
+  const next = String(value || fallback || '').toLowerCase();
+  return ['queued', 'processing', 'sent', 'failed', 'skipped'].includes(next) ? next : fallback;
+}
+
+function normalizeOutboundJob(job = {}) {
+  const now = job.created_at || job.createdAt || nowIso();
+  const updatedAt = job.updated_at || job.updatedAt || now;
+  const status = normalizeOutboundStatus(job.status);
+  const history = Array.isArray(job.history) ? job.history : [];
+
+  return {
+    id: String(job.id || `outbound-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`),
+    kind: String(job.kind || job.type || 'generic'),
+    channel: String(job.channel || 'email').toLowerCase(),
+    target: String(job.target || job.email || ''),
+    subject: String(job.subject || ''),
+    status,
+    attempts: Math.max(0, Number(job.attempts || 0)),
+    scheduled_at: job.scheduled_at || job.scheduledAt || null,
+    created_at: now,
+    updated_at: updatedAt,
+    processed_at: job.processed_at || job.processedAt || null,
+    error: String(job.error || ''),
+    result: job.result ?? null,
+    note: String(job.note || ''),
+    idempotency_key: String(job.idempotency_key || job.idempotencyKey || ''),
+    payload: job.payload && typeof job.payload === 'object' ? job.payload : {},
+    metadata: job.metadata && typeof job.metadata === 'object' ? job.metadata : {},
+    history: history.map((entry) => ({
+      status: normalizeOutboundStatus(entry.status, status),
+      at: entry.at || nowIso(),
+      note: String(entry.note || ''),
+      details: entry.details && typeof entry.details === 'object' ? entry.details : {}
+    }))
+  };
+}
+
+async function ensureOutboundQueueStoreDir() {
+  await fsp.mkdir(path.dirname(outboundQueueStorePath()), { recursive: true });
+}
+
+async function readOutboundQueueStore() {
+  try {
+    const raw = await fsp.readFile(outboundQueueStorePath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultOutboundQueueStore(),
+      ...parsed,
+      jobs: Array.isArray(parsed?.jobs) ? parsed.jobs.map((job) => normalizeOutboundJob(job)) : [],
+      events: Array.isArray(parsed?.events) ? parsed.events : []
+    };
+  } catch {
+    return defaultOutboundQueueStore();
+  }
+}
+
+async function writeOutboundQueueStore(store) {
+  await ensureOutboundQueueStoreDir();
+  const nextStore = {
+    ...defaultOutboundQueueStore(),
+    ...store,
+    jobs: Array.isArray(store?.jobs) ? store.jobs.map((job) => normalizeOutboundJob(job)) : [],
+    events: Array.isArray(store?.events) ? store.events.slice(0, 200) : []
+  };
+  await fsp.writeFile(outboundQueueStorePath(), `${JSON.stringify(nextStore, null, 2)}\n`, 'utf8');
+}
+
+function outboundQueueJobTitle(job) {
+  const kind = String(job?.kind || 'generic').toLowerCase();
+  return {
+    magic_link_email: 'Magic link email',
+    invoice_sent_email: 'Invoice sent email',
+    payment_reminder_email: 'Payment reminder email',
+    billing_checkout_email: 'Billing checkout email',
+    generic: 'Outbound job'
+  }[kind] || kind.replace(/_/g, ' ');
+}
+
+async function appendOutboundQueueEvent(jobId, eventType, message, details = {}) {
+  const store = await readOutboundQueueStore();
+  store.events = [
+    {
+      id: `evt-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
+      job_id: jobId || null,
+      event_type: String(eventType || 'event'),
+      message: String(message || ''),
+      created_at: nowIso(),
+      details: details && typeof details === 'object' ? details : {}
+    },
+    ...(store.events || [])
+  ].slice(0, 200);
+  await writeOutboundQueueStore(store);
+}
+
+async function enqueueOutboundJob(job = {}) {
+  const store = await readOutboundQueueStore();
+  const nextJob = normalizeOutboundJob(job);
+  if (nextJob.idempotency_key) {
+    const existing = store.jobs.find((item) => item.idempotency_key === nextJob.idempotency_key && !['failed'].includes(item.status));
+    if (existing) return existing;
+  }
+
+  nextJob.status = normalizeOutboundStatus(nextJob.status);
+  nextJob.history = [
+    ...nextJob.history,
+    { status: nextJob.status, at: nowIso(), note: nextJob.note || 'Queued', details: { channel: nextJob.channel, target: nextJob.target } }
+  ];
+  store.jobs = [nextJob, ...(store.jobs || [])].slice(0, 500);
+  await writeOutboundQueueStore(store);
+  await appendOutboundQueueEvent(nextJob.id, 'queued', `Queued ${outboundQueueJobTitle(nextJob)}`, {
+    channel: nextJob.channel,
+    target: nextJob.target,
+    kind: nextJob.kind
+  });
+  return nextJob;
+}
+
+async function updateOutboundJob(jobId, patch = {}) {
+  const store = await readOutboundQueueStore();
+  const index = store.jobs.findIndex((job) => job.id === jobId);
+  if (index === -1) return null;
+  const current = store.jobs[index];
+  const next = normalizeOutboundJob({
+    ...current,
+    ...patch,
+    id: current.id,
+    created_at: current.created_at,
+    history: Array.isArray(patch.history) ? patch.history : current.history
+  });
+  store.jobs[index] = next;
+  await writeOutboundQueueStore(store);
+  return next;
+}
+
+async function processOutboundJob(jobId) {
+  const store = await readOutboundQueueStore();
+  const current = store.jobs.find((job) => job.id === jobId);
+  if (!current) throw new Error('Outbound job not found');
+  if (current.status === 'sent' || current.status === 'skipped') return current;
+
+  await updateOutboundJob(jobId, {
+    status: 'processing',
+    attempts: Number(current.attempts || 0) + 1,
+    updated_at: nowIso(),
+    history: [
+      ...(Array.isArray(current.history) ? current.history : []),
+      { status: 'processing', at: nowIso(), note: 'Processing job', details: {} }
+    ]
+  });
+
+  try {
+    const result = await runOutboundJobHandler(current);
+    const finalStatus = result?.skipped ? 'skipped' : 'sent';
+    const next = await updateOutboundJob(jobId, {
+      status: finalStatus,
+      processed_at: nowIso(),
+      updated_at: nowIso(),
+      error: '',
+      result,
+      history: [
+        ...(Array.isArray(current.history) ? current.history : []),
+        { status: finalStatus, at: nowIso(), note: result?.skipped ? String(result.reason || 'Skipped') : 'Sent successfully', details: result && typeof result === 'object' ? result : {} }
+      ]
+    });
+    await appendOutboundQueueEvent(jobId, finalStatus, `${outboundQueueJobTitle(current)} ${finalStatus}`, {
+      kind: current.kind,
+      channel: current.channel,
+      target: current.target
+    });
+    return next;
+  } catch (error) {
+    const message = error?.message || 'Outbound job failed';
+    const next = await updateOutboundJob(jobId, {
+      status: 'failed',
+      processed_at: nowIso(),
+      updated_at: nowIso(),
+      error: message,
+      history: [
+        ...(Array.isArray(current.history) ? current.history : []),
+        { status: 'failed', at: nowIso(), note: message, details: {} }
+      ]
+    });
+    await appendOutboundQueueEvent(jobId, 'failed', `${outboundQueueJobTitle(current)} failed`, {
+      kind: current.kind,
+      channel: current.channel,
+      target: current.target,
+      error: message
+    });
+    throw error;
+  }
+}
+
+async function runOutboundJobHandler(job) {
+  const payload = job.payload || {};
+  switch (String(job.kind || '').toLowerCase()) {
+    case 'magic_link_email': {
+      const email = String(payload.email || job.target || '').trim();
+      const name = String(payload.name || payload.workspaceName || 'there').trim() || 'there';
+      const workspaceName = String(payload.workspaceName || 'Work2U').trim() || 'Work2U';
+      const redirectTo = String(payload.redirectTo || process.env.SUPABASE_REDIRECT_TO || `${appBaseUrl()}/work2u`).trim();
+      const shouldCreateUser = payload.shouldCreateUser !== false;
+      const expiresInMinutes = Number(payload.expiresInMinutes || 60);
+      const { link } = await generateSupabaseMagicLink({ email, redirectTo, shouldCreateUser });
+      const result = await notifyMagicLinkEmail({
+        email,
+        name,
+        loginLink: link,
+        workspaceName,
+        expiresInMinutes
+      });
+      return { ...result, link };
+    }
+    case 'whatsapp_message':
+    case 'telegram_message':
+    case 'channel_message':
+      return sendChannelOutboundMessage(job.channel || payload.channel || job.kind.replace('_message', ''), {
+        ...payload,
+        target: job.target
+      });
+    case 'invoice_sent_email':
+      return notifyInvoiceSentEmail({
+        email: payload.email,
+        name: payload.name,
+        invoiceNumber: payload.invoiceNumber,
+        amount: payload.amount,
+        dueDate: payload.dueDate,
+        documentUrl: payload.documentUrl,
+        workspaceName: payload.workspaceName,
+        currency: payload.currency || 'MYR'
+      });
+    case 'payment_reminder_email':
+      return notifyPaymentReminderEmail({
+        email: payload.email,
+        name: payload.name,
+        invoiceNumber: payload.invoiceNumber,
+        amount: payload.amount,
+        dueDate: payload.dueDate,
+        paymentUrl: payload.paymentUrl,
+        workspaceName: payload.workspaceName,
+        currency: payload.currency || 'MYR'
+      });
+    case 'billing_checkout_email':
+      return notifyBillingCheckoutEmail({
+        email: payload.email,
+        name: payload.name,
+        workspaceName: payload.workspaceName,
+        plan: payload.plan,
+        provider: payload.provider,
+        paymentUrl: payload.paymentUrl,
+        region: payload.region
+      });
+    default:
+      return { skipped: true, reason: 'Unsupported outbound job kind' };
+  }
+}
+
+async function listOutboundJobs({ limit = 25, status = '' } = {}) {
+  const store = await readOutboundQueueStore();
+  const filtered = status ? store.jobs.filter((job) => String(job.status || '').toLowerCase() === String(status).toLowerCase()) : store.jobs;
+  const jobs = filtered.slice(0, Math.max(1, Math.min(100, Number(limit) || 25)));
+  const summary = jobs.reduce((acc, job) => {
+    const key = String(job.status || 'queued').toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, { queued: 0, processing: 0, sent: 0, failed: 0, skipped: 0 });
+  return {
+    jobs,
+    events: (store.events || []).slice(0, 50),
+    summary,
+    total: store.jobs.length
+  };
+}
+
+async function processOutboundQueue({ limit = 10 } = {}) {
+  const store = await readOutboundQueueStore();
+  const queue = store.jobs
+    .filter((job) => job.status === 'queued')
+    .filter((job) => !job.scheduled_at || new Date(job.scheduled_at).getTime() <= Date.now())
+    .slice(0, Math.max(1, Math.min(20, Number(limit) || 10)));
+
+  const processed = [];
+  for (const job of queue) {
+    // Finish each job before moving to the next so retry/history stays readable.
+    // eslint-disable-next-line no-await-in-loop
+    processed.push(await processOutboundJob(job.id));
+  }
+
+  return {
+    processed: processed.length,
+    jobs: processed
+  };
+}
+
+function work2uObjectCatalog() {
+  return [
+    {
+      key: 'lead',
+      title: 'Lead',
+      role: 'Prospect',
+      purpose: 'Capture interest before conversion.',
+      relations: ['task', 'client', 'outbound job'],
+      fields: ['name', 'company', 'stage', 'source', 'next follow-up', 'note']
+    },
+    {
+      key: 'client',
+      title: 'Client',
+      role: 'Account',
+      purpose: 'Store converted accounts and their service history.',
+      relations: ['task', 'invoice', 'receipt', 'case', 'thread'],
+      fields: ['name', 'company', 'email', 'phone', 'telegram username', 'status', 'service', 'timeline']
+    },
+    {
+      key: 'task',
+      title: 'Task',
+      role: 'Work item',
+      purpose: 'Track stage, progress, owner, and due date.',
+      relations: ['lead', 'client', 'calendar', 'case'],
+      fields: ['title', 'stage', 'progress', 'due', 'owner']
+    },
+    {
+      key: 'case',
+      title: 'Case',
+      role: 'Support / exception',
+      purpose: 'Handle service issues and exceptions with a clear owner.',
+      relations: ['client', 'task', 'thread'],
+      fields: ['title', 'type', 'status', 'client', 'summary']
+    },
+    {
+      key: 'service',
+      title: 'Service',
+      role: 'Offer',
+      purpose: 'Define what can later flow into billing.',
+      relations: ['client', 'invoice'],
+      fields: ['name', 'description', 'price', 'active']
+    },
+    {
+      key: 'outbound-job',
+      title: 'Outbound job',
+      role: 'Queued action',
+      purpose: 'Track every send attempt with retry and event history.',
+      relations: ['email', 'WhatsApp', 'Telegram', 'invoice', 'magic link'],
+      fields: ['kind', 'channel', 'target', 'status', 'attempts']
+    }
+  ];
+}
+
 async function handleWork2uMagicLinkEmail(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
   const body = await readBody(req);
@@ -557,15 +1582,26 @@ async function handleWork2uMagicLinkEmail(req, res) {
   const shouldCreateUser = body?.shouldCreateUser !== false;
 
   try {
-    const { link } = await generateSupabaseMagicLink({ email, redirectTo, shouldCreateUser });
-    await notifyMagicLinkEmail({
-      email,
-      name,
-      loginLink: link,
-      workspaceName,
-      expiresInMinutes: Number(body?.expiresInMinutes || 60)
+    const job = await enqueueOutboundJob({
+      kind: 'magic_link_email',
+      channel: 'email',
+      target: email,
+      subject: 'Your Work2U sign-in link',
+      payload: {
+        email,
+        name,
+        workspaceName,
+        redirectTo,
+        shouldCreateUser,
+        expiresInMinutes: Number(body?.expiresInMinutes || 60)
+      },
+      metadata: {
+        source: 'auth'
+      },
+      idempotencyKey: crypto.createHash('sha256').update(`${email}|${workspaceName}|${redirectTo}|magic_link`).digest('hex')
     });
-    return send(res, 200, { sent: true, email, workspaceName, redirectTo });
+    const result = await processOutboundJob(job.id);
+    return send(res, 200, { sent: true, email, workspaceName, redirectTo, job: result });
   } catch (error) {
     return send(res, 500, { error: error.message || 'Failed to send magic link' });
   }
@@ -575,16 +1611,27 @@ async function handleWork2uInvoiceSentEmail(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
   const body = await readBody(req);
   try {
-    const result = await notifyInvoiceSentEmail({
-      email: body?.email,
-      name: body?.name,
-      invoiceNumber: body?.invoiceNumber,
-      amount: body?.amount,
-      dueDate: body?.dueDate,
-      documentUrl: body?.documentUrl,
-      workspaceName: body?.workspaceName,
-      currency: body?.currency || 'MYR'
+    const job = await enqueueOutboundJob({
+      kind: 'invoice_sent_email',
+      channel: 'email',
+      target: body?.email,
+      subject: `Invoice ${body?.invoiceNumber || ''} from ${body?.workspaceName || 'Work2U'}`,
+      payload: {
+        email: body?.email,
+        name: body?.name,
+        invoiceNumber: body?.invoiceNumber,
+        amount: body?.amount,
+        dueDate: body?.dueDate,
+        documentUrl: body?.documentUrl,
+        workspaceName: body?.workspaceName,
+        currency: body?.currency || 'MYR'
+      },
+      metadata: {
+        source: 'billing'
+      },
+      idempotencyKey: crypto.createHash('sha256').update(`${body?.email}|${body?.invoiceNumber}|invoice_sent`).digest('hex')
     });
+    const result = await processOutboundJob(job.id);
     return send(res, 200, { sent: true, result });
   } catch (error) {
     return send(res, 500, { error: error.message || 'Failed to send invoice email' });
@@ -595,16 +1642,27 @@ async function handleWork2uPaymentReminderEmail(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
   const body = await readBody(req);
   try {
-    const result = await notifyPaymentReminderEmail({
-      email: body?.email,
-      name: body?.name,
-      invoiceNumber: body?.invoiceNumber,
-      amount: body?.amount,
-      dueDate: body?.dueDate,
-      paymentUrl: body?.paymentUrl,
-      workspaceName: body?.workspaceName,
-      currency: body?.currency || 'MYR'
+    const job = await enqueueOutboundJob({
+      kind: 'payment_reminder_email',
+      channel: 'email',
+      target: body?.email,
+      subject: `Payment reminder for invoice ${body?.invoiceNumber || ''}`,
+      payload: {
+        email: body?.email,
+        name: body?.name,
+        invoiceNumber: body?.invoiceNumber,
+        amount: body?.amount,
+        dueDate: body?.dueDate,
+        paymentUrl: body?.paymentUrl,
+        workspaceName: body?.workspaceName,
+        currency: body?.currency || 'MYR'
+      },
+      metadata: {
+        source: 'billing'
+      },
+      idempotencyKey: crypto.createHash('sha256').update(`${body?.email}|${body?.invoiceNumber}|payment_reminder`).digest('hex')
     });
+    const result = await processOutboundJob(job.id);
     return send(res, 200, { sent: true, result });
   } catch (error) {
     return send(res, 500, { error: error.message || 'Failed to send reminder email' });
@@ -612,7 +1670,7 @@ async function handleWork2uPaymentReminderEmail(req, res) {
 }
 
 function surveyStorePath() {
-  return path.join(ROOT, 'data', 'work2u-surveys.json');
+  return path.join(runtimeDataDir(), 'work2u-surveys.json');
 }
 
 function defaultSurveyStore() {
@@ -1231,6 +2289,7 @@ function publicConfig() {
   const supabaseUrl = process.env.SUPABASE_URL || '';
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
   const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+  const relayReady = outboundRelayReady();
   return {
     supabaseUrl,
     supabaseAnonKey,
@@ -1251,6 +2310,10 @@ function publicConfig() {
     billing: {
       billplzReady: !!(process.env.BILLPLZ_SECRET_KEY && process.env.BILLPLZ_COLLECTION_ID),
       stripeReady: !!process.env.STRIPE_SECRET_KEY
+    },
+    channels: {
+      ...relayReady,
+      webhookSecretReady: !!(process.env.WORK2U_CHANNEL_WEBHOOK_SECRET || process.env.WHATSAPP_WEBHOOK_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET)
     }
   };
 }
@@ -1290,7 +2353,7 @@ function billingProviderForRegion(region) {
 }
 
 function billingStorePath() {
-  return path.join(ROOT, 'data', 'work2u-billing-store.json');
+  return path.join(runtimeDataDir(), 'work2u-billing-store.json');
 }
 
 function defaultBillingStore() {
@@ -1782,15 +2845,26 @@ async function handleBillingCheckout(req, res) {
     });
 
     try {
-      await notifyBillingCheckoutEmail({
-        email,
-        name,
-        workspaceName,
-        plan: plan.code,
-        provider: checkout.provider,
-        paymentUrl: checkout.paymentUrl,
-        region
+      const job = await enqueueOutboundJob({
+        kind: 'billing_checkout_email',
+        channel: 'email',
+        target: email,
+        subject: `${workspaceName} checkout for ${plan.code}`,
+        payload: {
+          email,
+          name,
+          workspaceName,
+          plan: plan.code,
+          provider: checkout.provider,
+          paymentUrl: checkout.paymentUrl,
+          region
+        },
+        metadata: {
+          source: 'billing'
+        },
+        idempotencyKey: crypto.createHash('sha256').update(`${email}|${workspaceName}|${plan.code}|billing_checkout`).digest('hex')
       });
+      await processOutboundJob(job.id);
     } catch (mailError) {
       console.warn('Resend checkout email failed:', mailError.message);
       await appendBillingEvent({
@@ -2218,12 +3292,18 @@ function work2uPlanLimits() {
   };
 }
 
-function work2uBootstrap() {
+async function work2uBootstrap() {
+  const queueSnapshot = await listOutboundJobs({ limit: 5 }).catch(() => null);
   return {
     version: 'v1',
     launchGoal: 'AI-powered business OS for CRM, communication, accounting, automation, and AI assist',
     roles: ['Super Admin', 'Admin', 'User'],
     packages: work2uPlanLimits(),
+    objectCatalog: work2uObjectCatalog(),
+    channels: {
+      ...outboundRelayReady(),
+      webhookSecretReady: !!(process.env.WORK2U_CHANNEL_WEBHOOK_SECRET || process.env.WHATSAPP_WEBHOOK_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET)
+    },
     routing: {
       malaysia: 'Billplz',
       global: 'Stripe'
@@ -2238,12 +3318,133 @@ function work2uBootstrap() {
       'automation-and-calendar',
       'AI-and-billing',
       'hardening'
-    ]
+    ],
+    outboundQueue: queueSnapshot
   };
 }
 
+async function handleWork2uBootstrap(req, res) {
+  return send(res, 200, await work2uBootstrap());
+}
+
+async function handleWork2uOutboundJobs(req, res, url) {
+  if (req.method === 'GET') {
+    const limit = Number(url.searchParams.get('limit') || 25);
+    const status = String(url.searchParams.get('status') || '');
+    return send(res, 200, await listOutboundJobs({ limit, status }));
+  }
+
+  if (req.method === 'POST') {
+    const body = await readBody(req);
+    const action = String(body?.action || '').toLowerCase();
+    if (action === 'process') {
+      return send(res, 200, await processOutboundQueue({ limit: Number(body?.limit || 10) }));
+    }
+    if (action === 'retry') {
+      const jobId = String(body?.jobId || '').trim();
+      if (!jobId) return send(res, 400, { error: 'jobId is required' });
+      const job = await updateOutboundJob(jobId, {
+        status: 'queued',
+        error: '',
+        processed_at: null,
+        updated_at: nowIso(),
+        note: 'Retried manually'
+      });
+      if (!job) return send(res, 404, { error: 'Outbound job not found' });
+      return send(res, 200, { job: await processOutboundJob(jobId) });
+    }
+    return send(res, 400, { error: 'Unsupported action' });
+  }
+
+  return send(res, 405, { error: 'Method not allowed' });
+}
+
+async function handleWork2uChannelSend(req, res) {
+  if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+  const body = await readBody(req);
+  const channel = String(body?.channel || '').toLowerCase();
+  if (!['whatsapp', 'telegram'].includes(channel)) {
+    return send(res, 400, { error: 'channel must be whatsapp or telegram' });
+  }
+
+  const job = await enqueueOutboundJob({
+    kind: `${channel}_message`,
+    channel,
+    target: body?.target || body?.to || body?.chatId || body?.telegramUsername || '',
+    subject: String(body?.subject || body?.message || `${channel} message`).slice(0, 120),
+    payload: {
+      channel,
+      to: body?.to || body?.phone || body?.target || '',
+      chatId: body?.chatId || body?.telegramChatId || '',
+      username: body?.username || body?.telegramUsername || '',
+      phone: body?.phone || '',
+      name: body?.name || '',
+      message: body?.message || '',
+      workspaceName: body?.workspaceName || 'Work2U',
+      source: body?.source || 'work2u',
+      replyTo: body?.replyTo || ''
+    },
+    metadata: {
+      source: body?.source || 'api',
+      channel,
+      workspaceName: String(body?.workspaceName || 'Work2U').trim() || 'Work2U'
+    },
+    idempotencyKey: body?.idempotencyKey || crypto.createHash('sha256').update(`${channel}|${body?.target || body?.to || body?.chatId || body?.telegramUsername || ''}|${body?.message || ''}`).digest('hex')
+  });
+
+  const shouldProcess = body?.process !== false;
+  const result = shouldProcess ? await processOutboundJob(job.id) : job;
+  await appendChannelActivity({
+    direction: 'outbound',
+    channel,
+    contact: String(body?.target || body?.to || body?.chatId || body?.telegramUsername || ''),
+    chat_id: String(body?.chatId || body?.telegramChatId || '').trim(),
+    username: String(body?.username || body?.telegramUsername || '').trim().replace(/^@/, ''),
+    phone: String(body?.phone || body?.to || '').trim(),
+    name: String(body?.name || '').trim(),
+    message: String(body?.message || '').trim(),
+    status: String(result?.status || 'queued'),
+    event_type: 'message.sent',
+    thread_id: String(body?.threadId || body?.thread_id || ''),
+    payload: body || {},
+    metadata: {
+      source: body?.source || 'api',
+      jobId: result?.id || job.id
+    }
+  }).catch((error) => {
+    console.warn('Channel activity log failed:', error.message);
+  });
+  await appendChannelContactMapping({
+    channel,
+    contact: String(body?.target || body?.to || body?.chatId || body?.telegramUsername || ''),
+    chat_id: String(body?.chatId || body?.telegramChatId || '').trim(),
+    username: String(body?.username || body?.telegramUsername || '').trim().replace(/^@/, ''),
+    phone: String(body?.phone || body?.to || '').trim(),
+    name: String(body?.name || '').trim(),
+    thread_id: String(body?.threadId || body?.thread_id || ''),
+    payload: body || {},
+    metadata: {
+      source: body?.source || 'api',
+      channel,
+      workspaceName: String(body?.workspaceName || 'Work2U').trim() || 'Work2U'
+    }
+  }).catch((error) => {
+    console.warn('Channel contact mapping failed:', error.message);
+  });
+  return send(res, 200, { queued: true, channel, job: result });
+}
+
+async function handleWork2uChannelActivity(req, res, url) {
+  if (req.method !== 'GET') return send(res, 405, { error: 'GET only' });
+  const limit = Number(url.searchParams.get('limit') || 25);
+  const channel = String(url.searchParams.get('channel') || '').trim();
+  const direction = String(url.searchParams.get('direction') || '').trim();
+  const contact = String(url.searchParams.get('contact') || '').trim();
+  return send(res, 200, await listChannelActivity({ limit, channel, direction, contact }));
+}
+
 function coreStorePath() {
-  return path.join(ROOT, 'data', 'work2u-core-data.json');
+  return path.join(runtimeDataDir(), 'work2u-core-data.json');
 }
 
 function defaultCoreStore() {
@@ -2580,32 +3781,13 @@ async function handleGroq(req, res) {
 }
 
 async function handleWhatsAppWebhook(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 200;
-    return res.end();
-  }
-  if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
-
-  const expectedSecret = process.env.WHATSAPP_WEBHOOK_SECRET || 'work2u_webhook_secret_change_me';
-  const body = await readBody(req);
-  const event = body?.event;
-  const data = body?.data;
-  const secret = body?.secret;
-
-  if (secret !== expectedSecret) {
-    return send(res, 401, { error: 'Invalid secret' });
-  }
-
-  console.log('WhatsApp event:', event, data?.from);
-  return send(res, 200, { received: true, event, at: Date.now() });
+  return handleWork2uChannelWebhook(req, res, 'whatsapp');
 }
 
 async function routeStatic(urlPath, res) {
   const clean = urlPath.split('?')[0];
   if (clean === '/' || clean === '') return serveFile(res, path.join(ROOT, 'index.html'));
+  if (clean === '/docs' || clean === '/docs/') return serveFile(res, path.join(ROOT, 'docs', 'index.html'));
   if (clean === '/crm' || clean === '/crm/') return serveFile(res, path.join(ROOT, 'crm', 'dashboard.html'));
   if (clean === '/dashboard') return serveFile(res, path.join(ROOT, 'crm', 'dashboard.html'));
   if (clean === '/work2u' || clean === '/work2u/') return serveFile(res, path.join(ROOT, 'work2u', 'index.html'));
@@ -2635,8 +3817,14 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/expense-dashboard') return handleExpenseDashboard(req, res, url, send);
     if (pathname === '/api/expense-receipts') return handleExpenseReceipts(req, res, url, send);
     if (pathname === '/api/public-config') return send(res, 200, publicConfig());
-    if (pathname === '/api/work2u/bootstrap') return send(res, 200, work2uBootstrap());
+    if (pathname === '/api/work2u/bootstrap') return handleWork2uBootstrap(req, res);
     if (pathname === '/api/work2u/plan-limits') return send(res, 200, work2uPlanLimits());
+    if (pathname === '/api/work2u/outbound/jobs') return handleWork2uOutboundJobs(req, res, url);
+    if (pathname === '/api/work2u/outbound/jobs/process') return handleWork2uOutboundJobs(req, res, url);
+    if (pathname === '/api/work2u/channel/send') return handleWork2uChannelSend(req, res);
+    if (pathname === '/api/work2u/channel/activity') return handleWork2uChannelActivity(req, res, url);
+    if (pathname === '/api/work2u/channel/webhook') return handleWork2uChannelWebhook(req, res);
+    if (pathname === '/api/telegram/webhook') return handleWork2uChannelWebhook(req, res, 'telegram');
     if (pathname === '/api/work2u/email/magic-link') return handleWork2uMagicLinkEmail(req, res);
     if (pathname === '/api/work2u/email/invoice-sent') return handleWork2uInvoiceSentEmail(req, res);
     if (pathname === '/api/work2u/email/payment-reminder') return handleWork2uPaymentReminderEmail(req, res);

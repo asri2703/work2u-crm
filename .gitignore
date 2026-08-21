@@ -2,5 +2,8 @@ node_modules/
 .vercel/
 .DS_Store
 *.log
-.env
-.env.local
+
+# Env: block semua, kecuali template dan example
+.env*
+!.env*.example
+!.env.local.template

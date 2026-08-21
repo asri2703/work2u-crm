@@ -1,0 +1,8 @@
+.env
+.env.*
+.env.local
+Starter
+W
+.git
+.github
+node_modules
