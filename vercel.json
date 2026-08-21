@@ -1,10 +1,16 @@
 {
   "cleanUrls": false,
+  "functions": {
+    "server.js": {
+      "includeFiles": "**/*.{html,css,js,svg,png,jpg,jpeg,gif,ico,webp,mp4,woff,woff2,md,sql}"
+    }
+  },
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
     { "source": "/register", "destination": "/register.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     { "source": "/terms-of-service", "destination": "/terms-of-service.html" },
+    { "source": "/service-policy", "destination": "/service-policy.html" },
     { "source": "/docs", "destination": "/docs/index.html" },
     { "source": "/docs/", "destination": "/docs/index.html" },
     { "source": "/dashboard", "destination": "/crm/dashboard.html" },

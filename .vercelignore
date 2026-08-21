@@ -6,3 +6,6 @@ W
 .git
 .github
 node_modules
+
+# Dev/build tooling that has no place in the deployment bundle.
+tools
