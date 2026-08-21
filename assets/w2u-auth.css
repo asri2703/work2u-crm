@@ -1,0 +1,166 @@
+/* ==========================================================================
+   Work2U - lapisan auth (login + register)
+   Memerlukan w2u.css dimuat dahulu.
+   ========================================================================== */
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* Panel naratif disembunyikan pada skrin kecil - borang yang penting di sana */
+@media (max-width: 900px) {
+  .auth-shell { grid-template-columns: minmax(0, 1fr); }
+  .auth-aside { display: none; }
+}
+
+/* --- Panel kiri --------------------------------------------------------- */
+.auth-aside {
+  position: relative;
+  display: flex; flex-direction: column;
+  padding: var(--w2u-s10);
+  background: var(--w2u-bg-subtle);
+  border-right: 1px solid var(--w2u-border);
+  overflow: hidden;
+}
+.auth-aside::before {
+  content: "";
+  position: absolute;
+  left: -140px; top: -180px;
+  width: 620px; height: 520px;
+  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.12), transparent 68%);
+  pointer-events: none;
+}
+.auth-aside > * { position: relative; }
+
+.auth-aside-body { margin-top: auto; margin-bottom: auto; max-width: 42ch; }
+.auth-aside-body h2 {
+  font-size: var(--w2u-text-3xl);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-tight);
+  line-height: var(--w2u-leading-tight);
+  color: var(--w2u-text);
+  text-wrap: balance;
+}
+.auth-aside-body p { margin-top: var(--w2u-s4); color: var(--w2u-text-muted); }
+
+.auth-points { display: flex; flex-direction: column; gap: var(--w2u-s4); margin-top: var(--w2u-s10); }
+.auth-point { display: flex; gap: var(--w2u-s3); align-items: flex-start; }
+.auth-point svg {
+  width: 17px; height: 17px; margin-top: 3px; flex-shrink: 0;
+  color: var(--w2u-accent);
+}
+.auth-point strong { display: block; font-size: var(--w2u-text-md); font-weight: var(--w2u-weight-semi); color: var(--w2u-text); }
+.auth-point span { display: block; font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+
+.auth-aside-foot { font-size: var(--w2u-text-sm); color: var(--w2u-text-subtle); }
+
+/* --- Panel borang ------------------------------------------------------- */
+.auth-main {
+  display: flex; flex-direction: column;
+  padding: var(--w2u-s8) var(--w2u-s6);
+}
+.auth-main-top { display: flex; align-items: center; justify-content: space-between; gap: var(--w2u-s4); }
+
+.auth-form-wrap {
+  width: 100%; max-width: 400px;
+  margin: auto;
+  padding-block: var(--w2u-s10);
+}
+
+.auth-heading h1 {
+  font-size: var(--w2u-text-3xl);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-tight);
+  line-height: var(--w2u-leading-tight);
+  color: var(--w2u-text);
+}
+.auth-heading p { margin-top: var(--w2u-s2); color: var(--w2u-text-muted); font-size: var(--w2u-text-md); }
+
+.form { display: flex; flex-direction: column; gap: var(--w2u-s5); margin-top: var(--w2u-s8); }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--w2u-s4); }
+@media (max-width: 420px) { .form-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* Alias supaya markup lama (.form-group/.form-label/.form-input) terus
+   berfungsi tanpa menulis semula pengendali borang. */
+.form-group { display: flex; flex-direction: column; gap: var(--w2u-s2); }
+.form-label { font-size: var(--w2u-text-md); font-weight: var(--w2u-weight-medium); color: var(--w2u-text); }
+.form-input {
+  width: 100%; min-height: 42px;
+  padding: var(--w2u-s2) var(--w2u-s3);
+  background: var(--w2u-surface);
+  color: var(--w2u-text);
+  border: 1px solid var(--w2u-border-strong);
+  border-radius: var(--w2u-r-md);
+  font-size: var(--w2u-text-md);
+  transition: border-color var(--w2u-dur-fast) var(--w2u-ease),
+              box-shadow var(--w2u-dur-fast) var(--w2u-ease);
+}
+.form-input::placeholder { color: var(--w2u-text-subtle); }
+.form-input:focus {
+  outline: none;
+  border-color: var(--w2u-accent);
+  box-shadow: 0 0 0 3px var(--w2u-accent-100);
+}
+:root[data-theme="dark"] .form-input:focus { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28); }
+
+/* --- Amaran -------------------------------------------------------------
+   JS menogol kelas "alert-show". Tersembunyi secara lalai supaya bekas
+   kosong tidak menyediakan ruang.
+   ------------------------------------------------------------------------ */
+.alert {
+  display: none;
+  gap: var(--w2u-s2);
+  margin-top: var(--w2u-s6);
+  padding: var(--w2u-s3) var(--w2u-s4);
+  border-radius: var(--w2u-r-md);
+  font-size: var(--w2u-text-md);
+}
+.alert.alert-show { display: block; }
+.alert-error   { background: var(--w2u-danger-bg);  color: var(--w2u-danger); }
+.alert-success { background: var(--w2u-success-bg); color: var(--w2u-success); }
+
+/* --- Butang ------------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--w2u-s2);
+  width: 100%; height: 42px;
+  border: 1px solid transparent;
+  border-radius: var(--w2u-r-md);
+  font-size: var(--w2u-text-md);
+  font-weight: var(--w2u-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--w2u-dur-fast) var(--w2u-ease),
+              border-color var(--w2u-dur-fast) var(--w2u-ease);
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-primary { background: var(--w2u-accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--w2u-accent-600); }
+.btn-google {
+  background: var(--w2u-surface);
+  color: var(--w2u-text);
+  border-color: var(--w2u-border-strong);
+}
+.btn-google:hover { background: var(--w2u-surface-hover); }
+.btn-google svg { width: 17px; height: 17px; }
+
+/* --- Pemisah ------------------------------------------------------------ */
+.divider {
+  display: flex; align-items: center; gap: var(--w2u-s4);
+  margin-block: var(--w2u-s6);
+  font-size: var(--w2u-text-sm);
+  color: var(--w2u-text-subtle);
+}
+.divider::before, .divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--w2u-border);
+}
+
+.links { margin-top: var(--w2u-s6); text-align: center; font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+.footer-text {
+  margin-top: var(--w2u-s6);
+  text-align: center;
+  font-size: var(--w2u-text-sm);
+  line-height: 1.7;
+  color: var(--w2u-text-subtle);
+}
