@@ -3937,8 +3937,17 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/ai/groq') return handleGroq(req, res);
     if (pathname === '/api/whatsapp/webhook') return handleWhatsAppWebhook(req, res);
     if (pathname === '/api/work2u/survey') return handleWork2uSurvey(req, res);
-    if (pathname === '/api/expense-dashboard') return handleExpenseDashboard(req, res, url, send);
-    if (pathname === '/api/expense-receipts') return handleExpenseReceipts(req, res, url, send);
+    /* The expense libs call their responder as (status, body, headers), but
+     * send() here takes (res, status, body, headers). Passing send directly
+     * made the first argument 200 instead of the response, so the very first
+     * request to either route threw "res.writeHead is not a function" and
+     * killed the process — an unauthenticated crash, and the reason neither
+     * route has ever worked in local dev. The Vercel functions pass three
+     * arguments, so the lib falls back to its own responder and is unaffected.
+     * Bind res here so the shapes line up. */
+    const expenseSend = (status, body, headers = {}) => send(res, status, body, headers);
+    if (pathname === '/api/expense-dashboard') return handleExpenseDashboard(req, res, url, expenseSend);
+    if (pathname === '/api/expense-receipts') return handleExpenseReceipts(req, res, url, expenseSend);
     if (pathname === '/api/public-config') return send(res, 200, publicConfig());
     if (pathname === '/api/work2u/bootstrap') return handleWork2uBootstrap(req, res);
     if (pathname === '/api/work2u/plan-limits') return send(res, 200, work2uPlanLimits());
