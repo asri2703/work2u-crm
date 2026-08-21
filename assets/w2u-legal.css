@@ -1,0 +1,76 @@
+/* ==========================================================================
+   Work2U - lapisan halaman prose (undang-undang + docs)
+   Memerlukan w2u.css dimuat dahulu.
+
+   Kelas di sini (.wrap, .hero, .notice, .meta, .updated, .lede, .footer)
+   sepadan dengan markup dokumen asal, supaya teks undang-undang boleh
+   dipindahkan perkataan-demi-perkataan tanpa ditulis semula.
+   ========================================================================== */
+
+.legal-head {
+  padding-block: var(--w2u-s12) var(--w2u-s8);
+  border-bottom: 1px solid var(--w2u-border);
+  background: var(--w2u-bg-subtle);
+}
+
+.legal-body { padding-block: var(--w2u-s12) var(--w2u-s20); }
+
+/* .wrap ialah bekas luar dokumen asal - biar ia lulus terus supaya
+   .w2u-prose menguruskan lebar dan rentak menegak. */
+.w2u-prose .wrap { display: contents; }
+
+.w2u-prose .hero { margin-bottom: var(--w2u-s10); }
+.w2u-prose .hero h1 { margin-bottom: var(--w2u-s3); }
+
+.w2u-prose section + section { margin-top: var(--w2u-s12); }
+
+/* Baris tarikh / versi di bawah tajuk */
+.w2u-prose .meta,
+.w2u-prose .updated {
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-subtle);
+}
+
+.w2u-prose .lede {
+  font-size: var(--w2u-text-lg);
+  line-height: var(--w2u-leading-normal);
+  color: var(--w2u-text-muted);
+}
+
+/* Kotak amaran "draf, belum disemak peguam" */
+.w2u-prose .notice {
+  padding: var(--w2u-s4) var(--w2u-s5);
+  border: 1px solid var(--w2u-border);
+  border-left: 3px solid var(--w2u-warning);
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-warning-bg);
+  color: var(--w2u-text-muted);
+  font-size: var(--w2u-text-md);
+}
+
+.w2u-prose .footer,
+.w2u-prose footer {
+  margin-top: var(--w2u-s12);
+  padding-top: var(--w2u-s6);
+  border-top: 1px solid var(--w2u-border);
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-subtle);
+}
+
+/* Blok alamat / hubungan yang muncul di hujung setiap dokumen */
+.w2u-prose .contact,
+.w2u-prose .contact-block {
+  padding: var(--w2u-s5);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-lg);
+  background: var(--w2u-bg-subtle);
+}
+.w2u-prose .contact p,
+.w2u-prose .contact-block p { margin-top: var(--w2u-s2); }
+
+/* Jadual panjang dalam terms mesti boleh skrol sendiri, bukan menolak
+   halaman melebar. */
+.w2u-prose table { display: block; overflow-x: auto; white-space: nowrap; }
+@media (min-width: 700px) {
+  .w2u-prose table { display: table; white-space: normal; }
+}
