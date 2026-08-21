@@ -80,6 +80,57 @@ generated files nobody can check.
 - `terms-of-service.html` gives the company address as 50470 Kuala Lumpur and
   uses `@sagaxventures.com` contacts, while every other page says 70450
   Seremban and `@work2u.io`.
+## Security fixes in this branch — read before deploying
+
+Several of these were exploitable in production, not just dev. Fixes are in the
+code; the actions below are what only you can do.
+
+**1. Session cookies were signed with a public secret.** `api/_lib/auth.js`
+fell back to a hardcoded `JWT_SECRET` committed to this public repo, and the
+variable was set in no env file, so production used it. Anyone could forge a
+session cookie for any user, super admin included. Fixed: production now
+refuses to start without `JWT_SECRET`.
+
+  - **Set `JWT_SECRET` in your Vercel project env** before the next deploy.
+    Generate one: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
+  - Setting it invalidates every existing session — which is the point, since
+    old cookies were forgeable. Users sign in again.
+  - `.env.local` already has a live one, added automatically.
+
+**2. `/api/ai/groq` was an open, unauthenticated AI proxy** billed to your Groq
+key, callable from any website. Fixed: the Vercel function requires a session,
+the dev server rate-limits per address, and CORS is narrowed to
+`WORK2U_ALLOWED_ORIGINS`.
+
+**3. The dev server served `.env.local`** — Supabase service role key, Stripe,
+Billplz, and Resend keys — at `GET /.env.local`. Never exposed in production
+(Vercel does not run this server), but readable by anyone on your network while
+`node server.js` was running.
+
+  - **Rotate these if that server ever ran on a shared or untrusted network**
+    (coworking space, café, shared office):
+    `SUPABASE_SERVICE_ROLE_KEY` (bypasses row-level security),
+    `STRIPE_SECRET_KEY`, `BILLPLZ_SECRET_KEY`, `BILLPLZ_X_SIGNATURE_KEY`,
+    `RESEND_API_KEY`.
+  - On a home network you alone use, the risk is low.
+
+**4. `/api/expense-dashboard` crashed the dev server** on the first request,
+unauthenticated, because of a responder signature mismatch. Fixed. Production
+was unaffected (different call path).
+
+## Still open — not fixed here
+
+- **Auth carries the password hash inside the JWT.** The no-database design
+  puts the PBKDF2 hash in the signed-but-readable cookie payload, so anyone who
+  captures a cookie can attempt an offline crack. Closing this means moving
+  identity into Supabase (anon key and RLS are already set up). See the comment
+  at the top of `api/_lib/auth.js`.
+- **The webhook secret has a hardcoded fallback.** `api/whatsapp/webhook.js`
+  falls back to `'work2u_webhook_secret_change_me'` when
+  `WHATSAPP_WEBHOOK_SECRET` is unset, so an unset secret accepts a
+  publicly-known one rather than rejecting all calls. Set the real secret, or
+  change it to fail closed.
+
 ## Fixed, but worth knowing about
 
 `server.js` used to serve any file in the project root. `GET /.env.local`
