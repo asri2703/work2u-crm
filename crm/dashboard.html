@@ -1149,7 +1149,146 @@ body.loading #main {
   color: var(--primary);
 }
 /* Semasa seret aktif, tekankan semua zon lepas supaya sasaran jelas */
-body.kanban-dragging .kanban-col { border-style: dashed; }
+body.kanban-dragging .kanban-col,
+body.board-dragging .kanban-col { border-style: dashed; }
+.kanban-body { min-height: 60px; display: flex; flex-direction: column; gap: 10px; }
+.kanban-col.zone-over, .kanban-body.zone-over {
+  border-color: var(--primary);
+}
+
+/* ==========================================================================
+   Board head: view toggle (Table / Board), monday.com style
+   ========================================================================== */
+.board-head-actions { display: flex; align-items: center; gap: 12px; }
+.board-toggle {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.board-toggle-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.board-toggle-btn.active { background: var(--primary); color: #fff; }
+
+/* ==========================================================================
+   monday.com-style grouped table
+   ========================================================================== */
+.monday-board { display: flex; flex-direction: column; gap: 22px; }
+.mb-group { border-radius: 12px; }
+.mb-group-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--stage, #579bfc);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--stage, #579bfc) 10%, var(--surface));
+  margin-bottom: 6px;
+}
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .mb-group-head { background: var(--surface); }
+}
+.mb-group-name {
+  font-size: 14px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--stage, var(--ink));
+}
+.mb-group-count {
+  font-size: 12px; font-weight: 600; color: var(--ink-3);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 20px; padding: 1px 9px;
+}
+.mb-rows { display: flex; flex-direction: column; gap: 2px; min-height: 44px; border-radius: 8px; }
+.mb-rows.zone-over { outline: 2px dashed var(--primary); outline-offset: 2px; }
+
+.mb-row {
+  display: grid;
+  grid-template-columns: 20px minmax(160px, 2fr) 150px repeat(3, minmax(90px, 1fr));
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.12s, border-color 0.12s;
+}
+.mb-row:hover { border-color: var(--border-bright); box-shadow: var(--shadow-sm); }
+.mb-row.dragging { opacity: 0.45; }
+.mb-drag { color: var(--ink-3); cursor: grab; font-size: 12px; letter-spacing: -2px; }
+.mb-name { font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-cell { font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-dim { color: var(--ink-3); }
+.mb-money { font-weight: 700; color: var(--green); }
+.mb-date { color: var(--ink-2); }
+
+/* The colored status pill — the monday.com signature. Click to change stage. */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.12);
+  transition: filter 0.12s;
+}
+.status-pill:hover { filter: brightness(1.06); }
+.status-caret { font-size: 9px; opacity: 0.85; }
+
+.mb-prio { font-weight: 700; text-transform: capitalize; }
+.mb-prio-high { color: var(--red); }
+.mb-prio-med { color: var(--amber); }
+.mb-prio-low { color: var(--ink-3); }
+.mb-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; text-transform: capitalize;
+  background: var(--surface); color: var(--ink-2); border: 1px solid var(--border);
+}
+.mb-empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 12px;
+  border: 1.5px dashed var(--border-bright); border-radius: 8px;
+  color: var(--ink-3); font-size: 12px;
+}
+
+/* Inline colored status dropdown */
+.stage-menu {
+  position: absolute; z-index: 1200;
+  min-width: 180px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-bright);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  padding: 6px;
+}
+.stage-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  border: none; background: transparent;
+  padding: 8px 10px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  cursor: pointer; text-align: left;
+}
+.stage-menu-item:hover { background: var(--surface); }
+.stage-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+
+@media (max-width: 720px) {
+  .mb-row { grid-template-columns: 18px 1fr auto; }
+  .mb-row .mb-cell { display: none; }
+  .board-head-actions { flex-wrap: wrap; }
+}
 .col-title {
   display: flex;
   align-items: center;
@@ -3225,132 +3364,282 @@ function renderDashboard(c) {
     '</div>';
 }
 
-function renderTasks(c) {
-  c.innerHTML = '<div class="page-header"><div><h1 class="page-title">Tasks</h1><div class="page-sub">Track work across stages</div></div><button class="btn btn-primary" onclick="openAdd()">+ New Task</button></div>' +
-    '<div class="tabs">' +
-      '<button class="tab ' + (currentTab === 'all' ? 'active' : '') + '" onclick="setTab(\'all\')">All <span class="count">' + D.tasks.length + '</span></button>' +
-      '<button class="tab ' + (currentTab === 'todo' ? 'active' : '') + '" onclick="setTab(\'todo\')">To Do</button>' +
-      '<button class="tab ' + (currentTab === 'progress' ? 'active' : '') + '" onclick="setTab(\'progress\')">In Progress</button>' +
-      '<button class="tab ' + (currentTab === 'review' ? 'active' : '') + '" onclick="setTab(\'review\')">Review</button>' +
-      '<button class="tab ' + (currentTab === 'done' ? 'active' : '') + '" onclick="setTab(\'done\')">Done</button>' +
+/* ==========================================================================
+   Registry-driven boards (monday.com style)
+   One registry describes each pipeline object; one set of generic renderers
+   draws it. This replaced the separate renderTasks/renderKanban and
+   renderLeads/renderPipeline, so tasks and leads now share the same board,
+   status pills, drag-and-drop, and inline stage menu. Adding another pipeline
+   object is a registry entry, not new render code.
+   ========================================================================== */
+
+/* monday.com's actual status palette — kept literal so the look is familiar. */
+var OBJECTS = {
+  tasks: {
+    label: 'Tasks',
+    sub: 'Track work across stages',
+    itemLabel: 'Task',
+    addLabel: '+ New Task',
+    stages: [
+      { id: 'todo', label: 'To Do', color: '#579bfc' },
+      { id: 'progress', label: 'In Progress', color: '#fdab3d' },
+      { id: 'review', label: 'Review', color: '#a25ddc' },
+      { id: 'done', label: 'Done', color: '#00c875' }
+    ],
+    columns: [
+      { key: 'priority', label: 'Priority', type: 'priority' },
+      { key: 'tag', label: 'Tag', type: 'tag' },
+      { key: 'due', label: 'Due', type: 'date' }
+    ]
+  },
+  leads: {
+    label: 'Leads',
+    sub: 'Prospects not yet converted',
+    itemLabel: 'Lead',
+    addLabel: '+ New Lead',
+    stages: [
+      { id: 'new', label: 'New', color: '#579bfc' },
+      { id: 'contacted', label: 'Contacted', color: '#00d2d2' },
+      { id: 'qualified', label: 'Qualified', color: '#fdab3d' },
+      { id: 'converted', label: 'Converted', color: '#00c875' }
+    ],
+    columns: [
+      { key: 'company', label: 'Company', type: 'text' },
+      { key: 'value', label: 'Value', type: 'money' }
+    ]
+  }
+};
+
+var BOARD_MODE_KEY = 'work2u-board-mode';
+
+function getBoardMode(key) {
+  try {
+    var store = JSON.parse(localStorage.getItem(BOARD_MODE_KEY) || '{}');
+    return store[key] === 'kanban' ? 'kanban' : 'table';
+  } catch (e) { return 'table'; }
+}
+function setBoardMode(key, mode) {
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(BOARD_MODE_KEY) || '{}'); } catch (e) {}
+  store[key] = mode;
+  localStorage.setItem(BOARD_MODE_KEY, JSON.stringify(store));
+  renderObjectBoard(key);
+  document.querySelectorAll('.board-toggle-btn').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+}
+
+function stageOf(key, id) {
+  var obj = OBJECTS[key];
+  for (var i = 0; i < obj.stages.length; i++) if (obj.stages[i].id === id) return obj.stages[i];
+  return null;
+}
+
+/* Page shell for a pipeline object: header, view toggle, and the board slot. */
+function renderObjectView(key) {
+  var obj = OBJECTS[key];
+  var mode = getBoardMode(key);
+  var main = document.getElementById('main');
+  main.innerHTML =
+    '<div class="page-header">' +
+      '<div><h1 class="page-title">' + esc(obj.label) + '</h1><div class="page-sub">' + esc(obj.sub) + '</div></div>' +
+      '<div class="board-head-actions">' +
+        '<div class="board-toggle" role="tablist" aria-label="View">' +
+          '<button class="board-toggle-btn ' + (mode === 'table' ? 'active' : '') + '" data-mode="table" onclick="setBoardMode(\'' + key + '\',\'table\')">Table</button>' +
+          '<button class="board-toggle-btn ' + (mode === 'kanban' ? 'active' : '') + '" data-mode="kanban" onclick="setBoardMode(\'' + key + '\',\'kanban\')">Board</button>' +
+        '</div>' +
+        '<button class="btn btn-primary" onclick="openAdd()">' + esc(obj.addLabel) + '</button>' +
+      '</div>' +
     '</div>' +
-    '<div class="kanban">' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#94a3b8"></span>To Do</div><span class="col-count" id="c1">0</span></div><div id="col1"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#2563eb"></span>In Progress</div><span class="col-count" id="c2">0</span></div><div id="col2"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#f59e0b"></span>Review</div><span class="col-count" id="c3">0</span></div><div id="col3"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#10b981"></span>Done</div><span class="col-count" id="c4">0</span></div><div id="col4"></div></div>' +
-    '</div>';
-  renderKanban();
+    '<div id="object-board"></div>';
+  renderObjectBoard(key);
 }
 
-const TASK_STAGES = ['todo', 'progress', 'review', 'done'];
+function renderObjectBoard(key) {
+  var host = document.getElementById('object-board');
+  if (!host) return;
+  if (getBoardMode(key) === 'kanban') renderObjectKanban(key, host);
+  else renderMondayTable(key, host);
+}
 
-function renderKanban() {
-  const groups = { todo: [], progress: [], review: [], done: [] };
-  D.tasks.forEach(function(t) { if (groups[t.status]) groups[t.status].push(t); });
-  TASK_STAGES.forEach(function(status, i) {
-    const col = document.getElementById('col' + (i + 1));
-    const cnt = document.getElementById('c' + (i + 1));
-    if (!col) return;
-    cnt.textContent = groups[status].length;
-    col.innerHTML = '';
-    if (groups[status].length === 0) {
-      col.innerHTML = '<div class="kanban-empty">Drop tasks here</div>';
-    } else {
-      groups[status].forEach(function(t) {
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.setAttribute('draggable', 'true');
-        card.dataset.taskId = t.id;
-        card.onclick = function() { editItem('tasks', t.id); };
-        card.addEventListener('dragstart', function(e) {
-          // Guard against a task with no id (should not happen after the
-          // backfill, but a drop we cannot resolve is worse than none).
-          if (!t.id) { e.preventDefault(); return; }
-          e.dataTransfer.setData('text/plain', String(t.id));
-          e.dataTransfer.effectAllowed = 'move';
-          card.classList.add('dragging');
-          document.body.classList.add('kanban-dragging');
-        });
-        card.addEventListener('dragend', function() {
-          card.classList.remove('dragging');
-          document.body.classList.remove('kanban-dragging');
-        });
-        col.appendChild(card);
-      });
-    }
-    wireKanbanDropZone(col.closest('.kanban-col') || col, status);
+/* Group items by stage, preserving stage order and catching any orphan status. */
+function groupByStage(key) {
+  var obj = OBJECTS[key];
+  var groups = {};
+  obj.stages.forEach(function (s) { groups[s.id] = []; });
+  (D[key] || []).forEach(function (item) {
+    if (!groups[item.status]) groups[item.status] = [];  // orphan status still shows
+    groups[item.status].push(item);
+  });
+  return groups;
+}
+
+/* ---- monday.com-style grouped table ---------------------------------- */
+function renderMondayTable(key, host) {
+  var obj = OBJECTS[key];
+  var groups = groupByStage(key);
+  var html = '';
+  obj.stages.forEach(function (stage) {
+    var rows = groups[stage.id] || [];
+    html +=
+      '<section class="mb-group" data-stage="' + stage.id + '">' +
+        '<div class="mb-group-head" style="--stage:' + stage.color + '">' +
+          '<span class="mb-group-name">' + esc(stage.label) + '</span>' +
+          '<span class="mb-group-count">' + rows.length + '</span>' +
+        '</div>' +
+        '<div class="mb-rows" data-stage="' + stage.id + '">' +
+          (rows.length ? rows.map(function (item) { return mbRow(key, item); }).join('') :
+            '<div class="mb-empty">Drop ' + esc(obj.itemLabel.toLowerCase()) + 's here</div>') +
+        '</div>' +
+      '</section>';
+  });
+  host.className = 'monday-board';
+  host.innerHTML = html;
+  wireBoardDnD(key, host, '.mb-rows');
+}
+
+function mbRow(key, item) {
+  var obj = OBJECTS[key];
+  var st = stageOf(key, item.status) || { label: item.status || '—', color: '#c4c4c4' };
+  var cells = obj.columns.map(function (col) {
+    return '<div class="mb-cell mb-cell-' + col.type + '">' + renderCell(col, item) + '</div>';
+  }).join('');
+  return '' +
+    '<div class="mb-row" draggable="true" data-id="' + esc(String(item.id)) + '" onclick="editItem(\'' + key + '\',\'' + esc(String(item.id)) + '\')">' +
+      '<span class="mb-drag" aria-hidden="true">⋮⋮</span>' +
+      '<div class="mb-name">' + esc(item.name || 'Untitled') + '</div>' +
+      '<button type="button" class="status-pill" style="background:' + st.color + '" ' +
+        'onclick="event.stopPropagation(); openStageMenu(\'' + key + '\',\'' + esc(String(item.id)) + '\', this)">' +
+        esc(st.label) + ' <span class="status-caret">▾</span></button>' +
+      cells +
+    '</div>';
+}
+
+function renderCell(col, item) {
+  var v = item[col.key];
+  if (col.type === 'money') { var n = parseFloat(item.value) || 0; return n > 0 ? '<span class="mb-money">RM ' + n.toLocaleString() + '</span>' : '<span class="mb-dim">—</span>'; }
+  if (col.type === 'priority') { var p = v || 'med'; return '<span class="mb-prio mb-prio-' + esc(p) + '">' + esc(p) + '</span>'; }
+  if (col.type === 'tag') { return v ? '<span class="mb-tag ' + esc(v) + '">' + esc(v) + '</span>' : '<span class="mb-dim">—</span>'; }
+  if (col.type === 'date') { return v ? '<span class="mb-date">' + esc(v) + '</span>' : '<span class="mb-dim">—</span>'; }
+  return v ? esc(String(v)) : '<span class="mb-dim">—</span>';
+}
+
+/* ---- kanban view (registry-driven) ----------------------------------- */
+function renderObjectKanban(key, host) {
+  var obj = OBJECTS[key];
+  var groups = groupByStage(key);
+  host.className = 'kanban';
+  host.innerHTML = obj.stages.map(function (stage) {
+    var rows = groups[stage.id] || [];
+    return '' +
+      '<div class="kanban-col" data-stage="' + stage.id + '">' +
+        '<div class="kanban-col-header"><div class="col-title">' +
+          '<span class="col-dot" style="background:' + stage.color + '"></span>' + esc(stage.label) +
+        '</div><span class="col-count">' + rows.length + '</span></div>' +
+        '<div class="kanban-body" data-stage="' + stage.id + '">' +
+          (rows.length ? rows.map(function (item) { return kanbanCard(key, item); }).join('') :
+            '<div class="kanban-empty">Drop ' + esc(obj.itemLabel.toLowerCase()) + 's here</div>') +
+        '</div>' +
+      '</div>';
+  }).join('');
+  wireBoardDnD(key, host, '.kanban-body');
+}
+
+function kanbanCard(key, item) {
+  var obj = OBJECTS[key];
+  var st = stageOf(key, item.status) || { label: item.status, color: '#c4c4c4' };
+  var meta;
+  if (key === 'leads') {
+    var val = parseFloat(item.value) || 0;
+    meta = '<span class="mb-dim">' + esc(item.company || '') + '</span>' + (val > 0 ? '<span class="mb-money">RM ' + val.toLocaleString() + '</span>' : '');
+  } else {
+    meta = '<span class="mb-prio mb-prio-' + esc(item.priority || 'med') + '">' + esc(item.priority || 'med') + '</span>' +
+           (item.tag ? '<span class="mb-tag ' + esc(item.tag) + '">' + esc(item.tag) + '</span>' : '');
+  }
+  return '' +
+    '<div class="item-card" draggable="true" data-id="' + esc(String(item.id)) + '" onclick="editItem(\'' + key + '\',\'' + esc(String(item.id)) + '\')">' +
+      '<div class="item-card-title">' + esc(item.name || 'Untitled') + '</div>' +
+      '<div class="item-card-meta">' + meta + '</div>' +
+    '</div>';
+}
+
+/* ---- shared drag-and-drop -------------------------------------------- */
+/* Works for both the table rows and the kanban cards. Cards carry data-id;
+ * each drop zone carries data-stage. Handlers are assigned (not added) so a
+ * re-render never stacks duplicates. */
+function wireBoardDnD(key, host, zoneSelector) {
+  host.querySelectorAll('[draggable="true"][data-id]').forEach(function (card) {
+    card.addEventListener('dragstart', function (e) {
+      var id = card.dataset.id;
+      if (!id) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text/plain', id);
+      e.dataTransfer.effectAllowed = 'move';
+      card.classList.add('dragging');
+      document.body.classList.add('board-dragging');
+    });
+    card.addEventListener('dragend', function () {
+      card.classList.remove('dragging');
+      document.body.classList.remove('board-dragging');
+    });
+  });
+  host.querySelectorAll(zoneSelector).forEach(function (zone) {
+    var stage = zone.dataset.stage;
+    zone.ondragover = function (e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; zone.classList.add('zone-over'); };
+    zone.ondragleave = function (e) { if (!zone.contains(e.relatedTarget)) zone.classList.remove('zone-over'); };
+    zone.ondrop = function (e) {
+      e.preventDefault();
+      zone.classList.remove('zone-over');
+      var id = e.dataTransfer.getData('text/plain');
+      if (id) changeStage(key, id, stage);
+    };
   });
 }
 
-/* Turn a column into a drop target that moves the dragged task into `status`.
- * Handlers are reassigned (not addEventListener) so re-rendering the board
- * never stacks duplicate listeners on the same column. */
-function wireKanbanDropZone(zone, status) {
-  if (!zone) return;
-  zone.ondragover = function(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    zone.classList.add('kanban-col-over');
-  };
-  zone.ondragleave = function(e) {
-    // Only clear when the cursor actually leaves the column, not when it
-    // crosses onto a child element inside it.
-    if (!zone.contains(e.relatedTarget)) zone.classList.remove('kanban-col-over');
-  };
-  zone.ondrop = function(e) {
-    e.preventDefault();
-    zone.classList.remove('kanban-col-over');
-    const id = e.dataTransfer.getData('text/plain');
-    if (!id) return;
-    const task = D.tasks.find(function(t) { return String(t.id) === String(id); });
-    if (!task || task.status === status) return;
-    task.status = status;
-    saveKey('tasks');
-    renderKanban();
-    if (typeof notify === 'function') notify('Task moved to ' + kanbanStageLabel(status));
-  };
+/* The one mutation both drag-drop and the status menu call. */
+function changeStage(key, id, status) {
+  var item = (D[key] || []).find(function (x) { return String(x.id) === String(id); });
+  if (!item || item.status === status) return false;
+  item.status = status;
+  saveKey(key);
+  renderObjectBoard(key);
+  var st = stageOf(key, status);
+  if (typeof notify === 'function') notify(OBJECTS[key].itemLabel + ' → ' + (st ? st.label : status));
+  return true;
 }
 
-function kanbanStageLabel(status) {
-  return { todo: 'To Do', progress: 'In Progress', review: 'Review', done: 'Done' }[status] || status;
+/* ---- inline colored status menu (monday.com signature) --------------- */
+function closeStageMenu() {
+  var m = document.getElementById('stage-menu');
+  if (m) m.remove();
 }
-
-function renderLeads(c) {
-  c.innerHTML = '<div class="page-header"><div><h1 class="page-title">Leads</h1><div class="page-sub">Prospects not yet converted</div></div><button class="btn btn-primary" onclick="openAdd()">+ New Lead</button></div>' +
-    '<div class="kanban">' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#2563eb"></span>New</div><span class="col-count" id="c1">0</span></div><div id="col1"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#06b6d4"></span>Contacted</div><span class="col-count" id="c2">0</span></div><div id="col2"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#f59e0b"></span>Qualified</div><span class="col-count" id="c3">0</span></div><div id="col3"></div></div>' +
-      '<div class="kanban-col"><div class="kanban-col-header"><div class="col-title"><span class="col-dot" style="background:#10b981"></span>Converted</div><span class="col-count" id="c4">0</span></div><div id="col4"></div></div>' +
-    '</div>';
-  renderPipeline('leads', ['new', 'contacted', 'qualified', 'converted']);
-}
-
-function renderPipeline(key, stages) {
-  const groups = {};
-  stages.forEach(function(s) { groups[s] = []; });
-  D[key].forEach(function(item) { if (groups[item.status]) groups[item.status].push(item); });
-  stages.forEach(function(status, i) {
-    const col = document.getElementById('col' + (i + 1));
-    const cnt = document.getElementById('c' + (i + 1));
-    if (!col) return;
-    cnt.textContent = groups[status].length;
-    col.innerHTML = '';
-    if (groups[status].length === 0) {
-      col.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-3);font-size:11px;">No items</div>';
-    } else {
-      groups[status].forEach(function(item) {
-        const card = document.createElement('div');
-        card.className = 'item-card';
-        card.onclick = function() { editItem(key, item.id); };
-        const value = parseFloat(item.value) || 0;
-        card.innerHTML = '<div class="item-card-title">' + esc(item.name) + '</div><div class="item-card-meta"><span style="font-size:11px;color:var(--ink-3);">' + esc(item.company || '') + '</span>' + (value > 0 ? '<span style="font-weight:700;color:var(--green);">RM ' + value.toLocaleString() + '</span>' : '') + '</div>';
-        col.appendChild(card);
-      });
-    }
+function openStageMenu(key, id, anchor) {
+  closeStageMenu();
+  var obj = OBJECTS[key];
+  var menu = document.createElement('div');
+  menu.className = 'stage-menu';
+  menu.id = 'stage-menu';
+  obj.stages.forEach(function (s) {
+    var opt = document.createElement('button');
+    opt.type = 'button';
+    opt.className = 'stage-menu-item';
+    opt.innerHTML = '<span class="stage-swatch" style="background:' + s.color + '"></span>' + esc(s.label);
+    opt.onclick = function (ev) { ev.stopPropagation(); changeStage(key, id, s.id); closeStageMenu(); };
+    menu.appendChild(opt);
   });
+  document.body.appendChild(menu);
+  var r = anchor.getBoundingClientRect();
+  menu.style.top = (window.scrollY + r.bottom + 4) + 'px';
+  menu.style.left = (window.scrollX + r.left) + 'px';
+  // Close on the next outside click (deferred so this click doesn't trigger it).
+  setTimeout(function () {
+    document.addEventListener('click', function handler(ev) {
+      if (!menu.contains(ev.target)) { closeStageMenu(); document.removeEventListener('click', handler); }
+    });
+  }, 0);
 }
+
+function renderTasks() { renderObjectView('tasks'); }
+function renderLeads() { renderObjectView('leads'); }
 
 function renderClients(c) {
   c.innerHTML = '<div class="page-header"><div><h1 class="page-title">Clients</h1><div class="page-sub">Converted customers</div></div><button class="btn btn-primary" onclick="openAdd()">+ Add Client</button></div>' +

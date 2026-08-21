@@ -43,9 +43,16 @@ for (const f of PAGES) {
     try { new Function(b); } catch (e) { flag('skrip ' + (i + 1) + ': ' + e.message); }
   });
 
-  // Setiap getElementById mesti ada id sepadan
+  // Setiap getElementById mesti ada id sepadan. "have" merangkumi id statik
+  // dalam HTML dan id yang ditetapkan secara dinamik dalam JS (el.id = 'x'
+  // atau setAttribute('id','x')), supaya elemen yang dicipta semasa runtime
+  // — cth menu popover — tidak dibendera sebagai hilang.
   const need = [...new Set([...h.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)].map(x => x[1]))];
-  const have = new Set([...h.matchAll(/\sid="([^"]+)"/g)].map(x => x[1]));
+  const have = new Set([
+    ...[...h.matchAll(/\sid="([^"]+)"/g)].map(x => x[1]),
+    ...[...h.matchAll(/\.id\s*=\s*['"]([^'"]+)['"]/g)].map(x => x[1]),
+    ...[...h.matchAll(/setAttribute\(\s*['"]id['"]\s*,\s*['"]([^'"]+)['"]/g)].map(x => x[1])
+  ]);
   const miss = need.filter(id => !have.has(id));
   if (miss.length) flag('id hilang: ' + miss.join(', '));
 
