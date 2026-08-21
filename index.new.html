@@ -27,7 +27,7 @@
      apabila pengguna dark-mode memuatkan halaman. */
   (function () {
     try {
-      var t = localStorage.getItem('w2u-theme');
+      var t = localStorage.getItem('work2u-theme');
       if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
     /* Tandai bahawa JS hidup. CSS reveal bergantung pada kelas ini, jadi
@@ -1900,7 +1900,7 @@
       toggle.addEventListener('click', function () {
         var next = currentTheme() === 'dark' ? 'light' : 'dark';
         root.setAttribute('data-theme', next);
-        try { localStorage.setItem('w2u-theme', next); } catch (e) {}
+        try { localStorage.setItem('work2u-theme', next); } catch (e) {}
       });
     }
 
