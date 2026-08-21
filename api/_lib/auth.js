@@ -7,10 +7,52 @@
 // - All identity lives in the JWT cookie
 //
 // For production, swap to Supabase/Vercel KV by replacing the 2 functions below.
+//
+// KNOWN LIMITATION: because there is no store, the password hash and salt
+// travel inside the JWT payload (see generateToken). The payload is signed
+// but only base64-encoded, not encrypted, so anyone who captures the cookie
+// can read the PBKDF2 hash and attempt to crack it offline. The hash is
+// PBKDF2-SHA512 at 10k iterations, which slows that down but does not make it
+// safe to publish. Moving identity into Supabase (the anon key and RLS are
+// already set up) would let the hash stay server-side and should be the next
+// step for this file.
 
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.AUTH_SECRET || 'work2u_dev_secret_change_in_production_properly';
+/* This secret signs every session cookie. The old fallback here was a
+ * literal string committed to a public repo, and JWT_SECRET was set in no
+ * env file, so production ran on it. Anyone could read the string from
+ * GitHub, sign a cookie with any sub/email/role, and log in as any user —
+ * super admin included. There is no way to make an app secret safe once it
+ * is public, so there is no safe default: an unset secret is a hard error,
+ * not a fallback.
+ *
+ * A dev-only fallback is allowed, generated fresh each start so it is never
+ * a known value. It changes on restart, which logs dev sessions out — the
+ * correct trade-off, and the nudge to set JWT_SECRET in .env.local. */
+function resolveJwtSecret() {
+  const configured = process.env.JWT_SECRET || process.env.AUTH_SECRET;
+  if (configured && configured.length >= 32) return configured;
+
+  if (configured) {
+    throw new Error('JWT_SECRET is set but too short — use at least 32 random characters.');
+  }
+
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    throw new Error(
+      'JWT_SECRET is not set. Refusing to start with a default signing secret. ' +
+      'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"'
+    );
+  }
+
+  if (!globalThis.__W2U_DEV_JWT_SECRET) {
+    globalThis.__W2U_DEV_JWT_SECRET = crypto.randomBytes(48).toString('base64url');
+    console.warn('[auth] JWT_SECRET not set — using a random dev secret. Sessions reset on restart. Set JWT_SECRET in .env.local.');
+  }
+  return globalThis.__W2U_DEV_JWT_SECRET;
+}
+
+const JWT_SECRET = resolveJwtSecret();
 
 const COOKIE_NAME = 'work2u_session';
 
