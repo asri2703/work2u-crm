@@ -2,12 +2,12 @@
 const fs = require('fs');
 
 const PAGES = [
-  'index.new.html', 'login.new.html', 'register.new.html',
-  'privacy-policy.new.html', 'terms-of-service.new.html', 'service-policy.new.html',
-  'docs/index.new.html', 'work2u/index.new.html', 'crm/dashboard.new.html',
+  'index.html', 'login.html', 'register.html',
+  'privacy-policy.html', 'terms-of-service.html', 'service-policy.html',
+  'docs/index.html', 'work2u/index.html', 'crm/dashboard.html',
 ];
 const SHEETS = [
-  'assets/w2u.css', 'assets/w2u-auth.css', 'assets/w2u-legal.css', 'work2u/styles.new.css',
+  'assets/w2u.css', 'assets/w2u-auth.css', 'assets/w2u-legal.css', 'work2u/styles.css',
 ];
 
 const VOID = new Set(['area','base','br','col','embed','hr','img','input','link','meta',

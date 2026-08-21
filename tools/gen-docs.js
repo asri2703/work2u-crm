@@ -244,7 +244,7 @@ const html = `<!DOCTYPE html>
     <div class="w2u-nav-links">
       <a href="../#features" class="w2u-nav-link">Features</a>
       <a href="../#pricing" class="w2u-nav-link">Pricing</a>
-      <a href="./index.new.html" class="w2u-nav-link is-active">Docs</a>
+      <a href="./index.html" class="w2u-nav-link is-active">Docs</a>
     </div>
     <div class="w2u-nav-actions">
       <button type="button" class="w2u-theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
@@ -315,8 +315,8 @@ ${sections}
 </html>
 `;
 
-fs.writeFileSync(path.join(DOCS, 'index.new.html'), html);
+fs.writeFileSync(path.join(DOCS, 'index.html'), html);
 
-console.log('docs/index.new.html dijana');
+console.log('docs/index.html dijana');
 console.log('  fail disenaraikan :', files.length, '(index lama: 24)');
 allGroups.forEach(g => console.log('    ' + g.title.padEnd(28) + buckets.get(g.id).length));

@@ -5,7 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Work2U</title>
   <meta name="description" content="Work2U - AI-powered business operating system for follow-up, communication, automation, and accounting." />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" type="image/svg+xml" href="/assets/w2u-favicon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Design system dahulu, kemudian lapisan app yang memetakan ke atasnya -->
+  <link rel="stylesheet" href="/assets/w2u.css" />
   <link rel="stylesheet" href="/work2u/styles.css" />
+
+  <script>
+    /* app.js tidak pernah menetapkan data-theme, jadi CSS dark mode dalam
+       styles.css tidak pernah boleh dicetuskan. Ini menghidupkannya, dan
+       berkongsi kunci w2u-theme dengan tapak awam supaya pilihan pengguna
+       terbawa merentas kedua-duanya. */
+    (function () {
+      try {
+        var t = localStorage.getItem('work2u-theme');
+        if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="auth-gate" id="auth-gate" hidden>
@@ -289,7 +312,10 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">
-          <img src="/assets/work2u-favicon.svg" alt="Work2U" />
+          <svg viewBox="0 0 24 24" fill="none" role="img" aria-label="Work2U" style="color:var(--w2u-accent);width:100%;height:100%">
+            <rect width="24" height="24" rx="6" fill="currentColor"/>
+            <path d="M5.9 8.2 L9.1 16.2 L12 10.4 L14.9 16.2 L18.1 8.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
         <div>
           <div class="brand-title">Work2U</div>

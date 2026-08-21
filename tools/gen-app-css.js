@@ -12,9 +12,19 @@
 const fs = require('fs');
 
 const SRC = 'work2u/styles.css';
-const OUT = 'work2u/styles.new.css';
+const OUT = 'work2u/styles.css';
 
 let css = fs.readFileSync(SRC, 'utf8');
+
+/* Pengawal: sumber dan output kini fail yang sama, jadi menjalankan semula
+ * terhadap output yang sudah ditransformasi akan merosakkannya. */
+if (css.includes('--w2u-')) {
+  console.error('SUDAH DITRANSFORMASI: ' + SRC + ' sudah menggunakan token w2u.');
+  console.error('Skrip ini sekali-jalan dan telah pun digunakan.');
+  console.error('Untuk menjalankannya semula, dapatkan semula yang asal dahulu:');
+  console.error('  git show 1747ebd:' + SRC + ' > ' + SRC);
+  process.exit(1);
+}
 const stats = {};
 const bump = (k, n = 1) => (stats[k] = (stats[k] || 0) + n);
 

@@ -7,13 +7,13 @@ const fs = require('fs');
 const path = require('path');
 
 const PAGES = [
-  { src: 'privacy-policy.html',   out: 'privacy-policy.new.html',
+  { src: 'privacy-policy.html',   out: 'privacy-policy.html',
     title: 'Privacy Policy — Work2U',
     desc: 'How Work2U collects, uses, and protects your data.' },
-  { src: 'terms-of-service.html', out: 'terms-of-service.new.html',
+  { src: 'terms-of-service.html', out: 'terms-of-service.html',
     title: 'Terms of Service — Work2U',
     desc: 'The terms governing your use of Work2U.' },
-  { src: 'service-policy.html',   out: 'service-policy.new.html',
+  { src: 'service-policy.html',   out: 'service-policy.html',
     title: 'Service Policy — Work2U',
     desc: 'Scope, availability, billing, and support commitments for Work2U.' },
 ];
@@ -134,6 +134,16 @@ for (const p of PAGES) {
   const bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   if (!bodyMatch) { console.log(`RALAT ${p.src}: <body> tak dijumpai`); failures++; continue; }
   let inner = bodyMatch[1];
+
+  /* Pengawal: selepas promosi, sumber ialah output. */
+  if (inner.includes('w2u-prose')) {
+    console.error('SUDAH DITRANSFORMASI: ' + p.src + ' sudah menggunakan cangkerang baru.');
+    console.error('Skrip ini sekali-jalan dan telah pun digunakan.');
+    console.error('Untuk menjalankannya semula, dapatkan semula yang asal dahulu:');
+    console.error('  git show 1747ebd:' + p.src + ' > ' + p.src);
+    failures++;
+    continue;
+  }
 
   const before = inner.length;
 

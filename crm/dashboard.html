@@ -6,41 +6,64 @@
 <title>Work2U CRM</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/assets/w2u-favicon.svg">
+<link rel="stylesheet" href="/assets/w2u.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
 
+/* --------------------------------------------------------------------------
+   Palet dipetakan ke design system dikongsi (/assets/w2u.css).
+   Nama pembolehubah dashboard dikekalkan, jadi 219 rujukan var() di bawah
+   terus berfungsi tanpa diubah.
+
+   BAIKI: warna jenama dan status dahulunya hidup HANYA di dalam blok
+   [data-theme="light"]. Kedua-dua blok tema ialah adik-beradik, jadi
+   bertukar ke gelap meninggalkan --primary, --accent, --green, --red, dan
+   --amber tidak tertakrif - 78 pengisytiharan kehilangan nilainya. Ia kini
+   duduk pada :root kosong, di mana kedua-dua tema mewarisinya.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --primary:      var(--w2u-accent);
+  --primary-dark: var(--w2u-accent-600);
+  --accent:       var(--w2u-accent);
+  --green:        var(--w2u-success);
+  --red:          var(--w2u-danger);
+  --amber:        var(--w2u-warning);
+}
+
 :root[data-theme="light"] {
-  --bg: #f8fafc;
-  --bg-2: #ffffff;
-  --surface: #f1f5f9;
-  --surface-2: #e2e8f0;
-  --border: #e2e8f0;
-  --border-bright: #cbd5e1;
-  --ink: #0f172a;
-  --ink-2: #334155;
-  --ink-3: #64748b;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --accent: #06b6d4;
-  --green: #10b981;
-  --red: #ef4444;
-  --amber: #f59e0b;
-  --shadow: 0 4px 20px rgba(0,0,0,0.06);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --bg:            var(--w2u-bg-subtle);
+  --bg-2:          var(--w2u-bg);
+  --surface:       var(--w2u-bg-muted);
+  --surface-2:     var(--w2u-n200);
+  --border:        var(--w2u-border);
+  --border-bright: var(--w2u-border-strong);
+  --ink:           var(--w2u-text);
+  --ink-2:         var(--w2u-text-muted);
+  --ink-3:         var(--w2u-text-subtle);
+  --shadow:        var(--w2u-shadow-md);
+  --shadow-sm:     var(--w2u-shadow-sm);
 }
 
 :root[data-theme="dark"] {
-  --bg: #0a0f1c;
-  --bg-2: #111827;
-  --surface: #1f2937;
-  --surface-2: #374151;
-  --border: #1f2937;
-  --border-bright: #374151;
-  --ink: #f8fafc;
-  --ink-2: #cbd5e1;
-  --ink-3: #94a3b8;
-  --shadow: 0 4px 20px rgba(0,0,0,0.4);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --bg:            var(--w2u-bg);
+  --bg-2:          var(--w2u-bg-subtle);
+  --surface:       var(--w2u-surface);
+  --surface-2:     var(--w2u-surface-hover);
+  --border:        var(--w2u-border);
+  --border-bright: var(--w2u-border-strong);
+  --ink:           var(--w2u-text);
+  --ink-2:         var(--w2u-text-muted);
+  --ink-3:         var(--w2u-text-subtle);
+  --shadow:        var(--w2u-shadow-md);
+  --shadow-sm:     var(--w2u-shadow-sm);
+  /* Aksen dicerahkan supaya ia lulus kontras pada permukaan gelap */
+  --primary:       var(--w2u-accent-400);
+  --primary-dark:  var(--w2u-accent);
 }
 
 body {
@@ -2114,6 +2137,51 @@ body.loading #main {
     animation: mobileTap 0.14s ease;
   }
 }
+
+
+/* ==========================================================================
+   Lapisan penindih - menjajarkan dashboard dengan tapak awam
+   ========================================================================== */
+
+body {
+  font-family: var(--w2u-font);
+  font-size: var(--w2u-text-base);
+  line-height: var(--w2u-leading-normal);
+  letter-spacing: var(--w2u-track-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-weight: var(--w2u-weight-semi);
+  line-height: var(--w2u-leading-tight);
+}
+h1 { letter-spacing: var(--w2u-track-tight); }
+h2, h3 { letter-spacing: var(--w2u-track-snug); }
+
+/* Fokus mesti boleh nampak di setiap kawalan dashboard */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Angka sejajar merentas jadual, invois, dan kad KPI */
+table, .amount, .metric, .stat, .kpi, .num, td { font-variant-numeric: tabular-nums; }
+
+/* Jadual lebar skrol sendiri dan bukan menolak susun atur melebar */
+.table-wrap, .table-scroll, .table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 </style>
 </head>
 <body>

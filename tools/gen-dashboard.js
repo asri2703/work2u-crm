@@ -14,9 +14,19 @@
 const fs = require('fs');
 
 const SRC = 'crm/dashboard.html';
-const OUT = 'crm/dashboard.new.html';
+const OUT = 'crm/dashboard.html';
 
 let h = fs.readFileSync(SRC, 'utf8');
+
+/* Pengawal: sumber dan output kini fail yang sama, jadi menjalankan semula
+ * terhadap output yang sudah ditransformasi akan merosakkannya. */
+if (h.includes('var(--w2u-accent)')) {
+  console.error('SUDAH DITRANSFORMASI: ' + SRC + ' sudah menggunakan token w2u.');
+  console.error('Skrip ini sekali-jalan dan telah pun digunakan.');
+  console.error('Untuk menjalankannya semula, dapatkan semula yang asal dahulu:');
+  console.error('  git show 1747ebd:' + SRC + ' > ' + SRC);
+  process.exit(1);
+}
 
 /* ---- 1. Muat design system sebelum gaya inline ------------------------- */
 const styleOpen = '<style>';
