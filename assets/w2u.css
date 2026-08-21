@@ -671,6 +671,12 @@ hr {
 }
 .w2u-brand:hover { text-decoration: none; }
 .w2u-brand svg { height: 24px; width: auto; }
+/* Full logo (icon + wordmark + tagline). Higher specificity than the rule
+   above so it is not squeezed to 24px. Wordmark uses currentColor, so it
+   follows the theme; the icon and tagline dots keep their brand colours. */
+.w2u-logo { height: 34px; width: auto; display: block; }
+.w2u-brand .w2u-logo { height: 34px; }
+@media (max-width: 640px) { .w2u-logo, .w2u-brand .w2u-logo { height: 30px; } }
 
 .w2u-nav-links {
   display: flex; align-items: center; gap: var(--w2u-s1);
