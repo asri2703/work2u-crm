@@ -3784,8 +3784,62 @@ async function handleWhatsAppWebhook(req, res) {
   return handleWork2uChannelWebhook(req, res, 'whatsapp');
 }
 
+/* Rewrites live in vercel.json, which only production reads. Local dev used
+ * to hardcode a few of them here and miss the rest, so /login, /register,
+ * /privacy-policy, and /terms-of-service returned 404 on localhost while
+ * working fine once deployed. Reading the same file keeps the two from
+ * drifting apart again. */
+let vercelRewrites = null;
+
+function loadVercelRewrites() {
+  if (vercelRewrites) return vercelRewrites;
+  try {
+    const raw = fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8');
+    const parsed = JSON.parse(raw);
+    vercelRewrites = Array.isArray(parsed.rewrites) ? parsed.rewrites : [];
+  } catch (err) {
+    // A missing or malformed vercel.json must not stop the dev server.
+    vercelRewrites = [];
+  }
+  return vercelRewrites;
+}
+
+function applyRewrites(pathname) {
+  for (const rule of loadVercelRewrites()) {
+    if (!rule || typeof rule.source !== 'string' || typeof rule.destination !== 'string') continue;
+
+    if (rule.source === pathname) return rule.destination;
+
+    // Wildcard form: "/crm/:path*" -> "/crm/:path*"
+    const wildcard = rule.source.match(/^(.*?)\/:([A-Za-z_][A-Za-z0-9_]*)\*$/);
+    if (wildcard) {
+      const [, prefix, param] = wildcard;
+      if (pathname.startsWith(prefix + '/')) {
+        const rest = pathname.slice(prefix.length + 1);
+        return rule.destination.replace(':' + param + '*', rest);
+      }
+    }
+  }
+  return pathname;
+}
+
+/* Nothing whose path contains a dot-segment may ever be served. Without
+ * this, a plain GET /.env.local returned the file — Supabase service role
+ * key, Stripe secret, Billplz secret, and Resend key included — and
+ * /.git/HEAD exposed the repository. Vercel never shipped those files
+ * because .vercelignore excludes them, but `npm start` runs this server,
+ * so any plain Node host would have served them straight out. */
+function isBlockedPath(pathname) {
+  return pathname.split('/').some(
+    // .well-known is the one dot-directory that is meant to be public — it
+    // carries domain and certificate verification files.
+    (segment) => segment.startsWith('.') && segment !== '' && segment !== '.well-known'
+  );
+}
+
 async function routeStatic(urlPath, res) {
-  const clean = urlPath.split('?')[0];
+  const clean = applyRewrites(urlPath.split('?')[0]);
+  if (isBlockedPath(clean)) return false;
   if (clean === '/' || clean === '') return serveFile(res, path.join(ROOT, 'index.html'));
   if (clean === '/docs' || clean === '/docs/') return serveFile(res, path.join(ROOT, 'docs', 'index.html'));
   if (clean === '/crm' || clean === '/crm/') return serveFile(res, path.join(ROOT, 'crm', 'dashboard.html'));
@@ -3793,7 +3847,13 @@ async function routeStatic(urlPath, res) {
   if (clean === '/work2u' || clean === '/work2u/') return serveFile(res, path.join(ROOT, 'work2u', 'index.html'));
   if (clean.startsWith('/crm/')) {
     const rel = clean.replace('/crm/', '');
-    return serveFile(res, path.join(ROOT, 'crm', rel));
+    /* path.join collapses "..", so this branch could reach outside crm/.
+     * The generic branch below already checks containment; this one did
+     * not, so it is checked here too rather than trusted. */
+    const crmRoot = path.resolve(ROOT, 'crm');
+    const target = path.resolve(crmRoot, rel);
+    if (target !== crmRoot && !target.startsWith(crmRoot + path.sep)) return false;
+    return serveFile(res, target);
   }
   const filePath = path.resolve(ROOT, '.' + clean);
   if (!filePath.startsWith(ROOT_RESOLVED)) return false;
