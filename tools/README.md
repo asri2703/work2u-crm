@@ -80,6 +80,28 @@ generated files nobody can check.
 - `terms-of-service.html` gives the company address as 50470 Kuala Lumpur and
   uses `@sagaxventures.com` contacts, while every other page says 70450
   Seremban and `@work2u.io`.
-- `server.js` does not apply the rewrites in `vercel.json`, so `/login`,
-  `/register`, `/privacy-policy`, and `/terms-of-service` 404 in local dev
-  while working in production.
+## Fixed, but worth knowing about
+
+`server.js` used to serve any file in the project root. `GET /.env.local`
+returned the file with live Supabase, Stripe, Billplz, and Resend keys in it,
+and `/.git/HEAD` was readable too. Dot-segments are now refused, with
+`.well-known` excepted.
+
+Production was never exposed — Vercel does not run this server and
+`.vercelignore` keeps env files out of the deployment — and `.env.local` has
+never been committed. But the server binds to `0.0.0.0`, so anyone on the same
+network could have read those keys while `node server.js` was running.
+
+**If that server was ever run on a shared or untrusted network — a coworking
+space, a café, a shared office — rotate these:**
+
+- `SUPABASE_SERVICE_ROLE_KEY` (this one bypasses row-level security)
+- `STRIPE_SECRET_KEY`
+- `BILLPLZ_SECRET_KEY` and `BILLPLZ_X_SIGNATURE_KEY`
+- `RESEND_API_KEY`
+
+On a home network you alone use, the risk is low.
+
+The bind address was left as-is rather than narrowed to localhost, since
+testing the mobile layout from a phone on the same network is a normal thing
+to want and the leak is closed either way.
