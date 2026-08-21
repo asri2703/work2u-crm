@@ -1118,6 +1118,38 @@ body.loading #main {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
 }
+
+/* --- Drag and drop antara stage --- */
+.item-card[draggable="true"] { cursor: grab; }
+.item-card.dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+  transform: rotate(1deg);
+}
+/* Lajur menyala sebagai sasaran lepas semasa kad diseret */
+.kanban-col.kanban-col-over {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary) inset, 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+/* Ruang kosong menjadi zon lepas yang jelas, bukan hanya teks */
+.kanban-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 20px;
+  border: 1.5px dashed var(--border-bright);
+  border-radius: 12px;
+  color: var(--ink-3);
+  font-size: 11px;
+  text-align: center;
+}
+.kanban-col.kanban-col-over .kanban-empty {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+/* Semasa seret aktif, tekankan semua zon lepas supaya sasaran jelas */
+body.kanban-dragging .kanban-col { border-style: dashed; }
 .col-title {
   display: flex;
   align-items: center;
@@ -2405,9 +2437,37 @@ function saveWs() {
   localStorage.setItem(K.wsActive, activeWsId);
 }
 
+/* Generate an id that stays unique even when backfilling a whole list in one
+ * tick (Date.now() alone would collide). */
+function newItemId(i) {
+  return 'it-' + Date.now().toString(36) + '-' + (i || 0) + '-' + Math.floor(Math.random() * 1e9).toString(36);
+}
+
+/* Seeded starter items were pushed without ids, so editing and drag-and-drop
+ * could not identify them. Backfill any item missing an id, and report whether
+ * anything changed so the caller can persist it. */
+function ensureItemIds(key) {
+  const list = D[key];
+  if (!Array.isArray(list)) return false;
+  let changed = false;
+  list.forEach(function(item, i) {
+    if (item && typeof item === 'object' && !item.id) {
+      item.id = newItemId(i);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 function loadWsData() {
   Object.keys(D).forEach(function(key) {
     D[key] = load(wsKey(key));
+  });
+  // calendarEvents has its own id normalization below; every other collection
+  // gets ids backfilled here so cards are always identifiable.
+  Object.keys(D).forEach(function(key) {
+    if (key === 'calendarEvents') return;
+    if (ensureItemIds(key)) saveKey(key);
   });
   const normalizedCalendar = (Array.isArray(D.calendarEvents) ? D.calendarEvents : []).map(function(event, index) {
     return normalizeCalendarEvent(event, index);
@@ -2767,6 +2827,10 @@ function seedWorkspaceFromSurvey(context) {
   if (pack.invoices.length) D.invoices.push(...pack.invoices);
   if (pack.cases.length) D.cases.push(...pack.cases);
   if (pack.calendarEvents.length) D.calendarEvents.push(...pack.calendarEvents);
+
+  // Seeding runs after loadWsData's id backfill, so give these fresh items
+  // ids too — otherwise seeded cards cannot be edited or dragged.
+  ['tasks', 'leads', 'services', 'clients', 'invoices', 'cases'].forEach(ensureItemIds);
 
   saveKey('tasks');
   saveKey('leads');
@@ -3179,30 +3243,77 @@ function renderTasks(c) {
   renderKanban();
 }
 
+const TASK_STAGES = ['todo', 'progress', 'review', 'done'];
+
 function renderKanban() {
   const groups = { todo: [], progress: [], review: [], done: [] };
   D.tasks.forEach(function(t) { if (groups[t.status]) groups[t.status].push(t); });
-  Object.keys(groups).forEach(function(status, i) {
+  TASK_STAGES.forEach(function(status, i) {
     const col = document.getElementById('col' + (i + 1));
     const cnt = document.getElementById('c' + (i + 1));
     if (!col) return;
     cnt.textContent = groups[status].length;
     col.innerHTML = '';
     if (groups[status].length === 0) {
-      col.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-3);font-size:11px;">No tasks</div>';
+      col.innerHTML = '<div class="kanban-empty">Drop tasks here</div>';
     } else {
       groups[status].forEach(function(t) {
         const card = document.createElement('div');
         card.className = 'item-card';
+        card.setAttribute('draggable', 'true');
+        card.dataset.taskId = t.id;
         card.onclick = function() { editItem('tasks', t.id); };
-        card.innerHTML = '<div class="item-card-title">' + esc(t.name) + '</div><div class="item-card-meta">' +
-          '<div><span class="item-tag ' + (t.tag || 'ops') + '">' + (t.tag || 'ops') + '</span></div>' +
-          '<span class="item-prio ' + (t.priority === 'high' ? 'high' : t.priority === 'low' ? 'low' : 'med') + '">● ' + (t.priority || 'med') + '</span>' +
-          '</div>';
+        card.addEventListener('dragstart', function(e) {
+          // Guard against a task with no id (should not happen after the
+          // backfill, but a drop we cannot resolve is worse than none).
+          if (!t.id) { e.preventDefault(); return; }
+          e.dataTransfer.setData('text/plain', String(t.id));
+          e.dataTransfer.effectAllowed = 'move';
+          card.classList.add('dragging');
+          document.body.classList.add('kanban-dragging');
+        });
+        card.addEventListener('dragend', function() {
+          card.classList.remove('dragging');
+          document.body.classList.remove('kanban-dragging');
+        });
         col.appendChild(card);
       });
     }
+    wireKanbanDropZone(col.closest('.kanban-col') || col, status);
   });
+}
+
+/* Turn a column into a drop target that moves the dragged task into `status`.
+ * Handlers are reassigned (not addEventListener) so re-rendering the board
+ * never stacks duplicate listeners on the same column. */
+function wireKanbanDropZone(zone, status) {
+  if (!zone) return;
+  zone.ondragover = function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    zone.classList.add('kanban-col-over');
+  };
+  zone.ondragleave = function(e) {
+    // Only clear when the cursor actually leaves the column, not when it
+    // crosses onto a child element inside it.
+    if (!zone.contains(e.relatedTarget)) zone.classList.remove('kanban-col-over');
+  };
+  zone.ondrop = function(e) {
+    e.preventDefault();
+    zone.classList.remove('kanban-col-over');
+    const id = e.dataTransfer.getData('text/plain');
+    if (!id) return;
+    const task = D.tasks.find(function(t) { return String(t.id) === String(id); });
+    if (!task || task.status === status) return;
+    task.status = status;
+    saveKey('tasks');
+    renderKanban();
+    if (typeof notify === 'function') notify('Task moved to ' + kanbanStageLabel(status));
+  };
+}
+
+function kanbanStageLabel(status) {
+  return { todo: 'To Do', progress: 'In Progress', review: 'Review', done: 'Done' }[status] || status;
 }
 
 function renderLeads(c) {
