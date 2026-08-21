@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work2U — Follow-up, billing, and client messaging in one dashboard</title>
+<meta name="description" content="Work2U keeps leads, tasks, invoices, reminders, and client messaging in one calm dashboard. Built for property agents, insurance agents, freelancers, and small teams in Malaysia and worldwide.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/w2u-favicon.svg">
+<link rel="canonical" href="https://work2u.io/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Work2U — Follow-up, billing, and client messaging in one dashboard">
+<meta property="og:description" content="Leads, tasks, invoices, reminders, and client messaging in one calm dashboard. From RM39/month.">
+<meta property="og:url" content="https://work2u.io/">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/assets/w2u.css">
+
+<script>
+  /* Guna tema tersimpan sebelum cat pertama, supaya tiada kilatan putih
+     apabila pengguna dark-mode memuatkan halaman. */
+  (function () {
+    try {
+      var t = localStorage.getItem('w2u-theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+    /* Tandai bahawa JS hidup. CSS reveal bergantung pada kelas ini, jadi
+       halaman kekal boleh dibaca sepenuhnya apabila JS mati atau gagal. */
+    document.documentElement.classList.add('w2u-js');
+  })();
+</script>
+
+<style>
+/* ==========================================================================
+   Landing page - hanya yang khusus halaman ini.
+   Segala primitif (butang, kad, borang, nav, footer) datang dari w2u.css.
+   ========================================================================== */
+
+/* --- Reveal semasa skrol ------------------------------------------------ */
+.w2u-js .w2u-section-head, .w2u-js .lp-hero-copy, .w2u-js .lp-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms var(--w2u-ease), transform 500ms var(--w2u-ease);
+}
+.w2u-section-head.is-visible, .lp-hero-copy.is-visible, .lp-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .w2u-js .w2u-section-head, .w2u-js .lp-hero-copy, .w2u-js .lp-reveal { opacity: 1; transform: none; }
+}
+
+/* --- Hero ---------------------------------------------------------------
+   Satu tajuk, satu perenggan, dua butang, satu baris amanah. Itu sahaja.
+   Versi lama ada enam jalur kad berturut-turut di sini.
+   ------------------------------------------------------------------------ */
+
+.lp-hero {
+  position: relative;
+  padding-block: var(--w2u-s20) var(--w2u-s16);
+  overflow: hidden;
+}
+/* Satu cahaya lembut sahaja, bukan orb kabur bertindih */
+.lp-hero::before {
+  content: "";
+  position: absolute;
+  left: 50%; top: -320px;
+  width: 900px; height: 640px;
+  margin-left: -450px;
+  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.10), transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+.lp-hero > * { position: relative; z-index: 1; }
+
+.lp-hero-copy { max-width: 720px; }
+
+.lp-hero-badge {
+  display: inline-flex; align-items: center; gap: var(--w2u-s2);
+  height: 28px; padding-inline: var(--w2u-s3);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-full);
+  background: var(--w2u-surface);
+  font-size: var(--w2u-text-sm);
+  font-weight: var(--w2u-weight-medium);
+  color: var(--w2u-text-muted);
+}
+
+.lp-hero h1 { margin-top: var(--w2u-s5); }
+.lp-hero .w2u-lead { margin-top: var(--w2u-s5); max-width: 620px; }
+
+.lp-hero-actions {
+  display: flex; flex-wrap: wrap; gap: var(--w2u-s3);
+  margin-top: var(--w2u-s8);
+}
+
+.lp-hero-trust {
+  display: flex; flex-wrap: wrap;
+  gap: var(--w2u-s2) var(--w2u-s5);
+  margin-top: var(--w2u-s6);
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-subtle);
+}
+.lp-hero-trust span { display: inline-flex; align-items: center; gap: var(--w2u-s2); }
+.lp-hero-trust span::before {
+  content: "";
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--w2u-n400);
+}
+
+/* --- Mock aplikasi -------------------------------------------------------
+   Nama kelas dikekalkan dari versi lama kerana JS rotasi channel
+   bergantung padanya. Gayanya sahaja yang diganti.
+   ------------------------------------------------------------------------ */
+
+.lp-preview-wrap { margin-top: var(--w2u-s16); }
+
+.dashboard-preview {
+  position: relative;
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-xl);
+  background: var(--w2u-surface);
+  box-shadow: var(--w2u-shadow-xl);
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex; align-items: center; gap: var(--w2u-s2);
+  padding: var(--w2u-s3) var(--w2u-s4);
+  border-bottom: 1px solid var(--w2u-border);
+  background: var(--w2u-bg-subtle);
+}
+.preview-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--w2u-n300); }
+:root[data-theme="dark"] .preview-dot { background: var(--w2u-n700); }
+
+.preview-statusline {
+  display: flex; align-items: flex-start; gap: var(--w2u-s3);
+  padding: var(--w2u-s4) var(--w2u-s5);
+  border-bottom: 1px solid var(--w2u-border);
+}
+.preview-status-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-top: 7px; flex-shrink: 0;
+  background: var(--w2u-success);
+  box-shadow: 0 0 0 3px var(--w2u-success-bg);
+}
+.preview-status-title {
+  font-size: var(--w2u-text-md);
+  font-weight: var(--w2u-weight-semi);
+  color: var(--w2u-text);
+}
+.preview-status-copy {
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-muted);
+  margin-top: 2px;
+}
+
+.preview-channel-spotlight {
+  padding: var(--w2u-s2) var(--w2u-s5);
+  border-bottom: 1px solid var(--w2u-border);
+  background: var(--w2u-bg-subtle);
+  font-size: var(--w2u-text-sm);
+  color: var(--w2u-text-subtle);
+}
+
+.preview-channel-switcher {
+  display: flex; flex-wrap: wrap; gap: var(--w2u-s2);
+  padding: var(--w2u-s4) var(--w2u-s5) 0;
+}
+.preview-channel-chip {
+  display: inline-flex; align-items: center;
+  height: 30px; padding-inline: var(--w2u-s4);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-full);
+  background: var(--w2u-surface);
+  color: var(--w2u-text-muted);
+  font-size: var(--w2u-text-md);
+  font-weight: var(--w2u-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--w2u-dur-fast) var(--w2u-ease),
+              border-color var(--w2u-dur-fast) var(--w2u-ease),
+              color var(--w2u-dur-fast) var(--w2u-ease);
+}
+.preview-channel-chip:hover { border-color: var(--w2u-border-strong); color: var(--w2u-text); }
+/* JS menogol kelas "active", bukan "is-active" - jangan tukar tanpa tukar JS */
+.preview-channel-chip.active {
+  background: var(--w2u-accent); border-color: var(--w2u-accent); color: #fff;
+}
+
+.preview-content {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--w2u-s4);
+  padding: var(--w2u-s5);
+}
+
+.preview-sidebar { display: flex; flex-direction: column; gap: var(--w2u-s2); }
+.preview-item {
+  height: 26px;
+  border-radius: var(--w2u-r-sm);
+  background: var(--w2u-bg-muted);
+}
+.preview-item.active { background: var(--w2u-accent-100); }
+:root[data-theme="dark"] .preview-item.active { background: rgba(37, 99, 235, 0.28); }
+
+.preview-card {
+  padding: var(--w2u-s4);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-bg-subtle);
+}
+.preview-focus-card { grid-row: span 2; background: var(--w2u-surface); }
+.preview-focus-kicker {
+  font-size: var(--w2u-text-xs);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-wide);
+  text-transform: uppercase;
+  color: var(--w2u-accent-600);
+}
+:root[data-theme="dark"] .preview-focus-kicker { color: var(--w2u-accent-400); }
+.preview-focus-title {
+  margin-top: var(--w2u-s2);
+  font-size: var(--w2u-text-base);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-snug);
+  color: var(--w2u-text);
+}
+.preview-focus-copy {
+  margin-top: var(--w2u-s2);
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-muted);
+}
+.preview-focus-meta {
+  display: flex; flex-wrap: wrap; gap: var(--w2u-s2);
+  margin-top: var(--w2u-s4);
+}
+.preview-focus-pill {
+  display: inline-flex; align-items: center;
+  height: 22px; padding-inline: var(--w2u-s2);
+  border-radius: var(--w2u-r-sm);
+  background: var(--w2u-bg-muted);
+  color: var(--w2u-text-muted);
+  font-size: var(--w2u-text-xs);
+  font-weight: var(--w2u-weight-medium);
+}
+
+.preview-line {
+  height: 8px;
+  border-radius: var(--w2u-r-full);
+  background: var(--w2u-bg-muted);
+  margin-bottom: var(--w2u-s2);
+}
+.preview-line.med { width: 72%; }
+.preview-line.short { width: 46%; }
+
+.preview-float-card {
+  position: absolute;
+  right: var(--w2u-s5);
+  bottom: var(--w2u-s5);
+  width: 208px;
+  padding: var(--w2u-s4);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-surface);
+  box-shadow: var(--w2u-shadow-lg);
+}
+.preview-float-card .tiny {
+  font-size: var(--w2u-text-xs);
+  letter-spacing: var(--w2u-track-wide);
+  text-transform: uppercase;
+  color: var(--w2u-text-subtle);
+}
+.preview-float-card strong {
+  display: block;
+  margin-top: var(--w2u-s1);
+  font-size: var(--w2u-text-2xl);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-snug);
+  color: var(--w2u-text);
+}
+.preview-float-card p {
+  margin-top: var(--w2u-s1);
+  font-size: var(--w2u-text-sm);
+  color: var(--w2u-text-muted);
+}
+.preview-float-bars {
+  display: flex; align-items: flex-end; gap: 4px;
+  height: 26px; margin-top: var(--w2u-s3);
+}
+.preview-float-bars span {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--w2u-accent-200);
+}
+.preview-float-bars span:nth-child(1) { height: 40%; }
+.preview-float-bars span:nth-child(2) { height: 66%; }
+.preview-float-bars span:nth-child(3) { height: 50%; }
+.preview-float-bars span:nth-child(4) { height: 88%; }
+.preview-float-bars span:nth-child(5) { height: 62%; background: var(--w2u-accent); }
+:root[data-theme="dark"] .preview-float-bars span { background: rgba(37, 99, 235, 0.38); }
+:root[data-theme="dark"] .preview-float-bars span:nth-child(5) { background: var(--w2u-accent-400); }
+
+/* Kilatan 420ms yang JS picu semasa tukar channel */
+.preview-switching { animation: lp-flash 420ms var(--w2u-ease); }
+@keyframes lp-flash {
+  0%   { opacity: 0.45; transform: translateY(4px); }
+  100% { opacity: 1;    transform: none; }
+}
+
+@media (max-width: 900px) {
+  .preview-content { grid-template-columns: minmax(0, 1fr); }
+  .preview-sidebar { flex-direction: row; }
+  .preview-sidebar .preview-item { flex: 1; height: 20px; }
+  .preview-focus-card { grid-row: auto; }
+  .preview-float-card { display: none; }
+}
+
+/* --- Jalur statistik ---------------------------------------------------- */
+.lp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--w2u-border);
+  border-bottom: 1px solid var(--w2u-border);
+}
+.lp-stat {
+  padding: var(--w2u-s8) var(--w2u-s6);
+  border-left: 1px solid var(--w2u-border);
+}
+.lp-stat:first-child { border-left: none; }
+.lp-stat strong {
+  display: block;
+  font-size: var(--w2u-text-3xl);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-tight);
+  color: var(--w2u-text);
+}
+.lp-stat span {
+  display: block;
+  margin-top: var(--w2u-s1);
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-subtle);
+}
+@media (max-width: 800px) {
+  .lp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-stat:nth-child(odd) { border-left: none; }
+  .lp-stat:nth-child(n+3) { border-top: 1px solid var(--w2u-border); }
+  .lp-stat { padding: var(--w2u-s6) var(--w2u-s5); }
+}
+
+/* --- Naratif nilai ------------------------------------------------------ */
+.lp-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--w2u-s12);
+  align-items: start;
+}
+@media (max-width: 900px) { .lp-value { grid-template-columns: minmax(0, 1fr); gap: var(--w2u-s8); } }
+
+.lp-flow { display: flex; flex-direction: column; gap: var(--w2u-s5); margin-top: var(--w2u-s8); }
+.lp-flow-item { display: flex; gap: var(--w2u-s4); }
+.lp-flow-num {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-full);
+  background: var(--w2u-surface);
+  font-size: var(--w2u-text-sm);
+  font-weight: var(--w2u-weight-semi);
+  font-variant-numeric: tabular-nums;
+  color: var(--w2u-text-muted);
+}
+.lp-flow-item strong {
+  display: block;
+  font-size: var(--w2u-text-base);
+  font-weight: var(--w2u-weight-semi);
+  color: var(--w2u-text);
+}
+.lp-flow-item p { margin-top: 2px; font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+
+/* --- Ciri --------------------------------------------------------------- */
+.lp-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--w2u-border);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-lg);
+  overflow: hidden;
+}
+@media (max-width: 900px) { .lp-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .lp-feature-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Jaringan 1px + latar sempadan memberi garis pemisah sempurna tanpa
+   pengiraan sempadan per-sel. */
+.lp-feature {
+  padding: var(--w2u-s6);
+  background: var(--w2u-surface);
+  transition: background-color var(--w2u-dur-fast) var(--w2u-ease);
+}
+.lp-feature:hover { background: var(--w2u-bg-subtle); }
+.lp-feature-icon {
+  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-accent-50);
+  color: var(--w2u-accent-600);
+  margin-bottom: var(--w2u-s4);
+}
+:root[data-theme="dark"] .lp-feature-icon {
+  background: rgba(37, 99, 235, 0.14); color: var(--w2u-accent-400);
+}
+.lp-feature-icon svg { width: 18px; height: 18px; }
+.lp-feature h3 {
+  font-size: var(--w2u-text-base);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-normal);
+  color: var(--w2u-text);
+}
+.lp-feature p { margin-top: var(--w2u-s2); font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+
+/* --- Langkah ------------------------------------------------------------ */
+.lp-step { position: relative; padding-top: var(--w2u-s6); border-top: 2px solid var(--w2u-border); }
+.lp-step-num {
+  font-size: var(--w2u-text-sm);
+  font-weight: var(--w2u-weight-semi);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--w2u-track-wide);
+  color: var(--w2u-accent-600);
+}
+:root[data-theme="dark"] .lp-step-num { color: var(--w2u-accent-400); }
+.lp-step h3 { margin-top: var(--w2u-s3); font-size: var(--w2u-text-lg); }
+.lp-step p { margin-top: var(--w2u-s2); font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+.lp-step ul { margin-top: var(--w2u-s4); display: flex; flex-direction: column; gap: var(--w2u-s2); }
+.lp-step li {
+  display: flex; gap: var(--w2u-s2);
+  font-size: var(--w2u-text-md); color: var(--w2u-text-muted);
+}
+.lp-step li::before { content: "—"; color: var(--w2u-n400); flex-shrink: 0; }
+
+/* --- Modul -------------------------------------------------------------- */
+.lp-module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--w2u-s3);
+}
+@media (max-width: 900px) { .lp-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .lp-module-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.lp-module {
+  display: flex; align-items: center; gap: var(--w2u-s3);
+  padding: var(--w2u-s4);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-surface);
+}
+.lp-module svg { width: 17px; height: 17px; color: var(--w2u-text-subtle); flex-shrink: 0; }
+.lp-module h4 { font-size: var(--w2u-text-md); font-weight: var(--w2u-weight-semi); color: var(--w2u-text); }
+.lp-module p { font-size: var(--w2u-text-sm); color: var(--w2u-text-subtle); }
+
+/* --- Harga -------------------------------------------------------------- */
+.lp-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--w2u-s5);
+  align-items: start;
+}
+@media (max-width: 900px) { .lp-price-grid { grid-template-columns: minmax(0, 1fr); max-width: 460px; margin-inline: auto; } }
+
+.lp-price {
+  display: flex; flex-direction: column;
+  padding: var(--w2u-s6);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-lg);
+  background: var(--w2u-surface);
+  height: 100%;
+}
+/* Pelan disyorkan ditanda dengan sempadan sahaja, bukan pembesaran skala.
+   Kad yang diskalakan memecahkan penjajaran baseline merentas grid. */
+.lp-price.is-featured {
+  border-color: var(--w2u-accent);
+  box-shadow: var(--w2u-shadow-md);
+}
+.lp-price-head { display: flex; align-items: center; justify-content: space-between; gap: var(--w2u-s3); }
+.lp-price-tier {
+  font-size: var(--w2u-text-base);
+  font-weight: var(--w2u-weight-semi);
+  color: var(--w2u-text);
+}
+.lp-price-amount {
+  margin-top: var(--w2u-s5);
+  font-size: var(--w2u-text-4xl);
+  font-weight: var(--w2u-weight-bold);
+  letter-spacing: var(--w2u-track-tight);
+  color: var(--w2u-text);
+  font-variant-numeric: tabular-nums;
+}
+.lp-price-amount span {
+  font-size: var(--w2u-text-base);
+  font-weight: var(--w2u-weight-normal);
+  letter-spacing: var(--w2u-track-normal);
+  color: var(--w2u-text-subtle);
+}
+.lp-price-desc { margin-top: var(--w2u-s3); font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+.lp-price-feats {
+  display: flex; flex-direction: column; gap: var(--w2u-s3);
+  margin-top: var(--w2u-s6);
+  padding-top: var(--w2u-s6);
+  border-top: 1px solid var(--w2u-border);
+}
+.lp-price-feat {
+  display: flex; align-items: flex-start; gap: var(--w2u-s3);
+  font-size: var(--w2u-text-md); color: var(--w2u-text-muted);
+}
+.lp-price-feat svg {
+  width: 15px; height: 15px; margin-top: 4px; flex-shrink: 0;
+  color: var(--w2u-accent);
+}
+.lp-price .w2u-btn { margin-top: var(--w2u-s6); }
+/* Butang dilekat ke bawah supaya semua tiga sejajar walaupun senarai
+   ciri berbeza panjang. */
+.lp-price-spacer { flex: 1 1 auto; }
+
+/* --- CTA akhir ---------------------------------------------------------- */
+.lp-cta {
+  padding: var(--w2u-s16) var(--w2u-s6);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-2xl);
+  background: var(--w2u-bg-subtle);
+  text-align: center;
+}
+.lp-cta p { margin: var(--w2u-s4) auto 0; max-width: 520px; }
+.lp-cta .w2u-btn { margin-top: var(--w2u-s8); }
+
+/* --- Bar tindakan mudah alih -------------------------------------------- */
+.lp-mobile-bar { display: none; }
+@media (max-width: 768px) {
+  .lp-mobile-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    z-index: var(--w2u-z-nav);
+    display: flex; gap: var(--w2u-s2);
+    padding: var(--w2u-s3);
+    padding-bottom: calc(var(--w2u-s3) + env(safe-area-inset-bottom, 0px));
+    background: var(--w2u-bg);
+    border-top: 1px solid var(--w2u-border);
+  }
+  .lp-mobile-bar .w2u-btn { flex: 1; }
+  /* Beri ruang supaya bar tetap tak menutup hujung footer */
+  body { padding-bottom: 76px; }
+}
+
+/* --- Overlay survey -----------------------------------------------------
+   NOTA: openWork2USurvey() kini ubah hala terus ke /crm, jadi overlay ini
+   tidak pernah terbuka. Markup dan gaya dikekalkan supaya ia boleh
+   dihidupkan semula dengan menukar satu fungsi itu sahaja.
+   ------------------------------------------------------------------------ */
+.survey-overlay {
+  position: fixed; inset: 0;
+  z-index: var(--w2u-z-modal);
+  display: none;
+  align-items: flex-start; justify-content: center;
+  padding: var(--w2u-s8) var(--w2u-s5);
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+.survey-overlay.active { display: flex; }
+
+.survey-modal {
+  width: 100%; max-width: 900px;
+  background: var(--w2u-surface);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-xl);
+  box-shadow: var(--w2u-shadow-xl);
+  overflow: hidden;
+}
+.survey-modal-head {
+  display: flex; align-items: flex-start; gap: var(--w2u-s4);
+  padding: var(--w2u-s6);
+  border-bottom: 1px solid var(--w2u-border);
+}
+.survey-modal-title h3 {
+  margin-top: var(--w2u-s2);
+  font-size: var(--w2u-text-xl);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-snug);
+  color: var(--w2u-text);
+}
+.survey-modal-title p {
+  margin-top: var(--w2u-s2);
+  font-size: var(--w2u-text-md);
+  color: var(--w2u-text-muted);
+  max-width: 62ch;
+}
+.survey-modal-close {
+  margin-left: auto; flex-shrink: 0;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--w2u-r-md);
+  font-size: var(--w2u-text-xl);
+  line-height: 1;
+  color: var(--w2u-text-subtle);
+}
+.survey-modal-close:hover { background: var(--w2u-bg-muted); color: var(--w2u-text); }
+
+.survey-modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--w2u-s6);
+  padding: var(--w2u-s6);
+}
+@media (max-width: 860px) { .survey-modal-body { grid-template-columns: minmax(0, 1fr); } }
+
+.survey-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--w2u-s4);
+}
+@media (max-width: 560px) { .survey-fields { grid-template-columns: minmax(0, 1fr); } }
+.survey-field { display: flex; flex-direction: column; gap: var(--w2u-s2); }
+.survey-field.full { grid-column: 1 / -1; }
+
+.survey-label { font-size: var(--w2u-text-md); font-weight: var(--w2u-weight-medium); color: var(--w2u-text); }
+.survey-helper { font-size: var(--w2u-text-sm); color: var(--w2u-text-subtle); }
+
+.survey-input, .survey-select, .survey-textarea {
+  width: 100%; min-height: 40px;
+  padding: var(--w2u-s2) var(--w2u-s3);
+  background: var(--w2u-surface);
+  color: var(--w2u-text);
+  border: 1px solid var(--w2u-border-strong);
+  border-radius: var(--w2u-r-md);
+  font-size: var(--w2u-text-md);
+  transition: border-color var(--w2u-dur-fast) var(--w2u-ease),
+              box-shadow var(--w2u-dur-fast) var(--w2u-ease);
+}
+.survey-input:focus, .survey-select:focus, .survey-textarea:focus {
+  outline: none;
+  border-color: var(--w2u-accent);
+  box-shadow: 0 0 0 3px var(--w2u-accent-100);
+}
+:root[data-theme="dark"] .survey-input:focus,
+:root[data-theme="dark"] .survey-select:focus,
+:root[data-theme="dark"] .survey-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28);
+}
+.survey-textarea { min-height: 92px; resize: vertical; }
+.survey-select { cursor: pointer; }
+
+.survey-actions { display: flex; flex-wrap: wrap; gap: var(--w2u-s3); margin-top: var(--w2u-s5); }
+
+.survey-result-shell {
+  padding: var(--w2u-s5);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-lg);
+  background: var(--w2u-bg-subtle);
+  height: fit-content;
+}
+.survey-result-badge {
+  font-size: var(--w2u-text-xs);
+  font-weight: var(--w2u-weight-semi);
+  letter-spacing: var(--w2u-track-wide);
+  text-transform: uppercase;
+  color: var(--w2u-text-subtle);
+}
+.survey-result-plan {
+  margin-top: var(--w2u-s2);
+  font-size: var(--w2u-text-3xl);
+  font-weight: var(--w2u-weight-bold);
+  letter-spacing: var(--w2u-track-tight);
+  color: var(--w2u-text);
+}
+.survey-result-copy { margin-top: var(--w2u-s2); font-size: var(--w2u-text-md); color: var(--w2u-text-muted); }
+.survey-result-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--w2u-s3); margin-top: var(--w2u-s5); }
+.survey-result-metric {
+  padding: var(--w2u-s3);
+  border: 1px solid var(--w2u-border);
+  border-radius: var(--w2u-r-md);
+  background: var(--w2u-surface);
+}
+.survey-result-metric .tiny {
+  font-size: var(--w2u-text-xs);
+  letter-spacing: var(--w2u-track-wide);
+  text-transform: uppercase;
+  color: var(--w2u-text-subtle);
+}
+.survey-result-metric strong {
+  display: block; margin-top: 2px;
+  font-size: var(--w2u-text-md); font-weight: var(--w2u-weight-semi); color: var(--w2u-text);
+}
+.survey-result-list { display: flex; flex-direction: column; gap: var(--w2u-s2); margin-top: var(--w2u-s5); }
+.survey-result-list li { font-size: var(--w2u-text-md); color: var(--w2u-text-muted); padding-left: var(--w2u-s4); position: relative; }
+.survey-result-list li::before { content: "·"; position: absolute; left: var(--w2u-s2); color: var(--w2u-n400); }
+.survey-result-note { margin-top: var(--w2u-s4); font-size: var(--w2u-text-sm); color: var(--w2u-text-subtle); }
+</style>
+</head>
+<body>
+
+<a class="w2u-skip" href="#main">Skip to content</a>
+
+<nav class="w2u-nav" id="site-nav">
+  <div class="w2u-nav-inner">
+    <a href="/" class="w2u-brand" aria-label="Work2U home">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="color:var(--w2u-accent)">
+        <rect width="24" height="24" rx="6" fill="currentColor"/>
+        <path d="M5.9 8.2 L9.1 16.2 L12 10.4 L14.9 16.2 L18.1 8.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Work2U</span>
+    </a>
+
+    <button type="button" class="w2u-nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+
+    <div class="w2u-nav-links" id="nav-links">
+      <a href="#features" class="w2u-nav-link">Features</a>
+      <a href="#how" class="w2u-nav-link">How it works</a>
+      <a href="#modules" class="w2u-nav-link">Modules</a>
+      <a href="#pricing" class="w2u-nav-link">Pricing</a>
+      <a href="#faq" class="w2u-nav-link">FAQ</a>
+      <a href="/docs" class="w2u-nav-link">Docs</a>
+    </div>
+
+    <div class="w2u-nav-actions">
+      <button type="button" class="w2u-theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+        <svg class="w2u-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <svg class="w2u-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+        </svg>
+      </button>
+      <a href="/login" class="w2u-btn w2u-btn-secondary w2u-btn-sm">Sign in</a>
+      <a href="/crm" class="w2u-btn w2u-btn-primary w2u-btn-sm" onclick="return openWork2UEntry(false);">Open CRM</a>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+
+<!-- ============================== HERO ============================== -->
+<section class="lp-hero">
+  <div class="w2u-container">
+    <div class="lp-hero-copy">
+      <span class="lp-hero-badge">
+        <span class="w2u-dot"></span>
+        Built in Malaysia by Saga X Ventures
+      </span>
+
+      <h1 class="w2u-display">One platform for follow-up, billing, and AI-assisted business</h1>
+
+      <p class="w2u-lead">Work2U keeps leads, tasks, invoices, reminders, and client messaging in one calm dashboard — so nothing depends on remembering it. Built for property agents, insurance agents, freelancers, and small teams.</p>
+
+      <div class="lp-hero-actions">
+        <a href="/crm" class="w2u-btn w2u-btn-primary w2u-btn-lg" onclick="return openWork2UEntry(false);">Start 7-day trial</a>
+        <a href="/launch-checklist.html" class="w2u-btn w2u-btn-secondary w2u-btn-lg">View demo flow</a>
+      </div>
+
+      <div class="lp-hero-trust">
+        <span>No card needed to explore</span>
+        <span>Register to dashboard in one flow</span>
+        <span>Malaysia and global billing</span>
+      </div>
+    </div>
+
+    <div class="lp-preview-wrap lp-reveal">
+      <div class="dashboard-preview" role="img" aria-label="Work2U dashboard preview showing channel follow-up">
+        <div class="preview-header">
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+        </div>
+
+        <div class="preview-statusline">
+          <span class="preview-status-pulse" aria-hidden="true"></span>
+          <div class="preview-status-text">
+            <div class="preview-status-title" id="preview-status-title">Live sync ready</div>
+            <div class="preview-status-copy" id="preview-status-copy">Channel reminders, AI suggestions, and follow-up notes stay in one flow.</div>
+          </div>
+        </div>
+
+        <div class="preview-channel-spotlight" id="preview-channel-spotlight">Now showing: WhatsApp</div>
+
+        <div class="preview-channel-switcher" role="group" aria-label="Channel preview filter">
+          <button type="button" class="preview-channel-chip active" data-preview-channel="WhatsApp" aria-pressed="true">WhatsApp</button>
+          <button type="button" class="preview-channel-chip" data-preview-channel="Email" aria-pressed="false">Email</button>
+          <button type="button" class="preview-channel-chip" data-preview-channel="Telegram" aria-pressed="false">Telegram</button>
+        </div>
+
+        <div class="preview-content">
+          <div class="preview-sidebar" aria-hidden="true">
+            <div class="preview-item active"></div>
+            <div class="preview-item"></div>
+            <div class="preview-item"></div>
+            <div class="preview-item"></div>
+            <div class="preview-item"></div>
+            <div class="preview-item"></div>
+            <div class="preview-item"></div>
+          </div>
+
+          <div class="preview-card preview-focus-card">
+            <div class="preview-focus-kicker" id="preview-channel-kicker">WhatsApp-first workflow</div>
+            <div class="preview-focus-title" id="preview-channel-title">Fast replies from the dashboard</div>
+            <div class="preview-focus-copy" id="preview-channel-copy">Scan the QR, reply inside Work2U, and keep the follow-up moving without switching tools.</div>
+            <div class="preview-focus-meta">
+              <span class="preview-focus-pill" id="preview-channel-pill-1">QR web client</span>
+              <span class="preview-focus-pill" id="preview-channel-pill-2">Auto reminder</span>
+              <span class="preview-focus-pill" id="preview-channel-pill-3">Client follow-up</span>
+            </div>
+          </div>
+
+          <div class="preview-card" aria-hidden="true">
+            <div class="preview-line med"></div>
+            <div class="preview-line short"></div>
+            <div class="preview-line"></div>
+            <div class="preview-line short"></div>
+          </div>
+
+          <div class="preview-card" aria-hidden="true">
+            <div class="preview-line short"></div>
+            <div class="preview-line med"></div>
+            <div class="preview-line"></div>
+            <div class="preview-line short"></div>
+          </div>
+        </div>
+
+        <div class="preview-float-card">
+          <div class="tiny">Daily signal</div>
+          <strong>24 follow-ups</strong>
+          <p>Pending today across WhatsApp, email, and Telegram.</p>
+          <div class="preview-float-bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== STATS ============================== -->
+<div class="w2u-container">
+  <div class="lp-stats lp-reveal">
+    <div class="lp-stat"><strong>12</strong><span>Business modules</span></div>
+    <div class="lp-stat"><strong>RM 39</strong><span>Starter, per month</span></div>
+    <div class="lp-stat"><strong>7 days</strong><span>Trial before renewal</span></div>
+    <div class="lp-stat"><strong>3</strong><span>Messaging channels</span></div>
+  </div>
+</div>
+
+<!-- ============================== VALUE ============================== -->
+<section class="w2u-section" id="about">
+  <div class="w2u-container">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">What Work2U is</span>
+      <h2 class="w2u-h1">One place to turn interest into action, without losing track of the work</h2>
+      <p class="w2u-lead">Most teams do not need another enterprise stack. They need one place to capture a lead, follow up, issue invoices, sync reminders, and keep the day moving without relying on memory.</p>
+    </div>
+
+    <div class="lp-value lp-reveal">
+      <div>
+        <div class="lp-flow">
+          <div class="lp-flow-item">
+            <span class="lp-flow-num">1</span>
+            <div>
+              <strong>Lead to client flow</strong>
+              <p>Track prospect status until conversion, then attach services, cases, and invoices to the same record.</p>
+            </div>
+          </div>
+          <div class="lp-flow-item">
+            <span class="lp-flow-num">2</span>
+            <div>
+              <strong>Follow-up automation</strong>
+              <p>Send reminders by WhatsApp, email, or Telegram so nothing gets forgotten between conversations.</p>
+            </div>
+          </div>
+          <div class="lp-flow-item">
+            <span class="lp-flow-num">3</span>
+            <div>
+              <strong>AI assist</strong>
+              <p>Suggest what to write before sending, and help plan the next business step.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w2u-stack">
+        <div class="w2u-card">
+          <span class="w2u-eyebrow">Built for</span>
+          <h3 class="w2u-h3 w2u-mt-2">Property, insurance, freelance, and small teams</h3>
+          <p class="w2u-small w2u-mt-2">One workflow that adapts to different business types through the registration survey.</p>
+        </div>
+        <div class="w2u-card">
+          <span class="w2u-eyebrow">Core value</span>
+          <h3 class="w2u-h3 w2u-mt-2">Less memory burden, better follow-up</h3>
+          <p class="w2u-small w2u-mt-2">Tasks, calendar sync, and messaging reduce missed opportunities and admin stress.</p>
+        </div>
+        <div class="w2u-card">
+          <span class="w2u-eyebrow">Deployment</span>
+          <h3 class="w2u-h3 w2u-mt-2">Public site, CRM app, backend bridge</h3>
+          <p class="w2u-small w2u-mt-2">work2u.io handles trust and conversion, crm.work2u.io handles daily operations, and api.work2u.io stays ready for automation later.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FEATURES ============================== -->
+<section class="w2u-section" id="features" style="background:var(--w2u-bg-subtle);border-block:1px solid var(--w2u-border);">
+  <div class="w2u-container">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">Why Work2U</span>
+      <h2 class="w2u-h1">Everything you need, without the heavy-suite feel</h2>
+      <p class="w2u-lead">Follow-up, billing, reminders, and communication in one place — without forcing you into bloated software.</p>
+    </div>
+
+    <div class="lp-feature-grid lp-reveal">
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span>
+        <h3>Task management</h3>
+        <p>Track work across stages with Kanban boards. Stage-based progress keeps everyone aligned.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><path d="M6 8l3.4 2.6M18 8l-3.4 2.6M6 16l3.4-2.6M18 16l-3.4-2.6"/></svg></span>
+        <h3>Lead pipeline</h3>
+        <p>Convert prospects into customers with visual pipeline tracking. Know where every deal stands.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <h3>Client management</h3>
+        <p>Converted leads become clients with full histories. Attach services, invoices, and support cases.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+        <h3>Accounting &amp; receipt vault</h3>
+        <p>Invoicing, payments, expenses, receipt uploads, and P&amp;L statements in one place.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        <h3>Smart calendar</h3>
+        <p>Tasks sync to the internal calendar automatically, so deadlines stay visible.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <h3>Email integration</h3>
+        <p>Send from the Work2U domain via Resend. Compose, reply, and organise without switching tabs.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></span>
+        <h3>WhatsApp web</h3>
+        <p>Generate a QR code, scan with your phone, and chat with clients from the dashboard.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+        <h3>AI assistant</h3>
+        <p>Help drafting replies, analysing reports, and deciding the next step on a lead.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg></span>
+        <h3>Share links</h3>
+        <p>Shareable URLs for invoices, quotes, and reports. Send by WhatsApp or email in one click.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg></span>
+        <h3>Reports &amp; analytics</h3>
+        <p>Dashboards for revenue, expenses, P&amp;L, and team performance.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg></span>
+        <h3>Service catalog</h3>
+        <p>Maintain the services you offer. Auto-link to invoices and accounting when clients buy.</p>
+      </article>
+
+      <article class="lp-feature">
+        <span class="lp-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <h3>Support cases</h3>
+        <p>Track tickets from creation to resolution, with full case history and timeline.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== HOW IT WORKS ============================== -->
+<section class="w2u-section" id="how">
+  <div class="w2u-container">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">How it works</span>
+      <h2 class="w2u-h1">Register first, then we shape the workspace</h2>
+      <p class="w2u-lead">Setup stays fast and relevant, whether you are in Malaysia or billing globally.</p>
+    </div>
+
+    <div class="w2u-grid w2u-grid-3 lp-reveal">
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 01</span>
+        <h3 class="w2u-h3">Registration form</h3>
+        <p>We ask what you do, what you need, and which channels matter most, so the dashboard aligns to your workflow.</p>
+        <ul>
+          <li>Industry and role</li>
+          <li>Main goal and team size</li>
+          <li>WhatsApp, email, or Telegram first</li>
+        </ul>
+      </article>
+
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 02</span>
+        <h3 class="w2u-h3">Login your way</h3>
+        <p>Sign in with email or a magic link. If you already have a business mailbox, Work2U can send from it once the email workflow is enabled.</p>
+        <ul>
+          <li>Email login or magic link</li>
+          <li>Region-aware billing routing</li>
+        </ul>
+      </article>
+
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 03</span>
+        <h3 class="w2u-h3">AI and automation setup</h3>
+        <p>Work2U recommends a package, suggests an assistant mode, and lets you connect your own AI account for full control.</p>
+        <ul>
+          <li>Suggestion-only or auto-send</li>
+          <li>Calendar and reminder sync</li>
+          <li>Lead follow-up and client tracking</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== RECEIPTS ============================== -->
+<section class="w2u-section-sm" id="receipts" style="background:var(--w2u-bg-subtle);border-block:1px solid var(--w2u-border);">
+  <div class="w2u-container">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">Receipt management</span>
+      <h2 class="w2u-h1">Upload receipts, track expenses, close the month faster</h2>
+      <p class="w2u-lead">Every receipt lives in one vault, so monthly expense review and P&amp;L reporting stay simple instead of messy.</p>
+    </div>
+
+    <div class="w2u-grid w2u-grid-3 lp-reveal">
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 01</span>
+        <h3 class="w2u-h3">Upload receipt</h3>
+        <p>Attach receipt images or PDFs straight into the workspace, from phone or desktop.</p>
+      </article>
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 02</span>
+        <h3 class="w2u-h3">Categorise the spend</h3>
+        <p>Tag each receipt against a category so the expense trail stays consistent month to month.</p>
+      </article>
+      <article class="lp-step">
+        <span class="lp-step-num">STEP 03</span>
+        <h3 class="w2u-h3">Review and report</h3>
+        <p>The expense dashboard summarises the month, so P&amp;L reporting is a review rather than a rebuild.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== MODULES ============================== -->
+<section class="w2u-section" id="modules">
+  <div class="w2u-container">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">All modules</span>
+      <h2 class="w2u-h1">12 modules, one operating layer</h2>
+      <p class="w2u-lead">Every business function stays connected, but the interface still feels light.</p>
+    </div>
+
+    <div class="lp-module-grid lp-reveal">
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><div><h4>Dashboard</h4><p>Overview &amp; insights</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><div><h4>Tasks</h4><p>Kanban stages</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/></svg><div><h4>Leads</h4><p>Pipeline tracking</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div><h4>Clients</h4><p>Customer database</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><h4>Services</h4><p>Service catalog</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><div><h4>Cases</h4><p>Support tickets</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><div><h4>Accounting</h4><p>Invoices &amp; P&amp;L</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div><h4>Calendar</h4><p>Internal sync</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg><div><h4>Reports</h4><p>Analytics &amp; P&amp;L</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div><h4>Email</h4><p>Domain sending</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><div><h4>WhatsApp</h4><p>Web client</p></div></div>
+      <div class="lp-module"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg><div><h4>AI assistant</h4><p>Drafting &amp; suggestions</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== PRICING ============================== -->
+<section class="w2u-section" id="pricing" style="background:var(--w2u-bg-subtle);border-block:1px solid var(--w2u-border);">
+  <div class="w2u-container">
+    <div class="w2u-section-head is-center">
+      <span class="w2u-eyebrow">Pricing</span>
+      <h2 class="w2u-h1">Simple pricing that stays affordable as you grow</h2>
+      <p class="w2u-lead">Start from RM39, keep the core CRM light, and upgrade only when you need more seats, channels, or automation. Malaysia bills through Billplz; global bills through Stripe with a 7-day card trial.</p>
+    </div>
+
+    <div class="lp-price-grid lp-reveal">
+      <article class="lp-price">
+        <div class="lp-price-head">
+          <span class="lp-price-tier">Starter</span>
+          <span class="w2u-badge">Solo</span>
+        </div>
+        <div class="lp-price-amount">RM 39<span>/mo</span></div>
+        <p class="lp-price-desc">For solo operators who want core CRM, reminders, and light AI support without extra complexity.</p>
+        <div class="lp-price-feats">
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 user</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 workspace</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>1 main channel</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>7-day trial on Stripe</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Core CRM and tasks</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Basic AI drafting</span>
+        </div>
+        <div class="lp-price-spacer"></div>
+        <a href="/crm" class="w2u-btn w2u-btn-secondary w2u-btn-block" onclick="return openWork2UEntry(false);">Start Starter trial</a>
+      </article>
+
+      <article class="lp-price is-featured">
+        <div class="lp-price-head">
+          <span class="lp-price-tier">Elite</span>
+          <span class="w2u-badge w2u-badge-accent">Best value</span>
+        </div>
+        <div class="lp-price-amount">RM 99<span>/mo</span></div>
+        <p class="lp-price-desc">For teams that need collaboration, automation, and stronger reporting without jumping to Enterprise.</p>
+        <div class="lp-price-feats">
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Up to 5 users</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Up to 3 channels</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unified inbox</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>7-day trial on Stripe</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Accounting and reports</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>More AI credits</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automation and reminders</span>
+        </div>
+        <div class="lp-price-spacer"></div>
+        <a href="/crm" class="w2u-btn w2u-btn-primary w2u-btn-block" onclick="return openWork2UEntry(false);">Start Elite trial</a>
+      </article>
+
+      <article class="lp-price">
+        <div class="lp-price-head">
+          <span class="lp-price-tier">Enterprise</span>
+          <span class="w2u-badge">Custom</span>
+        </div>
+        <div class="lp-price-amount">Custom</div>
+        <p class="lp-price-desc">For custom workflow, SLA, and advanced control. Built for teams that need governance and a supported rollout.</p>
+        <div class="lp-price-feats">
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unlimited seats</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Custom channels and automations</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Custom permissions</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Dedicated onboarding</span>
+          <span class="lp-price-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>SLA and integrations</span>
+        </div>
+        <div class="lp-price-spacer"></div>
+        <a href="mailto:enquiry@work2u.io" class="w2u-btn w2u-btn-secondary w2u-btn-block">Talk to Work2U</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FAQ ============================== -->
+<section class="w2u-section" id="faq">
+  <div class="w2u-container w2u-container-narrow">
+    <div class="w2u-section-head">
+      <span class="w2u-eyebrow">FAQ</span>
+      <h2 class="w2u-h1">Frequently asked questions</h2>
+    </div>
+
+    <div class="w2u-accordion lp-reveal">
+      <details class="w2u-accordion-item">
+        <summary>What is Work2U CRM?</summary>
+        <div class="w2u-accordion-body">Work2U is an all-in-one business management platform combining tasks, leads, clients, accounting, receipt keeping, AI assistance, and communication tools in one system.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Which plan should I choose?</summary>
+        <div class="w2u-accordion-body">The registration flow recommends a fit based on your role, team size, channels, and automation needs. Starter is for solo users, Elite is the best-value team plan, and Enterprise covers custom workflow and governance.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Is there a free plan?</summary>
+        <div class="w2u-accordion-body">Pricing starts at RM39 per month. Founding users get free onboarding and priority setup during launch, but the product itself is not a free plan.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>How is my data stored?</summary>
+        <div class="w2u-accordion-body">Core data lives in Supabase with row-level security. The browser only handles the UI session, and enterprise customers can arrange a more custom data setup.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Can I use my own domain?</summary>
+        <div class="w2u-accordion-body">Yes. Custom domain and branded rollout support is available on higher plans, especially for enterprise setups that need a controlled experience.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Does it integrate with WhatsApp?</summary>
+        <div class="w2u-accordion-body">Yes. Work2U supports a QR-based WhatsApp Web style connection, so you can message clients from the dashboard without requiring the WhatsApp API for v1.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Is there an AI assistant?</summary>
+        <div class="w2u-accordion-body">Yes. AI helps draft replies, suggest next steps, and support workflow planning. You can also connect your own AI account for more control over usage.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Can I export my data?</summary>
+        <div class="w2u-accordion-body">Yes. Export invoices as PDF, reports as CSV, and backups at any time. Your data stays under your workspace ownership model.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Can I upload receipts?</summary>
+        <div class="w2u-accordion-body">Yes. Upload receipt images or PDFs so Work2U keeps expense records organised, making monthly review easier and P&amp;L reporting cleaner.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>How do I get support?</summary>
+        <div class="w2u-accordion-body">Email <a href="mailto:enquiry@work2u.io">enquiry@work2u.io</a>. Starter gets standard support, Elite gets priority support, and Enterprise gets dedicated onboarding and SLA-style support.</div>
+      </details>
+      <details class="w2u-accordion-item">
+        <summary>Why does the trial need a card?</summary>
+        <div class="w2u-accordion-body">The 7-day Stripe trial uses a card so you can continue smoothly after testing, while still being able to cancel before renewal if the plan is not the right fit.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FINAL CTA ============================== -->
+<section class="w2u-section-sm">
+  <div class="w2u-container">
+    <div class="lp-cta lp-reveal">
+      <h2 class="w2u-h1">Ready to run your business from one calm dashboard?</h2>
+      <p class="w2u-lead">Start with registration, pick the right plan, and move into a workspace built for follow-up, billing, and reminders.</p>
+      <a href="/crm" class="w2u-btn w2u-btn-primary w2u-btn-lg" onclick="return openWork2UEntry(false);">Open Work2U CRM</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================== FOOTER ============================== -->
+<footer class="w2u-footer">
+  <div class="w2u-container">
+    <div class="w2u-footer-grid">
+      <div class="w2u-footer-col">
+        <a href="/" class="w2u-brand" aria-label="Work2U home">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="color:var(--w2u-accent)">
+            <rect width="24" height="24" rx="6" fill="currentColor"/>
+            <path d="M5.9 8.2 L9.1 16.2 L12 10.4 L14.9 16.2 L18.1 8.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Work2U</span>
+        </a>
+        <p class="w2u-small w2u-mt-4" style="max-width:38ch;">A calm all-in-one CRM for teams that want clearer billing, less admin drift, and a better daily operating rhythm. Built in Malaysia by Saga X Ventures.</p>
+      </div>
+
+      <div class="w2u-footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#modules">Modules</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/crm" onclick="return openWork2UEntry(false);">Open CRM</a>
+        <a href="/login">Sign in</a>
+      </div>
+
+      <div class="w2u-footer-col">
+        <h4>Resources</h4>
+        <a href="#faq">FAQ</a>
+        <a href="/docs/index.html">Documentation</a>
+        <a href="/docs/work2u-data-api-map.md">API reference</a>
+        <a href="/docs/changelog.md">Changelog</a>
+        <a href="/launch-checklist.html">Launch checklist</a>
+      </div>
+
+      <div class="w2u-footer-col">
+        <h4>Company</h4>
+        <a href="https://sagaxventures.com">Saga X Ventures (NS0246319-H)</a>
+        <a href="mailto:enquiry@work2u.io">enquiry@work2u.io</a>
+        <a href="https://wa.me/60137732703">+60 13 773 2703</a>
+        <a href="/privacy-policy.html">Privacy policy</a>
+        <a href="/terms-of-service.html">Terms of service</a>
+        <a href="/service-policy.html">Service policy</a>
+      </div>
+    </div>
+
+    <div class="w2u-footer-bottom">
+      <span>&copy; 2026 Work2U — a product by Saga X Ventures (NS0246319-H)</span>
+      <span>136-1, Jalan Komersial Senawang, Taipan 1, 70450 Seremban, Negeri Sembilan</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Bar tindakan mudah alih -->
+<div class="lp-mobile-bar" aria-label="Quick actions">
+  <a href="/crm" class="w2u-btn w2u-btn-primary" onclick="return openWork2UEntry(false);">Start trial</a>
+  <a href="/login" class="w2u-btn w2u-btn-secondary">Sign in</a>
+</div>
+
+<!-- ==========================================================================
+     Overlay survey onboarding.
+     PENTING: openWork2USurvey() dalam skrip di bawah kini ubah hala terus ke
+     /crm, jadi overlay ini tidak pernah dibuka pada halaman langsung. Markup
+     dan semua id dikekalkan tepat supaya ia boleh dihidupkan semula tanpa
+     membina semula borang.
+     ========================================================================== -->
+<div id="work2u-survey-overlay" class="survey-overlay" aria-hidden="true">
+  <div class="survey-modal" role="dialog" aria-modal="true" aria-labelledby="work2u-survey-title">
+    <div class="survey-modal-head">
+      <div class="survey-modal-title">
+        <span class="w2u-eyebrow">Register-first onboarding</span>
+        <h3 id="work2u-survey-title">Tell us what you need when you register</h3>
+        <p>Answer a few short questions and we will recommend the right package, channels, and billing route before you enter the workspace. The result is saved so login feels smoother later.</p>
+      </div>
+      <button type="button" class="survey-modal-close" aria-label="Close survey" onclick="closeWork2USurvey()">&times;</button>
+    </div>
+
+    <div class="survey-modal-body">
+      <form id="work2u-survey-form" class="survey-form-shell">
+        <div class="survey-fields">
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-workspaceName">Workspace / business name</label>
+            <input class="survey-input" id="survey-workspaceName" name="workspaceName" type="text" placeholder="Your business name">
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-email">Business email / billing email</label>
+            <input class="survey-input" id="survey-email" name="email" type="email" placeholder="you@company.com">
+            <div class="survey-helper">Used for onboarding updates, billing, and follow-up reminders.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-role">Your role</label>
+            <select class="survey-select" id="survey-role" name="role" required>
+              <option value="Freelancer">Freelancer</option>
+              <option value="Property Agent">Property Agent</option>
+              <option value="Insurance Agent">Insurance Agent</option>
+              <option value="Corporate Team">Corporate Team</option>
+              <option value="Agency">Agency</option>
+              <option value="General Business">General Business</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-industry">Industry</label>
+            <input class="survey-input" id="survey-industry" name="industry" type="text" placeholder="Property, insurance, services, retail...">
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-teamSize">Team size</label>
+            <select class="survey-select" id="survey-teamSize" name="teamSize" required>
+              <option value="1">Solo / 1 person</option>
+              <option value="2-5">2 to 5 people</option>
+              <option value="6+">6 or more</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-mainChannel">Main channel</label>
+            <select class="survey-select" id="survey-mainChannel" name="mainChannel" required>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Email">Email</option>
+              <option value="Telegram">Telegram</option>
+            </select>
+          </div>
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-secondaryChannels">Secondary channels</label>
+            <input class="survey-input" id="survey-secondaryChannels" name="secondaryChannels" type="text" placeholder="Email, Telegram">
+            <div class="survey-helper">Optional. Separate with commas if you use more than one channel.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-aiMode">AI mode</label>
+            <select class="survey-select" id="survey-aiMode" name="aiMode">
+              <option value="draft">Draft only</option>
+              <option value="suggest">Suggest and rewrite</option>
+              <option value="workflow assist">Workflow assist</option>
+              <option value="auto-send">Auto-send with guardrails</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-reminderMode">Reminder mode</label>
+            <select class="survey-select" id="survey-reminderMode" name="reminderMode">
+              <option value="manual">Manual reminders</option>
+              <option value="suggest">Suggest reminders</option>
+              <option value="semi-auto">Semi-auto reminders</option>
+              <option value="auto-send">Auto reminders</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-workflowComplexity">Workflow complexity</label>
+            <select class="survey-select" id="survey-workflowComplexity" name="workflowComplexity">
+              <option value="standard">Standard</option>
+              <option value="medium">Medium</option>
+              <option value="high">High / custom</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-permissionNeeds">Custom permissions</label>
+            <select class="survey-select" id="survey-permissionNeeds" name="permissionNeeds">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-slaNeeds">SLA support</label>
+            <select class="survey-select" id="survey-slaNeeds" name="slaNeeds">
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-region">Region</label>
+            <select class="survey-select" id="survey-region" name="region">
+              <option value="Malaysia">Malaysia (Billplz)</option>
+              <option value="Global">Global (Stripe)</option>
+            </select>
+            <div class="survey-helper">We route billing based on your region so setup stays simple.</div>
+          </div>
+          <div class="survey-field">
+            <label class="survey-label" for="survey-language">Language</label>
+            <select class="survey-select" id="survey-language" name="language">
+              <option value="BM + English">BM + English</option>
+              <option value="English">English</option>
+              <option value="Malay">Malay</option>
+            </select>
+          </div>
+          <div class="survey-field full">
+            <label class="survey-label" for="survey-goal">Main goal / notes</label>
+            <textarea class="survey-textarea" id="survey-goal" name="goal" placeholder="Example: follow up prospects, send invoices, track receipts, or automate reminders..."></textarea>
+          </div>
+        </div>
+
+        <div class="survey-actions">
+          <button type="submit" class="w2u-btn w2u-btn-primary">Get recommendation</button>
+          <button type="button" class="w2u-btn w2u-btn-ghost" onclick="closeWork2USurvey()">Maybe later</button>
+        </div>
+        <div class="survey-helper w2u-mt-4">We only need a few details to recommend the best fit. Your answers are saved as a draft and can be refined later.</div>
+      </form>
+
+      <aside class="survey-result-shell" id="work2u-survey-result">
+        <div class="survey-result-badge" id="survey-result-badge">Recommendation preview</div>
+        <div class="survey-result-plan" id="survey-result-plan">Starter</div>
+        <p class="survey-result-copy" id="survey-result-copy">Answer the survey and we will recommend the best package for your workflow.</p>
+        <div class="survey-result-grid">
+          <div class="survey-result-metric">
+            <div class="tiny">Confidence</div>
+            <strong id="survey-result-confidence">--</strong>
+          </div>
+          <div class="survey-result-metric">
+            <div class="tiny">First channel</div>
+            <strong id="survey-result-channel">WhatsApp</strong>
+          </div>
+        </div>
+        <ul class="survey-result-list" id="survey-result-list">
+          <li>We will use your answers to shape the dashboard and package suggestion.</li>
+          <li>After that, you can continue to login and start the workspace setup.</li>
+        </ul>
+        <div class="survey-actions">
+          <a id="survey-continue-link" href="/crm" class="w2u-btn w2u-btn-primary">Continue to CRM</a>
+          <button type="button" class="w2u-btn w2u-btn-ghost" onclick="closeWork2USurvey()">Close</button>
+        </div>
+        <div class="survey-result-note" id="survey-result-note">Survey answers are saved locally and can be synced when you log in.</div>
+      </aside>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    const DRAFT_KEY = 'work2uSurveyDraft';
+    const RESULT_KEY = 'work2uSurveyResult';
+    const COMPLETE_KEY = 'work2uSurveyComplete';
+    const DISMISSED_KEY = 'work2uSurveyDismissed';
+
+    function getSurveyOverlay() { return document.getElementById('work2u-survey-overlay'); }
+    function getSurveyForm() { return document.getElementById('work2u-survey-form'); }
+    function getSurveyResultList() { return document.getElementById('survey-result-list'); }
+    function getSurveyValue(id) {
+      const el = document.getElementById(id);
+      return el ? String(el.value || '').trim() : '';
+    }
+    function setSurveyValue(id, value) {
+      const el = document.getElementById(id);
+      if (!el || value === undefined || value === null) return;
+      el.value = String(value);
+    }
+    function hasSurveyComplete() {
+      return localStorage.getItem(COMPLETE_KEY) === '1';
+    }
+    function readJson(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || 'null');
+      } catch (error) {
+        return null;
+      }
+    }
+    function writeJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+    function loadSurveyDraft() {
+      return readJson(DRAFT_KEY) || {};
+    }
+    function loadSurveyResult() {
+      return readJson(RESULT_KEY) || null;
+    }
+    function buildSurveyContinueHref(result) {
+      const recommendation = result && result.recommendation ? result.recommendation : {};
+      const plan = String(recommendation.planCode || 'Starter').toLowerCase();
+      const url = new URL('/crm', window.location.origin);
+      url.searchParams.set('survey', '1');
+      url.searchParams.set('plan', plan);
+      return url.pathname + url.search;
+    }
+    function saveSurveyDraft() {
+      writeJson(DRAFT_KEY, {
+        workspaceName: getSurveyValue('survey-workspaceName'),
+        email: getSurveyValue('survey-email'),
+        role: getSurveyValue('survey-role'),
+        industry: getSurveyValue('survey-industry'),
+        teamSize: getSurveyValue('survey-teamSize'),
+        mainChannel: getSurveyValue('survey-mainChannel'),
+        secondaryChannels: getSurveyValue('survey-secondaryChannels'),
+        aiMode: getSurveyValue('survey-aiMode'),
+        reminderMode: getSurveyValue('survey-reminderMode'),
+        workflowComplexity: getSurveyValue('survey-workflowComplexity'),
+        permissionNeeds: getSurveyValue('survey-permissionNeeds'),
+        slaNeeds: getSurveyValue('survey-slaNeeds'),
+        region: getSurveyValue('survey-region'),
+        language: getSurveyValue('survey-language'),
+        goal: getSurveyValue('survey-goal')
+      });
+    }
+    function renderSurveyResult(result) {
+      const recommendation = result && result.recommendation ? result.recommendation : {};
+      const survey = result && result.survey ? result.survey : {};
+      const plan = String(recommendation.planCode || 'Starter');
+      const reasons = Array.isArray(recommendation.reasons) ? recommendation.reasons : [];
+      const channels = Array.isArray(recommendation.channels) ? recommendation.channels : [];
+      const profile = recommendation.packageProfile || {};
+      const billingRoute = String(survey.region || '').toLowerCase() === 'global' ? 'Stripe with a 7-day card trial' : 'Billplz for Malaysia billing';
+      const planLabel = document.getElementById('survey-result-plan');
+      const badge = document.getElementById('survey-result-badge');
+      const copy = document.getElementById('survey-result-copy');
+      const confidence = document.getElementById('survey-result-confidence');
+      const channel = document.getElementById('survey-result-channel');
+      const note = document.getElementById('survey-result-note');
+      const continueLink = document.getElementById('survey-continue-link');
+      const list = getSurveyResultList();
+      if (planLabel) planLabel.textContent = plan;
+      if (badge) badge.textContent = result && result.profileSync && result.profileSync.synced ? 'Saved and synced' : 'Saved locally';
+      if (copy) {
+        const reasonText = profile.fitSummary || (reasons.length ? reasons.slice(0, 2).join(' ') : 'We will keep the setup lightweight and focused.');
+        copy.textContent = `We recommend ${plan} for your workflow. ${reasonText}`;
+      }
+      if (confidence) confidence.textContent = `${Math.round(Number(recommendation.confidence || 0)) || '--'}%`;
+      if (channel) channel.textContent = channels[0] || survey.mainChannel || 'WhatsApp';
+      if (note) note.textContent = result && result.profileSync && result.profileSync.synced
+        ? 'Your profile package mirror has been updated in Supabase.'
+        : 'Your answers are saved locally and will sync when profile details are available.';
+      if (continueLink) {
+        continueLink.href = buildSurveyContinueHref(result);
+      }
+      if (list) {
+        const items = [
+          `Best fit: ${plan}`,
+          profile.priceHint ? `Pricing: ${profile.priceHint}` : null,
+          profile.tagline ? profile.tagline : null,
+          recommendation.score !== undefined ? `Survey score: ${recommendation.score}` : null,
+          recommendation.confidence !== undefined ? `Confidence: ${Math.round(recommendation.confidence)}%` : null,
+          survey.region ? `Region: ${survey.region}` : null,
+          billingRoute ? `Billing: ${billingRoute}` : null,
+          channels.length ? `Main channels: ${channels.join(', ')}` : null,
+          survey.goal ? `Goal: ${survey.goal}` : null
+        ].filter(Boolean);
+        list.innerHTML = items.map((item) => `<li>${item}</li>`).join('');
+      }
+    }
+    function renderSurveyPlaceholder() {
+      renderSurveyResult({
+        recommendation: {
+          planCode: 'Starter',
+          confidence: 0,
+          reasons: ['Answer the survey to generate a recommendation.'],
+          channels: ['WhatsApp']
+        },
+        survey: {}
+      });
+      const badge = document.getElementById('survey-result-badge');
+      if (badge) badge.textContent = 'Recommendation preview';
+      const note = document.getElementById('survey-result-note');
+      if (note) note.textContent = 'Survey answers are saved locally and can be synced when you log in.';
+    }
+    function hydrateSurveyForm() {
+      const draft = loadSurveyDraft();
+      if (!draft || typeof draft !== 'object') return;
+      setSurveyValue('survey-workspaceName', draft.workspaceName || '');
+      setSurveyValue('survey-email', draft.email || '');
+      setSurveyValue('survey-role', draft.role || 'Freelancer');
+      setSurveyValue('survey-industry', draft.industry || '');
+      setSurveyValue('survey-teamSize', draft.teamSize || '1');
+      setSurveyValue('survey-mainChannel', draft.mainChannel || 'WhatsApp');
+      setSurveyValue('survey-secondaryChannels', draft.secondaryChannels || '');
+      setSurveyValue('survey-aiMode', draft.aiMode || 'draft');
+      setSurveyValue('survey-reminderMode', draft.reminderMode || 'manual');
+      setSurveyValue('survey-workflowComplexity', draft.workflowComplexity || 'standard');
+      setSurveyValue('survey-permissionNeeds', draft.permissionNeeds || 'no');
+      setSurveyValue('survey-slaNeeds', draft.slaNeeds || 'no');
+      setSurveyValue('survey-region', draft.region || 'Malaysia');
+      setSurveyValue('survey-language', draft.language || 'BM + English');
+      setSurveyValue('survey-goal', draft.goal || '');
+    }
+    function openWork2USurvey(forceSurvey) {
+      window.location.href = '/crm';
+      return false;
+    }
+    function closeWork2USurvey() {
+      const overlay = getSurveyOverlay();
+      if (!overlay) return;
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (!hasSurveyComplete()) {
+        sessionStorage.setItem(DISMISSED_KEY, '1');
+      }
+    }
+    async function submitWork2USurvey(event) {
+      event.preventDefault();
+      const form = getSurveyForm();
+      if (!form) return;
+      const submitButton = form.querySelector('button[type="submit"]');
+      const originalLabel = submitButton ? submitButton.textContent : '';
+      const payload = {
+        workspaceName: getSurveyValue('survey-workspaceName'),
+        email: getSurveyValue('survey-email'),
+        role: getSurveyValue('survey-role'),
+        industry: getSurveyValue('survey-industry'),
+        teamSize: getSurveyValue('survey-teamSize'),
+        mainChannel: getSurveyValue('survey-mainChannel'),
+        secondaryChannels: getSurveyValue('survey-secondaryChannels'),
+        aiMode: getSurveyValue('survey-aiMode'),
+        reminderMode: getSurveyValue('survey-reminderMode'),
+        workflowComplexity: getSurveyValue('survey-workflowComplexity'),
+        permissionNeeds: getSurveyValue('survey-permissionNeeds'),
+        slaNeeds: getSurveyValue('survey-slaNeeds'),
+        region: getSurveyValue('survey-region'),
+        language: getSurveyValue('survey-language'),
+        goal: getSurveyValue('survey-goal'),
+        authMethod: 'Email',
+        mailboxType: 'Own email'
+      };
+
+      saveSurveyDraft();
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Getting recommendation...';
+      }
+
+      try {
+        const response = await fetch('/api/work2u/survey', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(function() { return {}; });
+        if (!response.ok || !data.success) {
+          throw new Error((data && data.error && data.error.message) || data.error || 'Unable to save survey');
+        }
+
+        localStorage.setItem(COMPLETE_KEY, '1');
+        localStorage.removeItem(DISMISSED_KEY);
+        writeJson(RESULT_KEY, data.data || {});
+        writeJson(DRAFT_KEY, payload);
+        renderSurveyResult(data.data || {});
+      } catch (error) {
+        const badge = document.getElementById('survey-result-badge');
+        const note = document.getElementById('survey-result-note');
+        if (badge) badge.textContent = 'Survey save failed';
+        if (note) note.textContent = error.message || 'Please try again.';
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalLabel || 'Get recommendation';
+        }
+      }
+    }
+    function onSurveyKeyDown(event) {
+      if (event.key === 'Escape') closeWork2USurvey();
+    }
+    function openWork2UEntry(forceSurvey) {
+      return openWork2USurvey(forceSurvey === true);
+    }
+
+    window.openWork2USurvey = openWork2USurvey;
+    window.closeWork2USurvey = closeWork2USurvey;
+    window.openWork2UEntry = openWork2UEntry;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const overlay = getSurveyOverlay();
+      const form = getSurveyForm();
+      if (overlay) {
+        overlay.addEventListener('click', function(event) {
+          if (event.target === overlay) closeWork2USurvey();
+        });
+      }
+      if (form) {
+        form.addEventListener('submit', submitWork2USurvey);
+        form.addEventListener('input', saveSurveyDraft);
+        form.addEventListener('change', saveSurveyDraft);
+      }
+      document.addEventListener('keydown', onSurveyKeyDown);
+
+      hydrateSurveyForm();
+      if (hasSurveyComplete()) {
+        renderSurveyResult(loadSurveyResult());
+      } else {
+        renderSurveyPlaceholder();
+      }
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    const targets = document.querySelectorAll('.w2u-section-head, .lp-hero-copy, .lp-reveal');
+    const reveal = (el) => el.classList.add('is-visible');
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            reveal(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.16 });
+      targets.forEach((el) => observer.observe(el));
+    } else {
+      targets.forEach(reveal);
+    }
+
+    const heroCopy = document.querySelector('.lp-hero-copy');
+    if (heroCopy) reveal(heroCopy);
+  })();
+</script>
+
+<script>
+  (function () {
+    const previewCycle = ['WhatsApp', 'Email', 'Telegram'];
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let previewAutoTimer = null;
+    let previewActiveChannel = 'WhatsApp';
+
+    const presets = {
+      WhatsApp: {
+        kicker: 'WhatsApp-first workflow',
+        title: 'Fast replies from the dashboard',
+        copy: 'Scan the QR, reply inside Work2U, and keep the follow-up moving without switching tools.',
+        pills: ['QR web client', 'Auto reminder', 'Client follow-up'],
+        statusTitle: 'WhatsApp channel live',
+        statusCopy: 'Fast replies, smarter follow-up, and less tab switching.',
+        spotlight: 'Now showing: WhatsApp, live replies, and QR-first control'
+      },
+      Email: {
+        kicker: 'Email-first workflow',
+        title: 'Send invoices and updates cleanly',
+        copy: 'Use your own inbox or the Work2U domain to send documents, proposals, and follow-up emails from one place.',
+        pills: ['Receipt trail', 'Document send', 'Client inbox'],
+        statusTitle: 'Email delivery synced',
+        statusCopy: 'Documents and reminders stay structured for client follow-up.',
+        spotlight: 'Now showing: Email, invoices, and document delivery'
+      },
+      Telegram: {
+        kicker: 'Telegram-first workflow',
+        title: 'Bot-led messages that cost less',
+        copy: 'Work2U bot can route reminders and follow-up messages quickly for teams that prefer a leaner channel setup.',
+        pills: ['Bot send', 'Low setup cost', 'Quick automation'],
+        statusTitle: 'Telegram automation ready',
+        statusCopy: 'Use the bot for lean reminders and fast client pings.',
+        spotlight: 'Now showing: Telegram, bot routing, and lean alerts'
+      }
+    };
+
+    function flashPreviewState() {
+      const preview = document.querySelector('.dashboard-preview');
+      const statusLine = document.querySelector('.preview-statusline');
+      const floatCard = document.querySelector('.preview-float-card');
+      const focusCard = document.querySelector('.preview-focus-card');
+      const previewCards = Array.from(document.querySelectorAll('.dashboard-preview .preview-card, .dashboard-preview .preview-sidebar, .dashboard-preview .preview-channel-switcher'));
+
+      if (preview) {
+        preview.classList.add('preview-switching');
+        window.setTimeout(function() { preview.classList.remove('preview-switching'); }, 420);
+      }
+      if (statusLine) {
+        statusLine.classList.remove('preview-switching');
+        void statusLine.offsetWidth;
+        statusLine.classList.add('preview-switching');
+        window.setTimeout(function() { statusLine.classList.remove('preview-switching'); }, 420);
+      }
+      if (floatCard) {
+        floatCard.classList.add('preview-switching');
+        window.setTimeout(function() { floatCard.classList.remove('preview-switching'); }, 420);
+      }
+      if (focusCard) {
+        focusCard.classList.add('preview-switching');
+        window.setTimeout(function() { focusCard.classList.remove('preview-switching'); }, 420);
+      }
+      previewCards.forEach(function(card, index) {
+        const delay = index * 70;
+        window.setTimeout(function() {
+          card.classList.add('preview-switching');
+        }, delay);
+        window.setTimeout(function() {
+          card.classList.remove('preview-switching');
+        }, delay + 520);
+      });
+    }
+
+    function schedulePreviewAutoRotate(delay) {
+      if (prefersReducedMotion) return;
+      window.clearTimeout(previewAutoTimer);
+      previewAutoTimer = window.setTimeout(function() {
+        const currentIndex = Math.max(0, previewCycle.indexOf(previewActiveChannel));
+        const nextChannel = previewCycle[(currentIndex + 1) % previewCycle.length];
+        setPreviewChannel(nextChannel, { auto: true });
+        schedulePreviewAutoRotate(7000);
+      }, delay || 8200);
+    }
+
+    function setPreviewChannel(channel, options) {
+      const nextChannel = previewCycle.indexOf(channel) !== -1 ? channel : 'WhatsApp';
+      previewActiveChannel = nextChannel;
+      const preset = presets[nextChannel] || presets.WhatsApp;
+      const kicker = document.getElementById('preview-channel-kicker');
+      const title = document.getElementById('preview-channel-title');
+      const copy = document.getElementById('preview-channel-copy');
+      const pills = [
+        document.getElementById('preview-channel-pill-1'),
+        document.getElementById('preview-channel-pill-2'),
+        document.getElementById('preview-channel-pill-3')
+      ];
+      const statusTitle = document.getElementById('preview-status-title');
+      const statusCopy = document.getElementById('preview-status-copy');
+      const spotlight = document.getElementById('preview-channel-spotlight');
+      const preview = document.querySelector('.dashboard-preview');
+      const spotlightEl = document.querySelector('.preview-channel-spotlight');
+
+      if (kicker) kicker.textContent = preset.kicker;
+      if (title) title.textContent = preset.title;
+      if (copy) copy.textContent = preset.copy;
+      if (statusTitle) statusTitle.textContent = preset.statusTitle || 'Live sync ready';
+      if (statusCopy) statusCopy.textContent = preset.statusCopy || 'Channel reminders, AI suggestions, and follow-up notes stay in one flow.';
+      if (spotlight) spotlight.textContent = preset.spotlight || ('Now showing: ' + nextChannel);
+      if (preview) preview.dataset.previewChannel = nextChannel.toLowerCase();
+      const previewCards = document.querySelectorAll('.dashboard-preview .preview-card, .dashboard-preview .preview-sidebar, .dashboard-preview .preview-channel-switcher');
+      pills.forEach(function(pill, index) {
+        if (pill) pill.textContent = preset.pills[index] || '';
+      });
+      if (spotlightEl) {
+        spotlightEl.classList.remove('preview-switching');
+        void spotlightEl.offsetWidth;
+        spotlightEl.classList.add('preview-switching');
+        window.setTimeout(function() { spotlightEl.classList.remove('preview-switching'); }, 420);
+      }
+      previewCards.forEach(function(card) {
+        card.classList.add('preview-switching');
+        window.setTimeout(function() { card.classList.remove('preview-switching'); }, 420);
+      });
+      document.querySelectorAll('[data-preview-channel]').forEach(function(button) {
+        const isActive = button.dataset.previewChannel === nextChannel;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      flashPreviewState();
+
+      if (!options || !options.auto) {
+        schedulePreviewAutoRotate(8200);
+      }
+    }
+
+    document.querySelectorAll('[data-preview-channel]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        setPreviewChannel(button.dataset.previewChannel);
+      });
+    });
+
+    setPreviewChannel('WhatsApp', { auto: true });
+    schedulePreviewAutoRotate(8200);
+  })();
+</script>
+
+<script>
+  /* Suis tema dan menu mudah alih. Dipisahkan dari logik survey/preview
+     supaya kedua-duanya boleh berubah tanpa mengganggu yang lain. */
+  (function () {
+    var root = document.documentElement;
+
+    function currentTheme() {
+      var explicit = root.getAttribute('data-theme');
+      if (explicit) return explicit;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark' : 'light';
+    }
+
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var next = currentTheme() === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('w2u-theme', next); } catch (e) {}
+      });
+    }
+
+    var navToggle = document.getElementById('nav-toggle');
+    var nav = document.getElementById('site-nav');
+    if (navToggle && nav) {
+      navToggle.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      /* Tutup menu selepas melompat ke satu seksyen, jika tidak ia menutup
+         kandungan yang baru saja dilompat ke sana. */
+      nav.querySelectorAll('.w2u-nav-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+          nav.classList.remove('is-open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
