@@ -26,14 +26,23 @@
   --w2u-n900: #0f172a;
   --w2u-n950: #020617;
 
-  /* Aksen */
-  --w2u-accent-50:  #eff6ff;
-  --w2u-accent-100: #dbeafe;
-  --w2u-accent-200: #bfdbfe;
-  --w2u-accent-400: #60a5fa;
-  --w2u-accent:     #2563eb;
-  --w2u-accent-600: #1d4ed8;
-  --w2u-accent-700: #1e40af;
+  /* Aksen — indigo hidup ala Stripe (#635bff), menggantikan biru korporat.
+     Ramp dijaga supaya kontras kekal lulus: -50/-100 untuk latar tint,
+     -600/-700 untuk hover/aktif, -400 untuk permukaan gelap. */
+  --w2u-accent-50:  #f1f0ff;
+  --w2u-accent-100: #e4e2ff;
+  --w2u-accent-200: #cbc7ff;
+  --w2u-accent-400: #9d97ff;
+  --w2u-accent:     #635bff;
+  --w2u-accent-600: #4f46e5;
+  --w2u-accent-700: #4338ca;
+
+  /* Warna kecerunan tandatangan — dipakai pada hero dan panel aksen */
+  --w2u-grad-1: #635bff;   /* indigo */
+  --w2u-grad-2: #4f8bff;   /* biru */
+  --w2u-grad-3: #00d4ff;   /* sian */
+  --w2u-grad-4: #ff5fa2;   /* merah jambu */
+  --w2u-grad-5: #ffb85c;   /* kuning hangat */
 
   /* Semantik - guna berjimat, hanya untuk status sebenar */
   --w2u-success:    #059669;
@@ -291,9 +300,12 @@ hr {
 }
 
 .w2u-display {
-  font-size: clamp(2.25rem, 1.35rem + 3.6vw, 3.75rem);
-  letter-spacing: var(--w2u-track-tight);
+  /* Diperbesar ke arah skala hero Stripe: sehingga ~76px, jejak lebih
+     ketat, berat penuh. Inilah yang memberi rupa "mahal dan yakin". */
+  font-size: clamp(2.75rem, 1.4rem + 5.2vw, 4.75rem);
+  letter-spacing: -0.03em;
   font-weight: var(--w2u-weight-bold);
+  line-height: 1.05;
 }
 .w2u-h1 {
   font-size: clamp(1.875rem, 1.35rem + 2.1vw, 2.75rem);
@@ -980,3 +992,63 @@ hr {
 
 @media (max-width: 768px) { .w2u-hide-mobile { display: none !important; } }
 @media (min-width: 769px) { .w2u-hide-desktop { display: none !important; } }
+
+/* --------------------------------------------------------------------------
+   18. Kecerunan tandatangan (berinspirasi Stripe)
+   Kecerunan bersudut warna-warni untuk latar hero dan panel aksen. Teks
+   tidak pernah diletak terus atasnya tanpa lapisan legap atau overlay.
+   -------------------------------------------------------------------------- */
+
+/* Sapuan bersudut penuh — indigo → biru → sian → merah jambu → kuning */
+.w2u-gradient {
+  background:
+    linear-gradient(
+      115deg,
+      var(--w2u-grad-1) 0%,
+      var(--w2u-grad-2) 28%,
+      var(--w2u-grad-3) 50%,
+      var(--w2u-grad-4) 74%,
+      var(--w2u-grad-5) 100%
+    );
+}
+
+/* Versi lembut untuk cahaya latar di belakang kandungan terang */
+.w2u-gradient-soft {
+  background:
+    radial-gradient(60% 80% at 15% 10%, color-mix(in srgb, var(--w2u-grad-1) 24%, transparent), transparent 60%),
+    radial-gradient(55% 75% at 85% 5%, color-mix(in srgb, var(--w2u-grad-4) 20%, transparent), transparent 55%),
+    radial-gradient(50% 60% at 55% 0%, color-mix(in srgb, var(--w2u-grad-3) 16%, transparent), transparent 55%);
+}
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .w2u-gradient-soft {
+    background:
+      radial-gradient(60% 80% at 15% 10%, rgba(99, 91, 255, 0.18), transparent 60%),
+      radial-gradient(55% 75% at 85% 5%, rgba(255, 95, 162, 0.15), transparent 55%);
+  }
+}
+
+/* Teks kecerunan — untuk satu perkataan sorotan dalam tajuk */
+.w2u-gradient-text {
+  background: linear-gradient(100deg, var(--w2u-grad-1), var(--w2u-grad-4));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Sempadan kecerunan nipis untuk kad menonjol */
+.w2u-gradient-ring {
+  position: relative;
+}
+.w2u-gradient-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, var(--w2u-grad-1), var(--w2u-grad-4));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}

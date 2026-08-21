@@ -24,13 +24,21 @@
   border-right: 1px solid var(--w2u-border);
   overflow: hidden;
 }
+/* Cahaya kecerunan tandatangan di sebalik panel naratif */
 .auth-aside::before {
   content: "";
   position: absolute;
-  left: -140px; top: -180px;
-  width: 620px; height: 520px;
-  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.12), transparent 68%);
+  inset: 0;
+  background:
+    radial-gradient(60% 55% at 10% 8%, color-mix(in srgb, var(--w2u-grad-1) 30%, transparent), transparent 62%),
+    radial-gradient(55% 50% at 90% 12%, color-mix(in srgb, var(--w2u-grad-4) 24%, transparent), transparent 58%),
+    radial-gradient(50% 45% at 60% 100%, color-mix(in srgb, var(--w2u-grad-3) 20%, transparent), transparent 60%);
   pointer-events: none;
+}
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .auth-aside::before {
+    background: radial-gradient(ellipse at 20% 10%, rgba(99, 91, 255, 0.20), transparent 68%);
+  }
 }
 .auth-aside > * { position: relative; }
 

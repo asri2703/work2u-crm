@@ -63,20 +63,35 @@
 
 .lp-hero {
   position: relative;
-  padding-block: var(--w2u-s20) var(--w2u-s16);
+  padding-block: var(--w2u-s24) var(--w2u-s20);
   overflow: hidden;
 }
-/* Satu cahaya lembut sahaja, bukan orb kabur bertindih */
+/* Kecerunan tandatangan ala Stripe: sapuan bersudut warna-warni di bahagian
+   atas, memudar ke latar halaman supaya teks di bawah kekal boleh dibaca.
+   Bukan blok pekat — ia cahaya, jadi tajuk gelap masih berkontras tinggi. */
 .lp-hero::before {
   content: "";
   position: absolute;
-  left: 50%; top: -320px;
-  width: 900px; height: 640px;
-  margin-left: -450px;
-  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.10), transparent 68%);
+  inset: -40% 0 auto 0;
+  height: 900px;
+  background:
+    radial-gradient(50% 60% at 12% 0%, color-mix(in srgb, var(--w2u-grad-1) 42%, transparent), transparent 60%),
+    radial-gradient(45% 55% at 42% -8%, color-mix(in srgb, var(--w2u-grad-2) 34%, transparent), transparent 60%),
+    radial-gradient(45% 55% at 68% -4%, color-mix(in srgb, var(--w2u-grad-3) 30%, transparent), transparent 58%),
+    radial-gradient(48% 55% at 92% 2%, color-mix(in srgb, var(--w2u-grad-4) 36%, transparent), transparent 60%);
+  -webkit-mask: linear-gradient(180deg, #000 0%, #000 30%, transparent 78%);
+          mask: linear-gradient(180deg, #000 0%, #000 30%, transparent 78%);
   pointer-events: none;
   z-index: 0;
 }
+/* Fallback tanpa color-mix: kecerunan linear ringkas */
+@supports not (background: color-mix(in srgb, red 50%, transparent)) {
+  .lp-hero::before {
+    background: linear-gradient(115deg,
+      rgba(99,91,255,0.30), rgba(0,212,255,0.22) 50%, rgba(255,95,162,0.28));
+  }
+}
+:root[data-theme="dark"] .lp-hero::before { opacity: 0.55; }
 .lp-hero > * { position: relative; z-index: 1; }
 
 .lp-hero-copy { max-width: 720px; }
@@ -119,10 +134,31 @@
    bergantung padanya. Gayanya sahaja yang diganti.
    ------------------------------------------------------------------------ */
 
-.lp-preview-wrap { margin-top: var(--w2u-s16); }
+.lp-preview-wrap {
+  position: relative;
+  margin-top: var(--w2u-s16);
+}
+/* Panel kecerunan bertindih di belakang mock, memberi kedalaman ala Stripe.
+   Ia diputar sedikit dan diofset, dengan bayang, supaya mock utama nampak
+   melayang di atas lapisan berwarna. Disembunyikan pada mudah alih supaya
+   tak berselerak. */
+.lp-preview-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -18px -10px 28px -10px;
+  border-radius: var(--w2u-r-2xl);
+  background: linear-gradient(120deg, var(--w2u-grad-1), var(--w2u-grad-3) 55%, var(--w2u-grad-4));
+  opacity: 0.16;
+  transform: rotate(-1.4deg);
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 0;
+}
+@media (max-width: 700px) { .lp-preview-wrap::before { display: none; } }
 
 .dashboard-preview {
   position: relative;
+  z-index: 1;
   border: 1px solid var(--w2u-border);
   border-radius: var(--w2u-r-xl);
   background: var(--w2u-surface);
@@ -757,7 +793,7 @@
         Built in Malaysia by Saga X Ventures
       </span>
 
-      <h1 class="w2u-display">One platform for follow-up, billing, and AI-assisted business</h1>
+      <h1 class="w2u-display">One platform for <span class="w2u-gradient-text">follow-up, billing,</span> and AI-assisted business</h1>
 
       <p class="w2u-lead">Work2U keeps leads, tasks, invoices, reminders, and client messaging in one calm dashboard — so nothing depends on remembering it. Built for property agents, insurance agents, freelancers, and small teams.</p>
 
