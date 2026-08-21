@@ -1058,7 +1058,10 @@ function webhookSecretCandidates(channel = '') {
 
 function verifyChannelWebhookSecret(req, body, channel = '') {
   const candidates = webhookSecretCandidates(channel);
-  if (!candidates.length) return true;
+  // Fail closed: with no secret configured, reject rather than accept every
+  // caller. The handler turns this into a clear 503 before it gets here, but
+  // returning false keeps this safe if it is ever called on its own.
+  if (!candidates.length) return false;
   const provided = String(body?.secret || req.headers['x-work2u-webhook-secret'] || req.headers['x-webhook-secret'] || '').trim();
   return candidates.includes(provided);
 }
@@ -1071,6 +1074,11 @@ async function handleWork2uChannelWebhook(req, res, forcedChannel = '') {
     return send(res, 400, { error: 'channel must be whatsapp or telegram' });
   }
 
+  // No secret configured for this channel → the endpoint is not enabled. Say so
+  // plainly instead of silently accepting unauthenticated calls.
+  if (!webhookSecretCandidates(channel).length) {
+    return send(res, 503, { error: 'Webhook secret not configured for ' + channel });
+  }
   if (!verifyChannelWebhookSecret(req, body, channel)) {
     return send(res, 401, { error: 'Invalid webhook secret' });
   }
