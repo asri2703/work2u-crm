@@ -3777,6 +3777,16 @@ function groqCors(req) {
   return headers;
 }
 
+/* The qwen model emits chain-of-thought in <think>...</think> before the
+ * answer. Left in, the assistant shows the user its internal reasoning.
+ * Strip it and keep only the answer. */
+function stripThinking(content) {
+  if (!content) return '';
+  let out = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  if (/<think>/i.test(out)) out = out.replace(/<think>[\s\S]*$/i, '').trim();
+  return out;
+}
+
 async function handleGroq(req, res) {
   const cors = groqCors(req);
 
@@ -3817,7 +3827,7 @@ async function handleGroq(req, res) {
           },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 600
+        max_tokens: 1024
       })
     });
 
@@ -3833,7 +3843,7 @@ async function handleGroq(req, res) {
     return send(
       res,
       200,
-      { text: data.choices?.[0]?.message?.content || 'No response' },
+      { text: stripThinking(data.choices?.[0]?.message?.content) || 'No response' },
       cors
     );
   } catch (e) {

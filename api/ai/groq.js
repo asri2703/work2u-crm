@@ -70,7 +70,7 @@ export default async function handler(req, res) {
           },
           { role: 'user', content: text }
         ],
-        max_tokens: 600
+        max_tokens: 1024
       })
     });
 
@@ -83,9 +83,23 @@ export default async function handler(req, res) {
     }
 
     const data = await r.json();
-    return res.status(200).json({ text: data.choices?.[0]?.message?.content || 'No response' });
+    const answer = stripThinking(data.choices?.[0]?.message?.content) || 'No response';
+    return res.status(200).json({ text: answer });
   } catch (e) {
     console.error('Groq request failed', e);
     return res.status(500).json({ error: 'Assistant request failed' });
   }
+}
+
+/* The qwen model emits its chain-of-thought inside <think>...</think> before
+ * the actual answer. Left in, the assistant shows the user a wall of internal
+ * reasoning. Strip the block and return only the answer. If a response is
+ * somehow all thinking with no answer after it, fall back to the stripped
+ * remainder so the user still sees something. */
+function stripThinking(content) {
+  if (!content) return '';
+  let out = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // Handle an unclosed <think> (truncated output)
+  if (/<think>/i.test(out)) out = out.replace(/<think>[\s\S]*$/i, '').trim();
+  return out;
 }
