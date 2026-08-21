@@ -118,6 +118,41 @@ Billplz, and Resend keys — at `GET /.env.local`. Never exposed in production
 unauthenticated, because of a responder signature mismatch. Fixed. Production
 was unaffected (different call path).
 
+## Deployment model — needs a decision
+
+Vercel now auto-detects the root `server.js` and runs the whole site through
+it as one serverless function. `functions.includeFiles` in `vercel.json` makes
+that work for static files, but it leaves one gap: with `server.js` as the sole
+entrypoint, the `api/` serverless functions are never reached.
+
+That matters because the two backends are split:
+
+- **In `server.js` only** (these work): `/api/public-config`,
+  `/api/work2u/*`, `/api/billing/*`, `/api/telegram/*`, `/api/ai/groq`, Google
+  OAuth.
+- **In `api/` functions only** (these do NOT work under the current model):
+  email auth — `/api/auth/login`, `/register`, `/session`, `/logout`,
+  `/magic-link`.
+
+So email login/register does not work in this deploy model. (Note: the current
+live production is the opposite — it serves the `api/` functions but not the
+`server.js` routes, so `/api/public-config` and the work2u/billing routes
+404 there. Neither model serves both.)
+
+Reconciling this is an architecture decision, not a patch. The two clean
+options:
+
+1. **Make `server.js` the single backend.** Port the five email-auth routes
+   from `api/` into `server.js`. Then everything runs through one function and
+   the `api/` directory can go. Simplest to reason about.
+2. **Make `api/` functions the single backend.** Serve static files directly
+   (framework preset "Other"), and port the `server.js`-only routes into
+   individual `api/` functions. More functions, but static files serve from the
+   CDN instead of through a function.
+
+Until then, the deployed site renders and navigates correctly, but email
+sign-in will not complete.
+
 ## Still open — not fixed here
 
 - **Auth carries the password hash inside the JWT.** The no-database design
