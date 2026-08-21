@@ -153,18 +153,42 @@ options:
 Until then, the deployed site renders and navigates correctly, but email
 sign-in will not complete.
 
-## Still open — not fixed here
+## Still open — the Supabase work
 
-- **Auth carries the password hash inside the JWT.** The no-database design
-  puts the PBKDF2 hash in the signed-but-readable cookie payload, so anyone who
+- **The CRM's data lives only in the browser.** The dashboard reads and writes
+  tasks, leads, clients, invoices, cases, etc. through `localStorage` only — it
+  calls just three APIs (AI, billing checkout, expense receipts). So data does
+  not survive a browser or device change, is not shared between users, and is
+  not backed up. Wiring these collections to Supabase (schema and RLS already
+  defined in `work2u-master-deploy-bundle.sql`) is the main remaining build. The
+  `OBJECTS` registry added for the boards is shaped to map straight onto those
+  tables — see `study-twenty-crm.md`.
+- **Auth carries the password hash inside the JWT.** The no-database design puts
+  the PBKDF2 hash in the signed-but-readable cookie payload, so anyone who
   captures a cookie can attempt an offline crack. Closing this means moving
   identity into Supabase (anon key and RLS are already set up). See the comment
-  at the top of `api/_lib/auth.js`.
-- **The webhook secret has a hardcoded fallback.** `api/whatsapp/webhook.js`
-  falls back to `'work2u_webhook_secret_change_me'` when
-  `WHATSAPP_WEBHOOK_SECRET` is unset, so an unset secret accepts a
-  publicly-known one rather than rejecting all calls. Set the real secret, or
-  change it to fail closed.
+  at the top of `api/_lib/auth.js`. Do this as part of the Supabase work above.
+
+## Fixed since the redesign
+
+- Webhook secret verification now fails closed in both `server.js` and
+  `api/whatsapp/webhook.js` — an unconfigured channel returns 503, a wrong
+  secret returns 401. The old fail-open behaviour and the public-string
+  fallback are gone.
+- Terms of Service contact block aligned to the canonical Seremban address and
+  `@work2u.io` (was a KL address + `@sagaxventures.com`). Confirm the registered
+  office if the KL address was deliberate.
+- Old 396KB raster logo/favicon removed; the empty `Starter` and `W` files
+  deleted.
+
+## Go-live checklist (Vercel Production, at deploy time)
+
+- Set `JWT_SECRET` — the app refuses to boot without it. Generate:
+  `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
+- Add the other secrets to Production: `GROQ_API_KEY` (only in Preview so far),
+  `SUPABASE_*`, `STRIPE_*`, `BILLPLZ_*`, `RESEND_*`, and the webhook secrets.
+- Set `APP_BASE_URL`, `SUPABASE_REDIRECT_TO`, `GOOGLE_REDIRECT_URI`, and
+  `WORK2U_ALLOWED_ORIGINS` to the production domain (not localhost).
 
 ## Fixed, but worth knowing about
 
