@@ -142,7 +142,7 @@ const html = `<!DOCTYPE html>
 <script>
   (function () {
     try {
-      var t = localStorage.getItem('w2u-theme');
+      var t = localStorage.getItem('work2u-theme');
       if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
     } catch (e) {}
   })();
@@ -306,7 +306,7 @@ ${sections}
         window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       var next = current === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
-      try { localStorage.setItem('w2u-theme', next); } catch (e) {}
+      try { localStorage.setItem('work2u-theme', next); } catch (e) {}
     });
   })();
 </script>
