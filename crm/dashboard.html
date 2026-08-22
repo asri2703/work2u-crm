@@ -2396,7 +2396,7 @@ table, .amount, .metric, .stat, .kpi, .num, td { font-variant-numeric: tabular-n
     <div class="workspace-selector" onclick="toggleWorkspaceDropdown(event)">
       <div class="ws-icon" id="ws-icon" style="background: linear-gradient(135deg, #2563eb, #06b6d4);">S</div>
       <div class="ws-info">
-        <div class="ws-name" id="ws-name">Saga X</div>
+        <div class="ws-name" id="ws-name">Workspace</div>
         <div class="ws-plan" id="ws-plan">Starter</div>
       </div>
       <button class="ws-add" onclick="event.stopPropagation(); openWorkspaceModal()" title="Add">+</button>
@@ -2562,7 +2562,7 @@ function wsKey(key) { return 'work2u-' + activeWsId + '-' + key; }
 
 function getWs() {
   if (workspaces.length === 0) {
-    const def = { id: 'ws-' + Date.now(), name: 'Saga X', color: '#2563eb', plan: 'Starter' };
+    const def = { id: 'ws-' + Date.now(), name: 'Workspace', color: '#2563eb', plan: 'Starter' };
     workspaces = [def];
     activeWsId = def.id;
     saveWs();
@@ -5554,7 +5554,7 @@ function openWorkspaceModal() {
   const form = document.getElementById('main-form');
   form.onsubmit = function(e) { e.preventDefault(); saveWorkspace(); };
   document.getElementById('modal-title').textContent = 'New Workspace';
-  form.innerHTML = '<div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="ws-name" required></div><div class="form-group"><label class="form-label">Color</label><select class="form-select" id="ws-color"><option value="#2563eb">Blue</option><option value="#06b6d4">Cyan</option><option value="#8b5cf6">Purple</option><option value="#ec4899">Pink</option><option value="#10b981">Green</option><option value="#f59e0b">Orange</option></select></div><div class="btn-row"><div></div><div><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">Create</button></div></div>';
+  form.innerHTML = '<div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="ws-name" placeholder="Workspace" required></div><div class="form-group"><label class="form-label">Color</label><select class="form-select" id="ws-color"><option value="#2563eb">Blue</option><option value="#06b6d4">Cyan</option><option value="#8b5cf6">Purple</option><option value="#ec4899">Pink</option><option value="#10b981">Green</option><option value="#f59e0b">Orange</option></select></div><div class="btn-row"><div></div><div><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">Create</button></div></div>';
   document.getElementById('modal').classList.add('active');
 }
 
