@@ -5347,7 +5347,7 @@ function fieldsLeads(it) {
 
 function fieldsClients(it) {
   it = it || {};
-  return '<div class="form-group"><label class="form-label">Client Name</label><input type="text" class="form-input" id="f-name" value="' + esc(it.name) + '" required></div><div class="form-row"><div class="form-group"><label class="form-label">Company</label><input type="text" class="form-input" id="f-company" value="' + esc(it.company || '') + '"></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="f-email" value="' + esc(it.email || '') + '"></div><div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="f-phone" value="' + esc(it.phone || '') + '"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Total Revenue (RM)</label><input type="number" class="form-input" id="f-totalRevenue" value="' + (it.totalRevenue || 0) + '" step="0.01"></div><div class="form-group"><label class="form-label">Linked Service</label><select class="form-select" id="f-serviceId"><option value="">None</option>' + D.services.map(function(s) { return '<option value="' + s.id + '" ' + (it.serviceId === s.id ? 'selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes">' + esc(it.notes || '') + '</textarea></div><div class="btn-row">' + (editId ? '<button type="button" class="btn btn-danger" onclick="deleteItem()">Delete</button>' : '<div></div>') + '<div><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></div>';
+  return '<div class="form-group"><label class="form-label">Client Name</label><input type="text" class="form-input" id="f-name" value="' + esc(it.name) + '" required></div><div class="form-row"><div class="form-group"><label class="form-label">Company</label><input type="text" class="form-input" id="f-company" value="' + esc(it.company || '') + '"></div><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="f-email" value="' + esc(it.email || '') + '"></div><div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="f-phone" value="' + esc(it.phone || '') + '"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Total Revenue (RM)</label><input type="number" class="form-input" id="f-totalRevenue" value="' + (it.totalRevenue || 0) + '" step="0.01"></div><div class="form-group"><label class="form-label">Linked Service</label><select class="form-select" id="f-serviceId"><option value="">None</option>' + D.services.map(function(s) { return '<option value="' + s.id + '" ' + (it.serviceId === s.id ? 'selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select></div></div><div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="f-address" placeholder="Billing address — used on invoices and receipts">' + esc(it.address || '') + '</textarea></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes">' + esc(it.notes || '') + '</textarea></div><div class="btn-row">' + (editId ? '<button type="button" class="btn btn-danger" onclick="deleteItem()">Delete</button>' : '<div></div>') + '<div><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></div>';
 }
 
 function fieldsServices(it) {
@@ -5365,7 +5365,7 @@ function handleSave() {
   let item;
   if (type === 'tasks') item = { name: getV('f-name'), priority: getV('f-priority'), status: getV('f-status'), due: getV('f-due'), tag: getV('f-tag'), notes: getV('f-notes') };
   else if (type === 'leads') item = { name: getV('f-name'), company: getV('f-company'), value: parseFloat(getV('f-value')) || 0, email: getV('f-email'), phone: getV('f-phone'), status: getV('f-status'), followup: getV('f-followup'), notes: getV('f-notes') };
-  else if (type === 'clients') item = { name: getV('f-name'), company: getV('f-company'), status: getV('f-status'), email: getV('f-email'), phone: getV('f-phone'), totalRevenue: parseFloat(getV('f-totalRevenue')) || 0, serviceId: getV('f-serviceId'), notes: getV('f-notes') };
+  else if (type === 'clients') item = { name: getV('f-name'), company: getV('f-company'), status: getV('f-status'), email: getV('f-email'), phone: getV('f-phone'), address: getV('f-address'), totalRevenue: parseFloat(getV('f-totalRevenue')) || 0, serviceId: getV('f-serviceId'), notes: getV('f-notes') };
   else if (type === 'services') item = { name: getV('f-name'), category: getV('f-category'), price: parseFloat(getV('f-price')) || 0, description: getV('f-description') };
   else if (type === 'cases') item = { title: getV('f-title'), clientId: getV('f-clientId'), priority: getV('f-priority'), status: getV('f-status'), assignedTo: getV('f-assignedTo'), description: getV('f-description') };
   
@@ -5451,10 +5451,14 @@ function sendVia(method) {
   const amount = getV('f-amount');
   const number = getV('f-number');
   if (!client) { notify('⚠️ Select a client first'); return; }
+  // Pull the full client record so the invoice carries the saved billing
+  // address and phone — the reason the address field exists.
+  const record = D.clients.find(function(c) { return c.name === client; }) || {};
+  const billTo = 'Bill to: ' + client + (record.address ? '\n' + record.address : '');
   if (method === 'whatsapp') {
-    const phone = prompt('Phone number (with country code):');
+    const phone = prompt('Phone number (with country code):', record.phone || '');
     if (phone) {
-      const msg = 'Invoice ' + number + ' - RM ' + amount + '\n\nFrom Work2U CRM';
+      const msg = 'Invoice ' + number + ' — RM ' + amount + '\n' + billTo + '\n\nFrom Work2U CRM';
       window.open('https://wa.me/' + phone.replace(/[^\d]/g, '') + '?text=' + encodeURIComponent(msg), '_blank');
     }
   } else if (method === 'email') {
@@ -5597,7 +5601,18 @@ function getV(id) { const el = document.getElementById(id); return el ? el.value
 function notify(msg) { const el = document.getElementById('notif'); el.textContent = msg; el.classList.add('show'); setTimeout(function() { el.classList.remove('show'); }, 2500); }
 
 document.querySelectorAll('.modal-overlay').forEach(function(o) {
-  o.addEventListener('click', function(e) { if (e.target === o) closeModal(); });
+  // Close on a genuine backdrop click only. The old check fired on any click
+  // whose target was the overlay — but selecting text inside a field (e.g.
+  // dragging across the "0" in Total Revenue) puts mousedown on the input and
+  // mouseup on the backdrop, which makes the click target the overlay and shut
+  // the form mid-edit. Require BOTH the press and the release to land on the
+  // backdrop itself.
+  var pressedOnBackdrop = false;
+  o.addEventListener('mousedown', function(e) { pressedOnBackdrop = (e.target === o); });
+  o.addEventListener('click', function(e) {
+    if (e.target === o && pressedOnBackdrop) closeModal();
+    pressedOnBackdrop = false;
+  });
 });
 
 window.addEventListener('DOMContentLoaded', function() {
