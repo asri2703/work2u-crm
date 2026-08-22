@@ -3416,10 +3416,12 @@ var OBJECTS = {
 var BOARD_MODE_KEY = 'work2u-board-mode';
 
 function getBoardMode(key) {
+  // Default to the Board (kanban) view — cards in horizontal columns — and
+  // only show the Table view when the user has explicitly chosen it.
   try {
     var store = JSON.parse(localStorage.getItem(BOARD_MODE_KEY) || '{}');
-    return store[key] === 'kanban' ? 'kanban' : 'table';
-  } catch (e) { return 'table'; }
+    return store[key] === 'table' ? 'table' : 'kanban';
+  } catch (e) { return 'kanban'; }
 }
 function setBoardMode(key, mode) {
   var store = {};
@@ -3448,8 +3450,8 @@ function renderObjectView(key) {
       '<div><h1 class="page-title">' + esc(obj.label) + '</h1><div class="page-sub">' + esc(obj.sub) + '</div></div>' +
       '<div class="board-head-actions">' +
         '<div class="board-toggle" role="tablist" aria-label="View">' +
-          '<button class="board-toggle-btn ' + (mode === 'table' ? 'active' : '') + '" data-mode="table" onclick="setBoardMode(\'' + key + '\',\'table\')">Table</button>' +
           '<button class="board-toggle-btn ' + (mode === 'kanban' ? 'active' : '') + '" data-mode="kanban" onclick="setBoardMode(\'' + key + '\',\'kanban\')">Board</button>' +
+          '<button class="board-toggle-btn ' + (mode === 'table' ? 'active' : '') + '" data-mode="table" onclick="setBoardMode(\'' + key + '\',\'table\')">Table</button>' +
         '</div>' +
         '<button class="btn btn-primary" onclick="openAdd()">' + esc(obj.addLabel) + '</button>' +
       '</div>' +
